@@ -1,0 +1,6 @@
+@TodoRPGApp_HostAddress = http://localhost:5294
+
+GET {{TodoRPGApp_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

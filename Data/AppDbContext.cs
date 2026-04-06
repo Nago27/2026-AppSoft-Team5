@@ -1,0 +1,17 @@
+﻿using Microsoft.EntityFrameworkCore;
+using TodoRPGApp.Models; // Models 폴더의 TodoItem을 가져오기 위함
+
+namespace TodoRPGApp.Data
+{
+    // DbContext를 상속받아 DB 연결 다리 역할을 합니다.
+    public class AppDbContext : DbContext
+    {
+        public AppDbContext(DbContextOptions<AppDbContext> options) : base(options)
+        {
+        }
+
+        // 이 한 줄이 가장 중요합니다! 
+        // TodoItem 클래스를 데이터베이스의 'TodoItems'라는 테이블로 만들어 줍니다.
+        public DbSet<TodoItem> TodoItems { get; set; }
+    }
+}
