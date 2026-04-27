@@ -1,0 +1,5 @@
+<Solution>
+  <Project Path="TodoRPG.Api/TodoRPG.Api.csproj" Id="fde92a95-5c30-4cfa-8a6c-7680b80b7878" />
+  <Project Path="TodoRPG.Web/TodoRPG.Web.Client/TodoRPG.Web.Client.csproj" Id="1baae6c8-ec8a-4410-ac05-850a723111da" />
+  <Project Path="TodoRPG.Web/TodoRPG.Web/TodoRPG.Web.csproj" Id="07a4aa53-7c90-4afe-8589-ad2fe30d89c2" />
+</Solution>
