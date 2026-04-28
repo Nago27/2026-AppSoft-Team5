@@ -419,3 +419,6 @@ FodyWeavers.xsd
 
 # MacOS ignore
 *.DS_Store
+
+# database ignore
+*.db
