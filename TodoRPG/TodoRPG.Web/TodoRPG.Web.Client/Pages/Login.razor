@@ -5,22 +5,30 @@
 
 <PageTitle>Login - TodoRPG</PageTitle>
 
-<div class="login-card">
+<div class="login-card @(isOpening ? "is-opening" : "")">
     <h1 class="login-title">TodoRPG</h1>
-    <p class="login-subtitle">Sign in to continue</p>
 
-    <EditForm Model="model" OnValidSubmit="HandleLogin" FormName="login">
+    <EditForm Model="model" OnValidSubmit="HandleLogin" FormName="login" class="login-form">
         <DataAnnotationsValidator />
 
         <div class="field">
-            <label for="username">Username</label>
-            <InputText id="username" class="form-control" @bind-Value="model.Username" autocomplete="username" />
+            <label for="username">ID</label>
+            <InputText id="username"
+                       class="form-control"
+                       @bind-Value="model.Username"
+                       autocomplete="username"
+                       disabled="@isOpening" />
             <ValidationMessage For="@(() => model.Username)" />
         </div>
 
         <div class="field">
             <label for="password">Password</label>
-            <InputText id="password" type="password" class="form-control" @bind-Value="model.Password" autocomplete="current-password" />
+            <InputText id="password"
+                       type="password"
+                       class="form-control"
+                       @bind-Value="model.Password"
+                       autocomplete="current-password"
+                       disabled="@isOpening" />
             <ValidationMessage For="@(() => model.Password)" />
         </div>
 
@@ -29,26 +37,74 @@
             <div class="error">@errorMessage</div>
         }
 
-        <button type="submit" class="btn-login">Login</button>
+        <button type="submit" class="btn-login" disabled="@isOpening">
+            @(isOpening ? "Opening..." : "Login")
+        </button>
+
+        <div class="signup-row">
+            <a href="/signup">회원가입</a>
+        </div>
     </EditForm>
 </div>
+
+@if (isOpening)
+{
+    <div class="door-transition" aria-hidden="true">
+        <div class="door-frame">
+            <div class="door-light"></div>
+
+            <div class="door-panel door-left">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+
+            <div class="door-panel door-right">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+
+            <div class="door-player">
+                <div class="player-head"></div>
+                <div class="player-body"></div>
+            </div>
+
+            <div class="floor-light"></div>
+        </div>
+    </div>
+}
 
 @code {
     private LoginModel model = new();
     private string? errorMessage;
+    private bool isOpening;
 
-    private void HandleLogin()
+    private async Task HandleLogin()
     {
+        if (isOpening)
+        {
+            return;
+        }
+
         errorMessage = null;
+
+        // 나중에 실제 로그인 API를 연결하면,
+        // 로그인 성공 판정 이후에만 아래 코드를 실행하면 됩니다.
+        isOpening = true;
+
+        // CSS 애니메이션 재생 시간과 맞춤
+        await Task.Delay(2300);
+
         Navigation.NavigateTo("/home");
     }
 
     private sealed class LoginModel
     {
-        [System.ComponentModel.DataAnnotations.Required(ErrorMessage = "Username is required.")]
+        [System.ComponentModel.DataAnnotations.Required(ErrorMessage = "ID를 입력하세요.")]
         public string Username { get; set; } = string.Empty;
 
-        [System.ComponentModel.DataAnnotations.Required(ErrorMessage = "Password is required.")]
+        [System.ComponentModel.DataAnnotations.Required(ErrorMessage = "비밀번호를 입력하세요.")]
         public string Password { get; set; } = string.Empty;
     }
 }
