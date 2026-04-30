@@ -43,21 +43,39 @@ namespace TodoRPG.Api.Controllers
         [HttpPost]
         public async Task<ActionResult<User>> PostUser(User user)
         {
+            user.Id = user.Id.Trim();
+            user.Nickname = user.Nickname.Trim();
+
+            if (user.Id.Length < 2 || user.Id.Length > 10)
+            {
+                return BadRequest("ID는 2~10자여야 합니다.");
+            }
+
+            if (string.IsNullOrWhiteSpace(user.Nickname))
+            {
+                return BadRequest("닉네임을 입력하세요.");
+            }
+
+            if (string.IsNullOrWhiteSpace(user.Password))
+            {
+                return BadRequest("비밀번호를 입력하세요.");
+            }
+
             var exists = await _context.Users.AnyAsync(u => u.Id == user.Id);
 
             if (exists)
             {
-                // 2. 중복된 경우 400 Bad Request와 함께 메시지를 보냅니다.
                 return BadRequest("이미 존재하는 아이디입니다.");
             }
 
-            // 중복되지 않는 경우에만, DB의 Users 테이블에 새로운 유저 정보를 추가합니다.
+            user.Level = 1;
+            user.Experience = 0;
+
             _context.Users.Add(user);
             await _context.SaveChangesAsync();
 
-            // 저장된 데이터와 함께 성공 상태(201)를 반환합니다.
             return CreatedAtAction(nameof(GetUser), new { id = user.Id }, user);
-        }                       
+        }          
 
         // 4. 비밀번호 수정 (Update)
         [HttpPut("{id}/change-password")]

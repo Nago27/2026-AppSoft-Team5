@@ -12,7 +12,6 @@ namespace TodoRPG.Api
             const string AllowTodoRpgWeb = "AllowTodoRpgWeb";
 
             // Add services to the container.
-
             builder.Services.AddControllers();
             // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
             builder.Services.AddEndpointsApiExplorer();
@@ -26,12 +25,12 @@ namespace TodoRPG.Api
             {
                 options.AddPolicy(AllowTodoRpgWeb, policy =>
                 {
-                    policy.withOrigins(
-                        "https://localhost:7137",
-                        "https://localhost:5093"
-                    )
-                    .AllowAnyHeader()
-                    .AllowAnyMethod();
+                    policy.WithOrigins(
+                            "https://localhost:7137",
+                            "http://localhost:5093"
+                        )
+                        .AllowAnyHeader()
+                        .AllowAnyMethod();
                 });
             });
 
