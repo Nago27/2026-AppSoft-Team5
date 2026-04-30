@@ -27,7 +27,7 @@ namespace TodoRPG.Api.Controllers
 
         // 2. 특정 사용자 정보 조회 (Read)
         [HttpGet("{id}")]
-        public async Task<ActionResult<User>> GetUser(int id)
+        public async Task<ActionResult<User>> GetUser(string id)
         {
             var user = await _context.Users.FindAsync(id);
 
@@ -43,17 +43,25 @@ namespace TodoRPG.Api.Controllers
         [HttpPost]
         public async Task<ActionResult<User>> PostUser(User user)
         {
-            // DB의 Users 테이블에 새로운 유저 정보를 추가합니다.
+            var exists = await _context.Users.AnyAsync(u => u.Id == user.Id);
+
+            if (exists)
+            {
+                // 2. 중복된 경우 400 Bad Request와 함께 메시지를 보냅니다.
+                return BadRequest("이미 존재하는 아이디입니다.");
+            }
+
+            // 중복되지 않는 경우에만, DB의 Users 테이블에 새로운 유저 정보를 추가합니다.
             _context.Users.Add(user);
             await _context.SaveChangesAsync();
 
             // 저장된 데이터와 함께 성공 상태(201)를 반환합니다.
             return CreatedAtAction(nameof(GetUser), new { id = user.Id }, user);
-        }
+        }                       
 
         // 4. 비밀번호 수정 (Update)
         [HttpPut("{id}/change-password")]
-        public async Task<IActionResult> UpdatePassword(int id, [FromBody] string newPassword)
+        public async Task<IActionResult> UpdatePassword(string id, [FromBody] string newPassword)
         {
             // 1. 수정할 유저를 DB에서 먼저 찾습니다 (Read)
             var user = await _context.Users.FindAsync(id);
@@ -84,7 +92,7 @@ namespace TodoRPG.Api.Controllers
 
         // 5. 회원 탈퇴 (Delete)
         [HttpDelete("{id}")]
-        public async Task<IActionResult> DeleteUser(int id)
+        public async Task<IActionResult> DeleteUser(string id)
         {
             // 1. 삭제할 유저를 찾습니다.
             var user = await _context.Users.FindAsync(id);
@@ -101,7 +109,7 @@ namespace TodoRPG.Api.Controllers
         }
 
         // 유저 존재 여부 확인용 헬퍼 메서드
-        private bool UserExists(int id)
+        private bool UserExists(string id)
         {
             return _context.Users.Any(e => e.Id == id);
         }

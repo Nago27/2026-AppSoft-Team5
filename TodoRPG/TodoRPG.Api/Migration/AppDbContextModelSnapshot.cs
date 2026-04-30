@@ -47,9 +47,9 @@ namespace TodoRPG.Api.Migrations
 
             modelBuilder.Entity("TodoRPG.Api.Models.User", b =>
                 {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER");
+                    b.Property<string>("Id")
+                        .HasMaxLength(10)
+                        .HasColumnType("VARCHAR");
 
                     b.Property<int>("Experience")
                         .HasColumnType("INTEGER");

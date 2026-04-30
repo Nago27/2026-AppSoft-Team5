@@ -11,8 +11,8 @@ using TodoRPG.Api.Data;
 namespace TodoRPG.Api.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20260430054423_FinalUserTable")]
-    partial class FinalUserTable
+    [Migration("20260430063946_User")]
+    partial class User
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -50,9 +50,9 @@ namespace TodoRPG.Api.Migrations
 
             modelBuilder.Entity("TodoRPG.Api.Models.User", b =>
                 {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER");
+                    b.Property<string>("Id")
+                        .HasMaxLength(10)
+                        .HasColumnType("VARCHAR");
 
                     b.Property<int>("Experience")
                         .HasColumnType("INTEGER");
