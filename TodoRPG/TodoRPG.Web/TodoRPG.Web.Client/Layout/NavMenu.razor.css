@@ -103,3 +103,32 @@
         overflow-y: auto;
     }
 }
+
+/* Sidebar theme */
+
+.navbar {
+    background: #17130f;
+}
+
+.top-row {
+    background:
+        radial-gradient(circle at 20%, 10%, rgba(111, 74, 0,18), transparent 26%),
+        linear-gradient(100deg, #17130f 0%, #0f0d0a 100%);
+}
+
+.navbar-brand {
+    color: #d79d53
+    font-weight: 800;
+    letter-spacing: 1px;
+}
+
+.nav-item ::deep a {
+    color: #b0a17f;
+    border-radius: 6px;
+}
+
+.nav-item ::deep a::hover {
+    color: #15120f;
+    background-color: #9d9078;
+    font-weight: 700;
+}

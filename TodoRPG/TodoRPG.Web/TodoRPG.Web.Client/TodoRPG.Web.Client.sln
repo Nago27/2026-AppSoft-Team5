@@ -1,0 +1,31 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.9.34728.123
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TodoRPG.Web.Client", "TodoRPG.Web.Client.csproj", "{9F81A9A9-AE77-41A9-ADF8-0E0752E2115F}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TodoRPG.Web", "..\TodoRPG.Web\TodoRPG.Web.csproj", "{19CA9865-9C32-49D8-8C0A-28AF0FE449A4}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{9F81A9A9-AE77-41A9-ADF8-0E0752E2115F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9F81A9A9-AE77-41A9-ADF8-0E0752E2115F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9F81A9A9-AE77-41A9-ADF8-0E0752E2115F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9F81A9A9-AE77-41A9-ADF8-0E0752E2115F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{19CA9865-9C32-49D8-8C0A-28AF0FE449A4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{19CA9865-9C32-49D8-8C0A-28AF0FE449A4}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{19CA9865-9C32-49D8-8C0A-28AF0FE449A4}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{19CA9865-9C32-49D8-8C0A-28AF0FE449A4}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {DD4CAA97-2692-476A-A408-CB2F35C2F3D5}
+	EndGlobalSection
+EndGlobal

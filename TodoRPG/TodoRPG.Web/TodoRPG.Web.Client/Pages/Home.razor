@@ -1,4 +1,4 @@
-﻿@page "/home"
+@page "/"
 
 <PageTitle>LAST SURVIVAL - SHELTER DOSSIER</PageTitle>
 
@@ -9,7 +9,7 @@
     <header class="terminal-header">
         <div>
             <div class="system-title">SHELTER SURVIVAL DOSSIER</div>
-            <div class="system-subtitle">SECTOR-03 / DANGER ZONE / BUNKER_CORE_ACCESS</div>
+            <div class="system-subtitle">SECTOR-04 / DANGER ZONE / BUNKER_CORE_ACCESS</div>
         </div>
 
         <div class="resource-panel">
@@ -23,6 +23,8 @@
                 <span class="res-value">@Supply</span>
             </div>
         </div>
+
+        <img src="/images/decals/classified-stamp.png" alt="CLASSIFIED" class="header-stamp" />
     </header>
 
     @* Main content *@
@@ -36,10 +38,9 @@
                 <div class="depth-indicator">B@(10 - Level)F / EXIT ROUTE</div>
 
                 <div class="character-container">
-                    <div class="char-sprite">
-                        <div class="gas-mask"></div>
-                        <div class="survival-suit"></div>
-                    </div>
+                    <img src="/images/survivor.png"
+                         alt="Survivor character"
+                         class="survivor-character" />
                     <div class="char-shadow"></div>
                 </div>
 
@@ -81,34 +82,66 @@
             </div>
 
             <div class="params-grid">
-                <div class="param-box">
-                    <span class="p-label">STR</span>
-                    <span class="p-value">@Strength</span>
-                    <span class="p-desc">근력</span>
+
+                <div class="param-box param-str">
+                    <img class="param-note-bg"
+                         src="/images/stats/stat-note-4.png"
+                         alt="" />
+
+                    <div class="param-content">
+                        <span class="p-label">STR</span>
+                        <span class="p-value">@Strength</span>
+                        <span class="p-desc">근력</span>
+                    </div>
                 </div>
 
-                <div class="param-box">
-                    <span class="p-label">INT</span>
-                    <span class="p-value">@Intelligence</span>
-                    <span class="p-desc">지능</span>
+                <div class="param-box param-int">
+                    <img class="param-note-bg"
+                         src="/images/stats/stat-note-1.png"
+                         alt="" />
+
+                    <div class="param-content">
+                        <span class="p-label">INT</span>
+                        <span class="p-value">@Intelligence</span>
+                        <span class="p-desc">지능</span>
+                    </div>
                 </div>
 
-                <div class="param-box">
-                    <span class="p-label">LUK</span>
-                    <span class="p-value">@Luck</span>
-                    <span class="p-desc">행운</span>
+                <div class="param-box param-sta">
+                    <img class="param-note-bg"
+                         src="/images/stats/stat-note-3.png"
+                         alt="" />
+
+                    <div class="param-content">
+                        <span class="p-label">STA</span>
+                        <span class="p-value">@Hp</span>
+                        <span class="p-desc">체력</span>
+                    </div>
                 </div>
 
-                <div class="param-box">
-                    <span class="p-label">STA</span>
-                    <span class="p-value">@Hp</span>
-                    <span class="p-desc">체력</span>
+                <div class="param-box param-luk">
+                    <img class="param-note-bg"
+                         src="/images/stats/stat-note-2.png"
+                         alt="" />
+
+                    <div class="param-content">
+                        <span class="p-label">LUK</span>
+                        <span class="p-value">@Luck</span>
+                        <span class="p-desc">행운</span>
+                    </div>
                 </div>
+
             </div>
 
             <div class="system-memo">
                 <strong>MEMO</strong>
-                <p>미션을 완료하면 생존 자원과 능력치가 증가합니다. 업무 미션은 보급품을 더 얻지만 체력이 일부 감소합니다.</p>
+                <p>
+                    미션을 완료하면 생존 자원과 능력치가 증가합니다.<br />
+                    <span class="memo-warning">
+                        <span class="warning-mark">!</span>
+                        업무 미션은 보급품 보상이 크지만 체력이 일부 감소합니다.
+                    </span>
+                </p>
             </div>
         </aside>
 
@@ -261,7 +294,7 @@
     private string GetCategoryLabel(string category) => category switch
     {
         "운동" => "PATROL",
-        "업무" => "SUPPLY",
+        "업무" => "WORK",
         "자기개발" => "INTEL",
         "일상" => "SHELTER",
         _ => "CUSTOM"
