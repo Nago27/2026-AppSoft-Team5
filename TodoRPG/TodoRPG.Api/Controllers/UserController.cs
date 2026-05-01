@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using System.ComponentModel.DataAnnotations;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using TodoRPG.Api.Data;
 using TodoRPG.Api.Models;
@@ -46,19 +47,12 @@ namespace TodoRPG.Api.Controllers
             user.Id = user.Id.Trim();
             user.Nickname = user.Nickname.Trim();
 
-            if (user.Id.Length < 2 || user.Id.Length > 10)
+            // Trim 후 길이 변경 가능성이 있어 모델 검증을 다시 돌립니다.
+            // (ID/닉네임/비밀번호 길이 규칙은 User 모델의 DataAnnotations에 정의)
+            ModelState.Clear();
+            if (!TryValidateModel(user))
             {
-                return BadRequest("ID는 2~10자여야 합니다.");
-            }
-
-            if (string.IsNullOrWhiteSpace(user.Nickname))
-            {
-                return BadRequest("닉네임을 입력하세요.");
-            }
-
-            if (string.IsNullOrWhiteSpace(user.Password))
-            {
-                return BadRequest("비밀번호를 입력하세요.");
+                return ValidationProblem(ModelState);
             }
 
             var exists = await _context.Users.AnyAsync(u => u.Id == user.Id);
@@ -127,9 +121,8 @@ namespace TodoRPG.Api.Controllers
 
         // 5. 비밀번호 수정 (Update)
         [HttpPut("{id}/change-password")]
-        public async Task<IActionResult> UpdatePassword(string id, [FromBody] string newPassword)
+        public async Task<IActionResult> UpdatePassword(string id, [FromBody] ChangePasswordRequest request)
         {
-            // 1. 수정할 유저를 DB에서 먼저 찾습니다 (Read)
             var user = await _context.Users.FindAsync(id);
 
             if (user == null)
@@ -137,11 +130,17 @@ namespace TodoRPG.Api.Controllers
                 return NotFound("해당 사용자를 찾을 수 없습니다.");
             }
 
-            // 2. 비즈니스 로직: 비밀번호를 새 값으로 교체합니다.
-            user.Password = newPassword;
+            if (user.Password != request.CurrentPassword)
+            {
+                return Unauthorized("현재 비밀번호가 올바르지 않습니다.");
+            }
 
-            // 3. DB에 수정사항을 반영합니다. (Update)
-            _context.Entry(user).State = EntityState.Modified;
+            if (request.NewPassword == request.CurrentPassword)
+            {
+                return BadRequest("새 비밀번호는 현재 비밀번호와 달라야 합니다.");
+            }
+
+            user.Password = request.NewPassword;
 
             try
             {
@@ -179,5 +178,15 @@ namespace TodoRPG.Api.Controllers
         {
             return _context.Users.Any(e => e.Id == id);
         }
+    }
+
+    public sealed class ChangePasswordRequest
+    {
+        [Required(ErrorMessage = "현재 비밀번호를 입력하세요.")]
+        public string CurrentPassword { get; set; } = string.Empty;
+
+        [Required(ErrorMessage = "새 비밀번호를 입력하세요.")]
+        [StringLength(20, MinimumLength = 4, ErrorMessage = "비밀번호는 4~20자여야 합니다.")]
+        public string NewPassword { get; set; } = string.Empty;
     }
 }

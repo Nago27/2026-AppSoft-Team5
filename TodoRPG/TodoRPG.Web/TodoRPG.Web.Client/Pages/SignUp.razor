@@ -137,9 +137,11 @@
         public string Id { get; set; } = string.Empty;
 
         [Required(ErrorMessage = "닉네임을 입력하세요.")]
+        [StringLength(10, MinimumLength = 2, ErrorMessage = "닉네임은 2~10자여야 합니다.")]
         public string Nickname { get; set; } = string.Empty;
 
         [Required(ErrorMessage = "비밀번호를 입력하세요.")]
+        [StringLength(20, MinimumLength = 4, ErrorMessage = "비밀번호는 4~20자여야 합니다.")]
         public string Password { get; set; } = string.Empty;
 
         [Required(ErrorMessage = "비밀번호 확인을 입력하세요.")]
