@@ -1,0 +1,151 @@
+@page "/signup"
+@layout TodoRPG.Web.Client.Layout.LoginLayout
+@using System.ComponentModel.DataAnnotations
+@using System.Net.Http.Json
+@inject HttpClient Http
+@inject NavigationManager Navigation
+
+<PageTitle>Sign Up - TodoRPG</PageTitle>
+
+<div class="signup-card">
+    <h1 class="signup-title">TodoRPG</h1>
+
+    <EditForm Model="model" OnValidSubmit="HandleSignUp" FormName="signup" class="signup-form">
+        <DataAnnotationsValidator />
+
+        <div class="field">
+            <label for="id">ID</label>
+            <InputText id="id"
+                       class="form-control"
+                       @bind-Value="model.Id"
+                       autocomplete="username"
+                       disabled="@isSubmitting" />
+            <ValidationMessage For="@(() => model.Id)" />
+        </div>
+
+        <div class="field">
+            <label for="nickname">Nickname</label>
+            <InputText id="nickname"
+                       class="form-control"
+                       @bind-Value="model.Nickname"
+                       autocomplete="nickname"
+                       disabled="@isSubmitting" />
+            <ValidationMessage For="@(() => model.Nickname)" />
+        </div>
+
+        <div class="field">
+            <label for="password">Password</label>
+            <InputText id="password"
+                       type="password"
+                       class="form-control"
+                       @bind-Value="model.Password"
+                       autocomplete="new-password"
+                       disabled="@isSubmitting" />
+            <ValidationMessage For="@(() => model.Password)" />
+        </div>
+
+        <div class="field">
+            <label for="confirmPassword">Confirm Password</label>
+            <InputText id="confirmPassword"
+                       type="password"
+                       class="form-control"
+                       @bind-Value="model.ConfirmPassword"
+                       autocomplete="new-password"
+                       disabled="@isSubmitting" />
+            <ValidationMessage For="@(() => model.ConfirmPassword)" />
+        </div>
+
+        @if (!string.IsNullOrWhiteSpace(errorMessage))
+        {
+            <div class="error">@errorMessage</div>
+        }
+
+        @if (!string.IsNullOrWhiteSpace(successMessage))
+        {
+            <div class="success">@successMessage</div>
+        }
+
+        <button type="submit" class="btn-signup" disabled="@isSubmitting">
+            @(isSubmitting ? "Creating..." : "회원가입")
+        </button>
+
+        <div class="login-row">
+            <a href="/login">로그인으로 돌아가기</a>
+        </div>
+    </EditForm>
+</div>
+
+@code {
+    private SignUpFormModel model = new();
+    private string? errorMessage;
+    private string? successMessage;
+    private bool isSubmitting;
+
+    private async Task HandleSignUp()
+    {
+        if (isSubmitting)
+        {
+            return;
+        }
+
+        errorMessage = null;
+        successMessage = null;
+        isSubmitting = true;
+
+        // 계정 저장 요청
+        try
+        {
+            var user = new
+            {
+                Id = model.Id.Trim(),
+                Nickname = model.Nickname.Trim(),
+                Password = model.Password,
+                Level = 1,
+                Experience = 0
+            };
+
+            var response = await Http.PostAsJsonAsync("api/User", user);
+
+            if (response.IsSuccessStatusCode)
+            {
+                successMessage = "회원가입이 완료되었습니다.";
+                await Task.Delay(600);
+                Navigation.NavigateTo("/login");
+                return;
+            }
+
+            var responseText = await response.Content.ReadAsStringAsync();
+
+            errorMessage = string.IsNullOrWhiteSpace(responseText)
+                ? $"회원가입에 실패했습니다. 상태 코드: {(int)response.StatusCode}"
+                : responseText.Trim('"');
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"API 연결 실패: {ex.Message}";
+        }
+        finally
+        {
+            isSubmitting = false;
+        }
+    }
+
+    private sealed class SignUpFormModel
+    {
+        [Required(ErrorMessage = "ID를 입력하세요.")]
+        [StringLength(10, MinimumLength = 2, ErrorMessage = "ID는 2~10자여야 합니다.")]
+        public string Id { get; set; } = string.Empty;
+
+        [Required(ErrorMessage = "닉네임을 입력하세요.")]
+        [StringLength(10, MinimumLength = 2, ErrorMessage = "닉네임은 2~10자여야 합니다.")]
+        public string Nickname { get; set; } = string.Empty;
+
+        [Required(ErrorMessage = "비밀번호를 입력하세요.")]
+        [StringLength(20, MinimumLength = 4, ErrorMessage = "비밀번호는 4~20자여야 합니다.")]
+        public string Password { get; set; } = string.Empty;
+
+        [Required(ErrorMessage = "비밀번호 확인을 입력하세요.")]
+        [Compare(nameof(Password), ErrorMessage = "비밀번호가 일치하지 않습니다.")]
+        public string ConfirmPassword { get; set; } = string.Empty;
+    }
+}

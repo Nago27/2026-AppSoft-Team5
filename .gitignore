@@ -420,5 +420,12 @@ FodyWeavers.xsd
 # MacOS ignore
 *.DS_Store
 
+# Claude settings
+.claude
+.claude/
+
 # database ignore
 *.db
+TodoRPG/TodoRPG.Api/todorpg.db
+TodoRPG/TodoRPG.Api/todorpg.db-shm
+TodoRPG/TodoRPG.Api/todorpg.db-wal

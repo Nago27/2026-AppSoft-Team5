@@ -13,5 +13,7 @@ namespace TodoRPG.Api.Data
         // 이 한 줄이 가장 중요합니다! 
         // TodoItem 클래스를 데이터베이스의 'TodoItems'라는 테이블로 만들어 줍니다.
         public DbSet<TodoItem> TodoItems { get; set; }
+
+        public DbSet<User> Users { get; set; } // ID, 닉네임, PW 담은 Users 테이블 
     }
 }
