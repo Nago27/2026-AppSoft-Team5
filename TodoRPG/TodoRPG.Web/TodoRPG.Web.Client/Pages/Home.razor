@@ -484,11 +484,11 @@
 
             // 추후 개발 위치:
             // 여기서 isCompleted == true일 때 카테고리별 스탯 증가를 연결하면 됨.
-            //
-            // if (isCompleted && !previousValue)
-            // {
-            //     await ApplyTodoReward(todo);
-            // }
+            if (isCompleted && !previousValue)
+            {
+                // await ApplyTodoReward(todo);
+                await ShowTodoCompleteEffect(todo);
+            }
         }
         catch (Exception ex)
         {
@@ -496,6 +496,26 @@
             todoErrorMessage = $"Todo 상태 변경 중 오류가 발생했습니다: {ex.Message}";
         }
     }
+
+    private async Task ShowTodoCompleteEffect(TodoItemDto todo)
+{
+    EffectMessage = todo.Category switch
+    {
+        "운동" => "PATROL MISSION COMPLETED",
+        "업무" => "SUPPLY TASK COMPLETED",
+        "자기개발" => "INTEL MISSION COMPLETED",
+        "일상" => "SHELTER MISSION COMPLETED",
+        _ => "MISSION COMPLETED"
+    };
+
+    ShowRewardEffect = true;
+    await InvokeAsync(StateHasChanged);
+
+    await Task.Delay(1500);
+
+    ShowRewardEffect = false;
+    await InvokeAsync(StateHasChanged);
+}
 
     private async Task DeleteTodo(int id)
     {
