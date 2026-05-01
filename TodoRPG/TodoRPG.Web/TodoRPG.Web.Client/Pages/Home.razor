@@ -1,7 +1,328 @@
-﻿@page "/home"
+@page "/"
 
-<PageTitle>Home</PageTitle>
+<PageTitle>LAST SURVIVAL - SHELTER DOSSIER</PageTitle>
 
-<h1>사용자 RPG</h1>
+<div class="bunker-terminal">
+    <div class="scanlines"></div>
 
-Welcome to your new app.
+    @* Header *@
+    <header class="terminal-header">
+        <div>
+            <div class="system-title">SHELTER SURVIVAL DOSSIER</div>
+            <div class="system-subtitle">SECTOR-04 / DANGER ZONE / BUNKER_CORE_ACCESS</div>
+        </div>
+
+        <div class="resource-panel">
+            <div class="res-item">
+                <span class="res-label">LEVEL</span>
+                <span class="res-value">@Level</span>
+            </div>
+
+            <div class="res-item">
+                <span class="res-label">SUPPLY</span>
+                <span class="res-value">@Supply</span>
+            </div>
+        </div>
+
+        <img src="/images/decals/classified-stamp.png" alt="CLASSIFIED" class="header-stamp" />
+    </header>
+
+    @* Main content *@
+    <main class="terminal-body">
+
+        @* Character view *@
+        <section class="monitor-section">
+            <div class="section-tag">FIELD VIEW</div>
+
+            <div class="monitor-content">
+                <div class="depth-indicator">B@(10 - Level)F / EXIT ROUTE</div>
+
+                <div class="character-container">
+                    <img src="/images/survivor.png"
+                         alt="Survivor character"
+                         class="survivor-character" />
+                    <div class="char-shadow"></div>
+                </div>
+
+                <div class="monitor-warning">LOW LIGHT / FILTER REQUIRED / AREA UNSTABLE</div>
+            </div>
+
+            <div class="survivor-note">
+                <strong>SUBJECT #0471</strong>
+                <span>@Title</span>
+            </div>
+        </section>
+
+        @* Status panel *@
+        <aside class="stats-aside">
+            <h2>SURVIVAL PARAMS</h2>
+
+            <div class="vitals-group">
+                <div class="vital-row">
+                    <div class="vital-info">
+                        <span class="vital-name">FILTER HP</span>
+                        <span class="vital-num">@Hp / @MaxHp</span>
+                    </div>
+
+                    <div class="gauge-container hp">
+                        <div class="gauge-fill" style="width: @(HpPercent)%"></div>
+                    </div>
+                </div>
+
+                <div class="vital-row">
+                    <div class="vital-info">
+                        <span class="vital-name">LOAD EXP</span>
+                        <span class="vital-num">@Exp / @MaxExp</span>
+                    </div>
+
+                    <div class="gauge-container exp">
+                        <div class="gauge-fill" style="width: @(ExpPercent)%"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="params-grid">
+
+                <div class="param-box param-str">
+                    <img class="param-note-bg"
+                         src="/images/stats/stat-note-4.png"
+                         alt="" />
+
+                    <div class="param-content">
+                        <span class="p-label">STR</span>
+                        <span class="p-value">@Strength</span>
+                        <span class="p-desc">근력</span>
+                    </div>
+                </div>
+
+                <div class="param-box param-int">
+                    <img class="param-note-bg"
+                         src="/images/stats/stat-note-1.png"
+                         alt="" />
+
+                    <div class="param-content">
+                        <span class="p-label">INT</span>
+                        <span class="p-value">@Intelligence</span>
+                        <span class="p-desc">지능</span>
+                    </div>
+                </div>
+
+                <div class="param-box param-sta">
+                    <img class="param-note-bg"
+                         src="/images/stats/stat-note-3.png"
+                         alt="" />
+
+                    <div class="param-content">
+                        <span class="p-label">STA</span>
+                        <span class="p-value">@Hp</span>
+                        <span class="p-desc">체력</span>
+                    </div>
+                </div>
+
+                <div class="param-box param-luk">
+                    <img class="param-note-bg"
+                         src="/images/stats/stat-note-2.png"
+                         alt="" />
+
+                    <div class="param-content">
+                        <span class="p-label">LUK</span>
+                        <span class="p-value">@Luck</span>
+                        <span class="p-desc">행운</span>
+                    </div>
+                </div>
+
+            </div>
+
+            <div class="system-memo">
+                <strong>MEMO</strong>
+                <p>
+                    미션을 완료하면 생존 자원과 능력치가 증가합니다.<br />
+                    <span class="memo-warning">
+                        <span class="warning-mark">!</span>
+                        업무 미션은 보급품 보상이 크지만 체력이 일부 감소합니다.
+                    </span>
+                </p>
+            </div>
+        </aside>
+
+    </main>
+
+    @* Mission list *@
+    <footer class="mission-log">
+        <div class="log-header">
+            <span>MISSION LOG</span>
+            <small>오늘의 생존 미션을 완료하고 다음 구역 진입 준비</small>
+        </div>
+
+        <div class="log-container">
+            @foreach (var todo in Todos)
+            {
+                <article class="mission-card @(todo.IsDone ? "locked" : "")">
+                    <label class="checkbox-container">
+                        <input type="checkbox"
+                               checked="@todo.IsDone"
+                               disabled="@todo.IsDone"
+                               @onchange="async () => await CompleteTodo(todo)" />
+                        <span class="checkmark"></span>
+                    </label>
+
+                    <div class="mission-details">
+                        <div class="mission-top">
+                            <span class="m-cat @GetCategoryClass(todo.Category)">
+                                @GetCategoryLabel(todo.Category)
+                            </span>
+
+                            <span class="m-reward">
+                                @GetRewardText(todo.Category)
+                            </span>
+                        </div>
+
+                        <div class="m-title">@todo.Title</div>
+                    </div>
+
+                    @if (todo.IsDone)
+                    {
+                        <div class="stamp">SECURED</div>
+                    }
+                </article>
+            }
+        </div>
+    </footer>
+
+    @* Reward popup *@
+    @if (ShowRewardEffect)
+    {
+        <div class="alert-popup">
+            <div class="alert-header">RESOURCE ACQUIRED</div>
+            <div class="alert-msg">@EffectMessage</div>
+        </div>
+    }
+</div>
+
+@code {
+    // Character state
+    private int Level = 1;
+
+    private int Hp = 60;
+    private int MaxHp = 100;
+
+    private int Exp = 30;
+    private int MaxExp = 100;
+
+    private int Supply = 247;
+
+    private int Strength = 42;
+    private int Intelligence = 31;
+    private int Luck = 28;
+
+    private string Title = "벙커 신입 생존자";
+
+    // UI state
+    private bool ShowRewardEffect = false;
+    private string EffectMessage = "";
+
+    private int HpPercent => MaxHp == 0 ? 0 : Math.Clamp(Hp * 100 / MaxHp, 0, 100);
+    private int ExpPercent => MaxExp == 0 ? 0 : Math.Clamp(Exp * 100 / MaxExp, 0, 100);
+
+    // Temporary mission data
+    private List<TodoItem> Todos = new()
+    {
+        new TodoItem { Title = "구역 순찰 완료", Category = "운동", IsDone = false },
+        new TodoItem { Title = "물자 목록 정리", Category = "업무", IsDone = false },
+        new TodoItem { Title = "생존 매뉴얼 숙지", Category = "자기개발", IsDone = false },
+        new TodoItem { Title = "벙커 청소", Category = "일상", IsDone = false },
+    };
+
+    // Mission completion
+    private async Task CompleteTodo(TodoItem item)
+    {
+        if (item.IsDone)
+        {
+            return;
+        }
+
+        item.IsDone = true;
+
+        Exp += 15;
+        Supply += 10;
+
+        switch (item.Category)
+        {
+            case "운동":
+                Strength += 1;
+                EffectMessage = "+15 EXP / +10 SUPPLY / STR +1";
+                break;
+
+            case "업무":
+                Supply += 10;
+                Hp = Math.Max(0, Hp - 5);
+                EffectMessage = "+15 EXP / +20 SUPPLY / HP -5";
+                break;
+
+            case "자기개발":
+                Intelligence += 1;
+                EffectMessage = "+15 EXP / +10 SUPPLY / INT +1";
+                break;
+
+            case "일상":
+                Hp = Math.Min(MaxHp, Hp + 5);
+                EffectMessage = "+15 EXP / +10 SUPPLY / HP +5";
+                break;
+
+            default:
+                Luck += 1;
+                EffectMessage = "+15 EXP / +10 SUPPLY / LUK +1";
+                break;
+        }
+
+        if (Exp >= MaxExp)
+        {
+            Exp -= MaxExp;
+            Level += 1;
+            MaxExp += 25;
+            Hp = MaxHp;
+            Title = "구역 정비 생존자";
+            EffectMessage = "LEVEL UP / HP REPAIRED";
+        }
+
+        ShowRewardEffect = true;
+        await Task.Delay(1500);
+        ShowRewardEffect = false;
+    }
+
+    // Display helpers
+    private string GetCategoryLabel(string category) => category switch
+    {
+        "운동" => "PATROL",
+        "업무" => "SUPPLY",
+        "자기개발" => "INTEL",
+        "일상" => "SHELTER",
+        _ => "CUSTOM"
+    };
+
+    private string GetCategoryClass(string category) => category switch
+    {
+        "운동" => "patrol",
+        "업무" => "supply",
+        "자기개발" => "intel",
+        "일상" => "shelter",
+        _ => "custom"
+    };
+
+    private string GetRewardText(string category) => category switch
+    {
+        "운동" => "+STR",
+        "업무" => "+SUP / -HP",
+        "자기개발" => "+INT",
+        "일상" => "+HP",
+        _ => "+LUK"
+    };
+
+    // View model
+    private class TodoItem
+    {
+        public string Title { get; set; } = "";
+        public string Category { get; set; } = "";
+        public bool IsDone { get; set; }
+    }
+}
