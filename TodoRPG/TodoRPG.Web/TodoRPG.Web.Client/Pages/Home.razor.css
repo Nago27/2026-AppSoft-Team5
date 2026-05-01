@@ -884,6 +884,85 @@
     filter: saturate(0.9) brightness(0.95);
 }
 
+/* todo style */
+.mission-form {
+    margin: 18px 0;
+}
+
+.mission-input-row {
+    display: grid;
+    grid-template-columns: 1fr 160px 110px;
+    gap: 10px;
+}
+
+.mission-input,
+.mission-category {
+    min-height: 42px;
+    padding: 10px 12px;
+    color: #d7ccb0;
+    background: #12110e;
+    border: 2px solid #312b24;
+    font-family: "Courier New", monospace;
+}
+
+.mission-input:focus,
+.mission-category:focus {
+    outline: none;
+    border-color: #936245;
+}
+
+.mission-add,
+.mission-delete,
+.filter-btn {
+    border: 2px solid #20160f;
+    background: #936245;
+    color: #1b160f;
+    font-weight: 900;
+    cursor: pointer;
+}
+
+.mission-add:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+}
+
+.category-filter {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin: 14px 0 18px;
+}
+
+.filter-btn {
+    padding: 8px 12px;
+    background: #545a46;
+    color: #d7ccb0;
+}
+
+.filter-btn.active {
+    background: #b68b55;
+    color: #1b160f;
+}
+
+.mission-delete {
+    position: relative;
+    z-index: 3;
+    align-self: center;
+    padding: 8px 10px;
+    margin-left: 10px;
+    font-size: 0.72rem;
+}
+
+.todo-error,
+.todo-empty {
+    padding: 14px;
+    margin: 12px 0;
+    border: 2px solid #312b24;
+    background: rgba(18, 17, 14, 0.92);
+    color: #d7ccb0;
+    font-weight: 800;
+}
+
 /* Responsive */
 
 @media (max-width: 900px) {
@@ -920,6 +999,16 @@
 
     .mission-card {
         grid-template-columns: 28px 1fr;
+    }
+
+    .mission-input-row {
+        grid-template-columns: 1fr;
+    }
+
+    .mission-delete {
+        width: 100%;
+        margin-left: 0;
+        margin-top: 8px;
     }
 
     .stamp {

@@ -1,5 +1,10 @@
 @page "/home"
 
+@inject HttpClient Http
+@inject IJSRuntime JS
+@inject NavigationManager Navigation
+@using System.ComponentModel.DataAnnotations
+
 <PageTitle>LAST SURVIVAL - SHELTER DOSSIER</PageTitle>
 
 <div class="bunker-terminal">
@@ -151,42 +156,107 @@
     <footer class="mission-log">
         <div class="log-header">
             <span>MISSION LOG</span>
-            <small>오늘의 생존 미션을 완료하고 다음 구역 진입 준비</small>
+            <small>카테고리별 생존 미션을 등록하고 관리합니다.</small>
         </div>
 
-        <div class="log-container">
-            @foreach (var todo in Todos)
-            {
-                <article class="mission-card @(todo.IsDone ? "locked" : "")">
-                    <label class="checkbox-container">
-                        <input type="checkbox"
-                               checked="@todo.IsDone"
-                               disabled="@todo.IsDone"
-                               @onchange="async () => await CompleteTodo(todo)" />
-                        <span class="checkmark"></span>
-                    </label>
+        <EditForm Model="@newTodo" OnValidSubmit="@AddTodo" FormName="todo-create" class="mission-form">
+            <DataAnnotationsValidator />
 
-                    <div class="mission-details">
-                        <div class="mission-top">
-                            <span class="m-cat @GetCategoryClass(todo.Category)">
-                                @GetCategoryLabel(todo.Category)
-                            </span>
+            <div class="mission-input-row">
+                <InputText class="mission-input"
+                        placeholder="새 미션을 입력하세요"
+                        @bind-Value="newTodo.Title"
+                        disabled="@isLoading" />
 
-                            <span class="m-reward">
-                                @GetRewardText(todo.Category)
-                            </span>
-                        </div>
-
-                        <div class="m-title">@todo.Title</div>
-                    </div>
-
-                    @if (todo.IsDone)
+                <InputSelect class="mission-category"
+                            @bind-Value="newTodo.Category"
+                            disabled="@isLoading">
+                    @foreach (var category in Categories)
                     {
-                        <div class="stamp">SECURED</div>
+                        <option value="@category">@GetCategoryLabel(category)</option>
                     }
-                </article>
+                </InputSelect>
+
+                <button type="submit" class="mission-add" disabled="@isLoading">
+                    ADD
+                </button>
+            </div>
+
+            <ValidationMessage For="@(() => newTodo.Title)" />
+        </EditForm>
+
+        <div class="category-filter">
+            <button type="button"
+                    class="filter-btn @(selectedCategory == "전체" ? "active" : "")"
+                    @onclick="@(() => SelectCategory("전체"))">
+                전체
+            </button>
+
+            @foreach (var category in Categories)
+            {
+                <button type="button"
+                        class="filter-btn @(selectedCategory == category ? "active" : "")"
+                        @onclick="@(() => SelectCategory(category))">
+                    @GetCategoryLabel(category)
+                </button>
             }
         </div>
+
+        @if (!string.IsNullOrWhiteSpace(todoErrorMessage))
+        {
+            <div class="todo-error">@todoErrorMessage</div>
+        }
+
+        @if (isLoading)
+        {
+            <div class="todo-empty">MISSION DATA LOADING...</div>
+        }
+        else if (!FilteredTodos.Any())
+        {
+            <div class="todo-empty">등록된 미션이 없습니다.</div>
+        }
+        else
+        {
+            <div class="log-container">
+                @foreach (var todo in FilteredTodos)
+                {
+                    <article class="mission-card @(todo.IsCompleted ? "locked" : "")">
+                        <label class="checkbox-container">
+                            <input type="checkbox"
+                                checked="@todo.IsCompleted"
+                                @onchange="async e => await ToggleTodoCompleted(todo, e.Value is bool checkedValue && checkedValue)" />
+                            <span class="checkmark"></span>
+                        </label>
+
+                        <div class="mission-details">
+                            <div class="mission-top">
+                                <span class="m-cat @GetCategoryClass(todo.Category)">
+                                    @GetCategoryLabel(todo.Category)
+                                </span>
+
+                                <span class="m-reward">
+                                    @todo.CreatedAt.ToLocalTime().ToString("yyyy-MM-dd")
+                                </span>
+                            </div>
+
+                            <div class="m-title">@todo.Title</div>
+                        </div>
+
+                        <button type="button"
+                                class="mission-delete"
+                                title="삭제"
+                                @onclick="async () => await DeleteTodo(todo.Id)">
+                            DELETE
+                        </button>
+
+                        @if (todo.IsCompleted)
+                        {
+                            <div class="stamp">SECURED</div>
+                        }
+                    </article>
+                }
+            </div>
+        }
     </footer>
 
     @* Reward popup *@
@@ -200,7 +270,11 @@
 </div>
 
 @code {
+    // =========================
     // Character state
+    // 추후 User / Character 테이블과 연결 가능
+    // =========================
+
     private int Level = 1;
 
     private int Hp = 60;
@@ -217,36 +291,271 @@
 
     private string Title = "벙커 신입 생존자";
 
-    // UI state
-    private bool ShowRewardEffect = false;
-    private string EffectMessage = "";
-
     private int HpPercent => MaxHp == 0 ? 0 : Math.Clamp(Hp * 100 / MaxHp, 0, 100);
     private int ExpPercent => MaxExp == 0 ? 0 : Math.Clamp(Exp * 100 / MaxExp, 0, 100);
 
-    // Temporary mission data
-    private List<TodoItem> Todos = new()
+    // =========================
+    // Reward / effect state
+    // 현재는 유지만 하고 Todo 완료와 연결하지 않음
+    // 추후 Todo 완료 시 스탯 증가 개발 때 사용
+    // =========================
+
+    private bool ShowRewardEffect = false;
+    private string EffectMessage = "";
+
+    // =========================
+    // Todo state
+    // =========================
+
+    private string? userId;
+    private bool isLoading = true;
+    private string? todoErrorMessage;
+
+    private string selectedCategory = "전체";
+
+    private TodoCreateModel newTodo = new();
+
+    private List<TodoItemDto> Todos = new();
+
+    private static readonly string[] Categories =
     {
-        new TodoItem { Title = "구역 순찰 완료", Category = "운동", IsDone = false },
-        new TodoItem { Title = "물자 목록 정리", Category = "업무", IsDone = false },
-        new TodoItem { Title = "생존 매뉴얼 숙지", Category = "자기개발", IsDone = false },
-        new TodoItem { Title = "벙커 청소", Category = "일상", IsDone = false },
+        "운동",
+        "업무",
+        "자기개발",
+        "일상",
+        "기타"
     };
 
-    // Mission completion
-    private async Task CompleteTodo(TodoItem item)
+    private IEnumerable<TodoItemDto> FilteredTodos =>
+        selectedCategory == "전체"
+            ? Todos
+            : Todos.Where(todo => todo.Category == selectedCategory);
+
+    // =========================
+    // Initial load
+    // sessionStorage 접근 때문에 OnAfterRenderAsync 사용
+    // =========================
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        if (item.IsDone)
+        if (!firstRender)
         {
             return;
         }
 
-        item.IsDone = true;
+        userId = await JS.InvokeAsync<string?>(
+            "sessionStorage.getItem",
+            "todoRpg_user_id"
+        );
 
+        if (string.IsNullOrWhiteSpace(userId))
+        {
+            Navigation.NavigateTo("/login", forceLoad: true);
+            return;
+        }
+
+        await LoadTodos();
+
+        await InvokeAsync(StateHasChanged);
+    }
+
+    // =========================
+    // Todo API
+    // =========================
+
+    private async Task LoadTodos()
+    {
+        if (string.IsNullOrWhiteSpace(userId))
+        {
+            return;
+        }
+
+        isLoading = true;
+        todoErrorMessage = null;
+
+        try
+        {
+            var encodedUserId = Uri.EscapeDataString(userId);
+
+            Todos = await Http.GetFromJsonAsync<List<TodoItemDto>>(
+                $"api/Todo/user/{encodedUserId}"
+            ) ?? new List<TodoItemDto>();
+        }
+        catch (Exception ex)
+        {
+            todoErrorMessage = $"Todo 목록을 불러오지 못했습니다: {ex.Message}";
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private async Task AddTodo()
+    {
+        if (string.IsNullOrWhiteSpace(userId))
+        {
+            Navigation.NavigateTo("/login", forceLoad: true);
+            return;
+        }
+
+        todoErrorMessage = null;
+
+        var request = new CreateTodoRequest
+        {
+            UserId = userId,
+            Title = newTodo.Title.Trim(),
+            Category = newTodo.Category
+        };
+
+        try
+        {
+            var response = await Http.PostAsJsonAsync("api/Todo", request);
+
+            if (!response.IsSuccessStatusCode)
+            {
+                var responseText = await response.Content.ReadAsStringAsync();
+
+                todoErrorMessage = string.IsNullOrWhiteSpace(responseText)
+                    ? "Todo 추가에 실패했습니다."
+                    : responseText.Trim('"');
+
+                return;
+            }
+
+            var createdTodo = await response.Content.ReadFromJsonAsync<TodoItemDto>();
+
+            if (createdTodo != null)
+            {
+                Todos.Insert(0, createdTodo);
+            }
+            else
+            {
+                await LoadTodos();
+            }
+
+            newTodo = new TodoCreateModel();
+        }
+        catch (Exception ex)
+        {
+            todoErrorMessage = $"Todo 추가 중 오류가 발생했습니다: {ex.Message}";
+        }
+    }
+
+    private async Task ToggleTodoCompleted(TodoItemDto todo, bool isCompleted)
+    {
+        if (string.IsNullOrWhiteSpace(userId))
+        {
+            Navigation.NavigateTo("/login", forceLoad: true);
+            return;
+        }
+
+        var previousValue = todo.IsCompleted;
+
+        // 먼저 UI에 반영
+        todo.IsCompleted = isCompleted;
+        todoErrorMessage = null;
+
+        try
+        {
+            var request = new SetTodoCompletedRequest
+            {
+                UserId = userId,
+                IsCompleted = isCompleted
+            };
+
+            var response = await Http.PatchAsJsonAsync(
+                $"api/Todo/{todo.Id}/completed",
+                request
+            );
+
+            if (!response.IsSuccessStatusCode)
+            {
+                todo.IsCompleted = previousValue;
+
+                var responseText = await response.Content.ReadAsStringAsync();
+
+                todoErrorMessage = string.IsNullOrWhiteSpace(responseText)
+                    ? "Todo 상태 변경에 실패했습니다."
+                    : responseText.Trim('"');
+
+                return;
+            }
+
+            // 추후 개발 위치:
+            // 여기서 isCompleted == true일 때 카테고리별 스탯 증가를 연결하면 됨.
+            //
+            // if (isCompleted && !previousValue)
+            // {
+            //     await ApplyTodoReward(todo);
+            // }
+        }
+        catch (Exception ex)
+        {
+            todo.IsCompleted = previousValue;
+            todoErrorMessage = $"Todo 상태 변경 중 오류가 발생했습니다: {ex.Message}";
+        }
+    }
+
+    private async Task DeleteTodo(int id)
+    {
+        if (string.IsNullOrWhiteSpace(userId))
+        {
+            Navigation.NavigateTo("/login", forceLoad: true);
+            return;
+        }
+
+        todoErrorMessage = null;
+
+        try
+        {
+            var encodedUserId = Uri.EscapeDataString(userId);
+
+            var response = await Http.DeleteAsync(
+                $"api/Todo/{id}?userId={encodedUserId}"
+            );
+
+            if (!response.IsSuccessStatusCode)
+            {
+                var responseText = await response.Content.ReadAsStringAsync();
+
+                todoErrorMessage = string.IsNullOrWhiteSpace(responseText)
+                    ? "Todo 삭제에 실패했습니다."
+                    : responseText.Trim('"');
+
+                return;
+            }
+
+            var target = Todos.FirstOrDefault(todo => todo.Id == id);
+
+            if (target != null)
+            {
+                Todos.Remove(target);
+            }
+        }
+        catch (Exception ex)
+        {
+            todoErrorMessage = $"Todo 삭제 중 오류가 발생했습니다: {ex.Message}";
+        }
+    }
+
+    private void SelectCategory(string category)
+    {
+        selectedCategory = category;
+    }
+
+    // =========================
+    // Future reward logic
+    // 현재는 호출하지 않음
+    // 추후 Todo 완료 시 스탯 증가 개발 때 활성화
+    // =========================
+
+    private async Task ApplyTodoReward(TodoItemDto todo)
+    {
         Exp += 15;
         Supply += 10;
 
-        switch (item.Category)
+        switch (todo.Category)
         {
             case "운동":
                 Strength += 1;
@@ -286,17 +595,25 @@
         }
 
         ShowRewardEffect = true;
+        await InvokeAsync(StateHasChanged);
+
         await Task.Delay(1500);
+
         ShowRewardEffect = false;
+        await InvokeAsync(StateHasChanged);
     }
 
+    // =========================
     // Display helpers
+    // =========================
+
     private string GetCategoryLabel(string category) => category switch
     {
         "운동" => "PATROL",
         "업무" => "SUPPLY",
         "자기개발" => "INTEL",
         "일상" => "SHELTER",
+        "기타" => "CUSTOM",
         _ => "CUSTOM"
     };
 
@@ -306,6 +623,7 @@
         "업무" => "supply",
         "자기개발" => "intel",
         "일상" => "shelter",
+        "기타" => "custom",
         _ => "custom"
     };
 
@@ -318,11 +636,51 @@
         _ => "+LUK"
     };
 
-    // View model
-    private class TodoItem
+    // =========================
+    // View models
+    // =========================
+
+    private sealed class TodoCreateModel
     {
-        public string Title { get; set; } = "";
-        public string Category { get; set; } = "";
-        public bool IsDone { get; set; }
+        [Required(ErrorMessage = "내용을 입력하세요.")]
+        [StringLength(100, MinimumLength = 1, ErrorMessage = "내용은 1~100자여야 합니다.")]
+        public string Title { get; set; } = string.Empty;
+
+        public string Category { get; set; } = "일상";
+    }
+
+    private sealed class TodoItemDto
+    {
+        public int Id { get; set; }
+
+        public string UserId { get; set; } = string.Empty;
+
+        public string Title { get; set; } = string.Empty;
+
+        public bool IsCompleted { get; set; }
+
+        public string Category { get; set; } = "일상";
+
+        public DateTime CreatedAt { get; set; }
+
+        public DateTime? DueDate { get; set; }
+    }
+
+    private sealed class CreateTodoRequest
+    {
+        public string UserId { get; set; } = string.Empty;
+
+        public string Title { get; set; } = string.Empty;
+
+        public string Category { get; set; } = "일상";
+
+        public DateTime? DueDate { get; set; }
+    }
+
+    private sealed class SetTodoCompletedRequest
+    {
+        public string UserId { get; set; } = string.Empty;
+
+        public bool IsCompleted { get; set; }
     }
 }

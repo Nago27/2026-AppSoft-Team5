@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using System.ComponentModel.DataAnnotations;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using TodoRPG.Api.Data;
 using TodoRPG.Api.Models;
@@ -11,81 +12,242 @@ namespace TodoRPG.Api.Controllers
     {
         private readonly AppDbContext _context;
 
-        // 생성자: Program.cs에서 만들어둔 DB 다리(AppDbContext)를 가져와서 연결합니다.
+        private static readonly HashSet<string> AllowedCategories = new(StringComparer.Ordinal)
+        {
+            "운동",
+            "업무",
+            "자기개발",
+            "일상",
+            "기타"
+        };
+
         public TodoController(AppDbContext context)
         {
             _context = context;
         }
 
-        // 1. 모든 할 일 가져오기 (GET 요청)
-        [HttpGet]
-        public async Task<ActionResult<IEnumerable<TodoItem>>> GetTodoItems()
+        // GET: api/Todo/user/testuser
+        // GET: api/Todo/user/testuser?category=운동
+        [HttpGet("user/{userId}")]
+        public async Task<ActionResult<IEnumerable<TodoItem>>> GetTodoItems(
+            string userId,
+            [FromQuery] string? category = null)
         {
-            // DB의 TodoItems 테이블에 있는 모든 데이터를 리스트 형태로 반환합니다.
-            return await _context.TodoItems.ToListAsync();
+            userId = userId.Trim();
+
+            if (string.IsNullOrWhiteSpace(userId))
+            {
+                return BadRequest("사용자 ID가 필요합니다.");
+            }
+
+            var userExists = await _context.Users.AnyAsync(user => user.Id == userId);
+
+            if (!userExists)
+            {
+                return NotFound("해당 사용자를 찾을 수 없습니다.");
+            }
+
+            var query = _context.TodoItems
+                .AsNoTracking()
+                .Where(todo => todo.UserId == userId);
+
+            if (!string.IsNullOrWhiteSpace(category) && category != "전체")
+            {
+                query = query.Where(todo => todo.Category == category.Trim());
+            }
+
+            var todos = await query
+                .OrderBy(todo => todo.IsCompleted)
+                .ThenByDescending(todo => todo.CreatedAt)
+                .ToListAsync();
+
+            return Ok(todos);
         }
 
-        // 2. 새로운 할 일 추가하기 (POST 요청)
+        // POST: api/Todo
         [HttpPost]
-        public async Task<ActionResult<TodoItem>> PostTodoItem(TodoItem todoItem)
+        public async Task<ActionResult<TodoItem>> PostTodoItem(CreateTodoRequest request)
         {
-            // 프론트엔드에서 보낸 할 일 데이터를 DB에 추가합니다.
-            _context.TodoItems.Add(todoItem);
+            var userId = request.UserId.Trim();
+            var title = request.Title.Trim();
+            var category = NormalizeCategory(request.Category);
 
-            // 변경사항을 실제 DB 파일에 저장합니다.
+            if (string.IsNullOrWhiteSpace(userId))
+            {
+                return BadRequest("사용자 ID가 필요합니다.");
+            }
+
+            if (string.IsNullOrWhiteSpace(title))
+            {
+                return BadRequest("할 일 제목을 입력하세요.");
+            }
+
+            var userExists = await _context.Users.AnyAsync(user => user.Id == userId);
+
+            if (!userExists)
+            {
+                return NotFound("해당 사용자를 찾을 수 없습니다.");
+            }
+
+            var todoItem = new TodoItem
+            {
+                UserId = userId,
+                Title = title,
+                Category = category,
+                IsCompleted = false,
+                CreatedAt = DateTime.UtcNow,
+                DueDate = request.DueDate
+            };
+
+            _context.TodoItems.Add(todoItem);
             await _context.SaveChangesAsync();
 
-            // 저장 성공 시, 저장된 데이터와 함께 성공 상태 코드(201 Created)를 반환합니다.
-            return CreatedAtAction(nameof(GetTodoItems), new { id = todoItem.Id }, todoItem);
+            return CreatedAtAction(
+                nameof(GetTodoItems),
+                new { userId = todoItem.UserId },
+                todoItem
+            );
         }
 
-        // 3. 할 일 수정하기 (PUT: api/Todo/5)
+        // PUT: api/Todo/5
         [HttpPut("{id}")]
-        public async Task<IActionResult> PutTodoItem(int id, TodoItem todoItem)
+        public async Task<IActionResult> PutTodoItem(int id, UpdateTodoRequest request)
         {
-            // URL로 전달된 id와 본문(Body)에 담긴 데이터의 id가 다르면 잘못된 요청입니다.
-            if (id != todoItem.Id)
+            var userId = request.UserId.Trim();
+            var title = request.Title.Trim();
+            var category = NormalizeCategory(request.Category);
+
+            if (string.IsNullOrWhiteSpace(userId))
             {
-                return BadRequest();
+                return BadRequest("사용자 ID가 필요합니다.");
             }
 
-            // DB에게 이 데이터가 수정되었다고 알려줍니다.
-            _context.Entry(todoItem).State = EntityState.Modified;
-
-            try
+            if (string.IsNullOrWhiteSpace(title))
             {
-                await _context.SaveChangesAsync();
-            }
-            catch (DbUpdateConcurrencyException)
-            {
-                // 수정하려는 사이에 데이터가 사라졌는지 확인합니다.
-                if (!_context.TodoItems.Any(e => e.Id == id))
-                {
-                    return NotFound();
-                }
-                else { throw; }
+                return BadRequest("할 일 제목을 입력하세요.");
             }
 
-            return NoContent(); // 성공했지만 딱히 돌려줄 데이터는 없을 때 보냅니다.
-        }
-
-        // 4. 할 일 삭제하기 (DELETE: api/Todo/5)
-        [HttpDelete("{id}")]
-        public async Task<IActionResult> DeleteTodoItem(int id)
-        {
-            // 먼저 삭제할 대상을 DB에서 찾습니다.
-            var todoItem = await _context.TodoItems.FindAsync(id);
+            var todoItem = await _context.TodoItems
+                .FirstOrDefaultAsync(todo => todo.Id == id && todo.UserId == userId);
 
             if (todoItem == null)
             {
-                return NotFound(); // 찾는 번호가 없으면 404 에러!
+                return NotFound("해당 할 일을 찾을 수 없습니다.");
             }
 
-            // 찾은 데이터를 삭제 목록에 넣고 저장합니다.
+            todoItem.Title = title;
+            todoItem.Category = category;
+            todoItem.IsCompleted = request.IsCompleted;
+            todoItem.DueDate = request.DueDate;
+
+            await _context.SaveChangesAsync();
+
+            return NoContent();
+        }
+
+        // PATCH: api/Todo/5/completed
+        [HttpPatch("{id}/completed")]
+        public async Task<IActionResult> SetTodoCompleted(int id, SetTodoCompletedRequest request)
+        {
+            var userId = request.UserId.Trim();
+
+            if (string.IsNullOrWhiteSpace(userId))
+            {
+                return BadRequest("사용자 ID가 필요합니다.");
+            }
+
+            var todoItem = await _context.TodoItems
+                .FirstOrDefaultAsync(todo => todo.Id == id && todo.UserId == userId);
+
+            if (todoItem == null)
+            {
+                return NotFound("해당 할 일을 찾을 수 없습니다.");
+            }
+
+            todoItem.IsCompleted = request.IsCompleted;
+
+            await _context.SaveChangesAsync();
+
+            return NoContent();
+        }
+
+        // DELETE: api/Todo/5?userId=testuser
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> DeleteTodoItem(
+            int id,
+            [FromQuery] string userId)
+        {
+            userId = userId.Trim();
+
+            if (string.IsNullOrWhiteSpace(userId))
+            {
+                return BadRequest("사용자 ID가 필요합니다.");
+            }
+
+            var todoItem = await _context.TodoItems
+                .FirstOrDefaultAsync(todo => todo.Id == id && todo.UserId == userId);
+
+            if (todoItem == null)
+            {
+                return NotFound("해당 할 일을 찾을 수 없습니다.");
+            }
+
             _context.TodoItems.Remove(todoItem);
             await _context.SaveChangesAsync();
 
             return NoContent();
         }
+
+        private static string NormalizeCategory(string? category)
+        {
+            if (string.IsNullOrWhiteSpace(category))
+            {
+                return "일상";
+            }
+
+            var trimmed = category.Trim();
+
+            return AllowedCategories.Contains(trimmed)
+                ? trimmed
+                : "기타";
+        }
+    }
+
+    public sealed class CreateTodoRequest
+    {
+        [Required]
+        public string UserId { get; set; } = string.Empty;
+
+        [Required]
+        [StringLength(100, MinimumLength = 1)]
+        public string Title { get; set; } = string.Empty;
+
+        public string Category { get; set; } = "일상";
+
+        public DateTime? DueDate { get; set; }
+    }
+
+    public sealed class UpdateTodoRequest
+    {
+        [Required]
+        public string UserId { get; set; } = string.Empty;
+
+        [Required]
+        [StringLength(100, MinimumLength = 1)]
+        public string Title { get; set; } = string.Empty;
+
+        public string Category { get; set; } = "일상";
+
+        public bool IsCompleted { get; set; }
+
+        public DateTime? DueDate { get; set; }
+    }
+
+    public sealed class SetTodoCompletedRequest
+    {
+        [Required]
+        public string UserId { get; set; } = string.Empty;
+
+        public bool IsCompleted { get; set; }
     }
 }

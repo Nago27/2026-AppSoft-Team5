@@ -15,5 +15,24 @@ namespace TodoRPG.Api.Data
         public DbSet<TodoItem> TodoItems { get; set; }
 
         public DbSet<User> Users { get; set; } // ID, 닉네임, PW 담은 Users 테이블 
+
+        protected override void OnModelCreating(ModelBuilder modelBuilder)
+        {
+            base.OnModelCreating(modelBuilder);
+
+            modelBuilder.Entity<TodoItem>()
+                .HasOne(todo => todo.User)
+                .WithMany()
+                .HasForeignKey(todo => todo.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<TodoItem>()
+                .HasIndex(todo => new
+                {
+                    todo.UserId,
+                    todo.IsCompleted,
+                    todo.CreatedAt
+                });
+        }
     }
 }
