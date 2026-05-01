@@ -426,6 +426,6 @@ FodyWeavers.xsd
 
 # database ignore
 *.db
-TodoRPG/TodoRPG.Api/todorpg.db
 TodoRPG/TodoRPG.Api/todorpg.db-shm
 TodoRPG/TodoRPG.Api/todorpg.db-wal
+TodoRPG/TodoRPG.Api/todorpg.db

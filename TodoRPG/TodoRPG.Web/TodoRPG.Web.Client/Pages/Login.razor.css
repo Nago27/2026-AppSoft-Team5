@@ -454,99 +454,6 @@
     left: 24px;
 }
 
-.door-player {
-    position: absolute;
-    left: 50%;
-    bottom: 12%;
-    z-index: 8;
-
-    width: 56px;
-    height: 118px;
-    transform: translateX(-50%) translateY(0) scale(1);
-    opacity: 0;
-
-    animation: player-enter-door 1.6s ease-in-out 0.62s forwards;
-}
-
-.player-head {
-    position: absolute;
-    left: 50%;
-    top: 0;
-
-    width: 34px;
-    height: 34px;
-    transform: translateX(-50%);
-
-    background:
-        radial-gradient(circle at 38% 35%, #c7b895, #6f654f 72%);
-
-    border: 4px solid #11100d;
-    border-radius: 10px;
-    box-shadow: inset 0 -8px 0 rgba(0,0,0,0.24);
-}
-
-.player-head::before,
-.player-head::after {
-    content: "";
-    position: absolute;
-    top: 11px;
-    width: 7px;
-    height: 7px;
-
-    background: #090807;
-    border-radius: 50%;
-}
-
-.player-head::before {
-    left: 7px;
-}
-
-.player-head::after {
-    right: 7px;
-}
-
-.player-body {
-    position: absolute;
-    left: 50%;
-    top: 34px;
-
-    width: 42px;
-    height: 78px;
-    transform: translateX(-50%);
-
-    background:
-        linear-gradient(90deg, rgba(0,0,0,0.28) 0 18%, transparent 18% 82%, rgba(0,0,0,0.28) 82%),
-        #545a46;
-
-    border: 4px solid #11100d;
-    border-radius: 8px 8px 4px 4px;
-    box-shadow:
-        inset 0 -14px 18px rgba(0,0,0,0.22),
-        0 8px 0 rgba(0,0,0,0.24);
-}
-
-.player-body::before,
-.player-body::after {
-    content: "";
-    position: absolute;
-    top: 18px;
-    width: 14px;
-    height: 48px;
-
-    background: #464c3a;
-    border: 3px solid #11100d;
-}
-
-.player-body::before {
-    left: -18px;
-    transform: rotate(9deg);
-}
-
-.player-body::after {
-    right: -18px;
-    transform: rotate(-9deg);
-}
-
 .floor-light {
     position: absolute;
     left: 50%;
@@ -637,34 +544,12 @@
     }
 }
 
-@keyframes player-enter-door {
-    0% {
-        opacity: 0;
-        transform: translateX(-50%) translateY(18px) scale(1.05);
-    }
-
-    16% {
-        opacity: 1;
-    }
-
-    55% {
-        opacity: 1;
-        transform: translateX(-50%) translateY(-54px) scale(0.74);
-    }
-
-    100% {
-        opacity: 0;
-        transform: translateX(-50%) translateY(-168px) scale(0.26);
-    }
-}
-
 @media (prefers-reduced-motion: reduce) {
     .login-card.is-opening,
     .door-transition,
     .door-left,
     .door-right,
     .door-light,
-    .door-player,
     .floor-light {
         animation-duration: 0.01ms;
         animation-delay: 0ms;

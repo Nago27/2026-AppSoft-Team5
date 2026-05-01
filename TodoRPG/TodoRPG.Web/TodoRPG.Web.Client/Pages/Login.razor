@@ -52,6 +52,7 @@
     </EditForm>
 </div>
 
+<!-- login 성공시 연출 -->
 @if (isOpening)
 {
     <div class="door-transition" aria-hidden="true">
@@ -70,11 +71,6 @@
                 <span></span>
             </div>
 
-            <div class="door-player">
-                <div class="player-head"></div>
-                <div class="player-body"></div>
-            </div>
-
             <div class="floor-light"></div>
         </div>
     </div>
@@ -85,6 +81,7 @@
     private string? errorMessage;
     private bool isOpening;
     private bool isSubmitting;
+    private bool shouldNavigateHome;
 
     private async Task HandleLogin()
     {
@@ -132,10 +129,9 @@
             );
 
             isOpening = true;
+            shouldNavigateHome = true;
 
-            await Task.Delay(2300);
-
-            Navigation.NavigateTo("/home");
+            return;
         }
         catch (Exception ex)
         {
@@ -157,5 +153,19 @@
 
         [Required(ErrorMessage = "비밀번호를 입력하세요.")]
         public string Password { get; set; } = string.Empty;
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!shouldNavigateHome)
+        {
+            return;
+        }
+
+        shouldNavigateHome = false;
+
+        await Task.Delay(2300);
+
+        Navigation.NavigateTo("/home");
     }
 }
