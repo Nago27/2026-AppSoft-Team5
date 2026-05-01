@@ -886,39 +886,87 @@
 
 /* todo style */
 .mission-form {
-    margin: 18px 0;
+    margin: 16px 0;
+    padding: 14px;
+    background:
+        repeating-linear-gradient(
+            45deg,
+            rgba(255,255,255,0.018) 0px,
+            rgba(255,255,255,0.018) 1px,
+            transparent 1px,
+            transparent 7px
+        ),
+        linear-gradient(180deg, #8f846f 0%, #756a58 100%);
+    border: 2px solid #2b241d;
+    border-left: 8px solid var(--rust);
+    box-shadow:
+        4px 4px 12px rgba(0,0,0,0.22),
+        inset 0 0 18px rgba(50, 36, 24, 0.2);
 }
 
 .mission-input-row {
     display: grid;
-    grid-template-columns: 1fr 160px 110px;
+    grid-template-columns: 1fr 150px 90px;
     gap: 10px;
 }
 
-.mission-input,
-.mission-category {
+.mission-form ::deep .mission-input,
+.mission-form ::deep .mission-category {
     min-height: 42px;
     padding: 10px 12px;
     color: #d7ccb0;
-    background: #12110e;
-    border: 2px solid #312b24;
-    font-family: "Courier New", monospace;
+    background:
+        repeating-linear-gradient(
+            0deg,
+            rgba(255,255,255,0.022) 0px,
+            rgba(255,255,255,0.022) 1px,
+            transparent 1px,
+            transparent 6px
+        ),
+        linear-gradient(180deg, #12110e 0%, #1c1813 100%);
+    border: 2px solid #110f0c;
+    border-radius: 0;
+    box-shadow:
+        inset 0 0 12px rgba(0,0,0,0.48),
+        0 0 0 1px rgba(255,255,255,0.035);
+    font-family: "Courier New", "Malgun Gothic", monospace;
+    font-weight: 700;
 }
 
-.mission-input:focus,
-.mission-category:focus {
+.mission-form ::deep .mission-input::placeholder {
+    color: rgba(215, 204, 176, 0.42);
+}
+
+.mission-form ::deep .mission-input:focus,
+.mission-form ::deep .mission-category:focus {
     outline: none;
-    border-color: #936245;
+    border-color: var(--rust-soft);
+    box-shadow:
+        inset 0 0 14px rgba(0,0,0,0.6),
+        0 0 0 2px rgba(147, 98, 69, 0.34);
 }
 
-.mission-add,
-.mission-delete,
-.filter-btn {
-    border: 2px solid #20160f;
-    background: #936245;
+.mission-add {
+    min-height: 42px;
     color: #1b160f;
-    font-weight: 900;
+    background:
+        radial-gradient(circle at 18% 18%, rgba(255,255,255,0.13), transparent 20%),
+        linear-gradient(180deg, #b68b55 0%, #936245 56%, #74432a 100%);
+    border: 2px solid #20160f;
+    border-radius: 0;
+    box-shadow:
+        0 4px 0 rgba(20, 14, 10, 0.85),
+        inset 0 0 0 1px rgba(255,255,255,0.08),
+        inset 0 -16px 18px rgba(0,0,0,0.18);
+    font-family: "Courier New", monospace;
+    font-weight: 950;
+    letter-spacing: 1px;
     cursor: pointer;
+}
+
+.mission-add:hover:not(:disabled) {
+    filter: brightness(1.07);
+    transform: translateY(-1px);
 }
 
 .mission-add:disabled {

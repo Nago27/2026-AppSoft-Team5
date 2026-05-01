@@ -242,16 +242,18 @@
                             <div class="m-title">@todo.Title</div>
                         </div>
 
-                        <button type="button"
-                                class="mission-delete"
-                                title="삭제"
-                                @onclick="async () => await DeleteTodo(todo.Id)">
-                            DELETE
-                        </button>
-
                         @if (todo.IsCompleted)
                         {
                             <div class="stamp">SECURED</div>
+                        }
+                        else
+                        {
+                            <button type="button"
+                                    class="mission-delete"
+                                    title="삭제"
+                                    @onclick="async () => await DeleteTodo(todo.Id)">
+                                DELETE
+                            </button>
                         }
                     </article>
                 }
