@@ -269,21 +269,21 @@
 .login-row {
     display: flex;
     justify-content: flex-end;
-    margin-top: 2px;
+    margin-top: 10px;
 }
 
 .login-row a {
-    color: #2f7aa7;
+    color: #74432a;
     font-size: 0.82rem;
     font-weight: 900;
     text-decoration: none;
     letter-spacing: 0.4px;
-    border-bottom: 2px solid rgba(47, 122, 167, 0.35);
+    border-bottom: 2px solid #74432a;
 }
 
 .login-row a:hover {
-    color: #1f5f8a;
-    border-bottom-color: #1f5f8a;
+    color: #74432a;
+    border-bottom-color: #74432a;
 }
 
 @media (max-width: 520px) {

@@ -75,9 +75,57 @@ namespace TodoRPG.Api.Controllers
             await _context.SaveChangesAsync();
 
             return CreatedAtAction(nameof(GetUser), new { id = user.Id }, user);
+        }
+
+        // 4. 로그인: ID와 비밀번호가 DB에 존재하는지 확인
+        [HttpPost("login")]
+        public async Task<IActionResult> Login([FromBody] Dictionary<string, string>? request)
+        {
+            if (request == null)
+            {
+                return BadRequest("로그인 정보가 없습니다.");
+            }
+
+            var id = request
+                .FirstOrDefault(x => string.Equals(x.Key, "id", StringComparison.OrdinalIgnoreCase))
+                .Value?
+                .Trim();
+
+            var password = request
+                .FirstOrDefault(x => string.Equals(x.Key, "password", StringComparison.OrdinalIgnoreCase))
+                .Value;
+
+            if (string.IsNullOrWhiteSpace(id) || string.IsNullOrWhiteSpace(password))
+            {
+                return BadRequest("ID와 비밀번호를 입력하세요.");
+            }
+
+            var user = await _context.Users
+                .AsNoTracking()
+                .FirstOrDefaultAsync(u => u.Id == id && u.Password == password);
+
+            if (user == null)
+            {
+                return Unauthorized("ID 또는 비밀번호가 올바르지 않습니다.");
+            }
+
+            return Ok(new
+            {
+                user.Id,
+                user.Nickname,
+                user.Level,
+                user.Experience
+            });
+        }
+
+        private static string? GetRequestValue(Dictionary<string, string> request, string key)
+        {
+            return request
+                .FirstOrDefault(x => string.Equals(x.Key, key, StringComparison.OrdinalIgnoreCase))
+                .Value;
         }          
 
-        // 4. 비밀번호 수정 (Update)
+        // 5. 비밀번호 수정 (Update)
         [HttpPut("{id}/change-password")]
         public async Task<IActionResult> UpdatePassword(string id, [FromBody] string newPassword)
         {
@@ -108,7 +156,7 @@ namespace TodoRPG.Api.Controllers
             return Ok("비밀번호가 성공적으로 변경되었습니다.");
         }
 
-        // 5. 회원 탈퇴 (Delete)
+        // 6. 회원 탈퇴 (Delete)
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteUser(string id)
         {

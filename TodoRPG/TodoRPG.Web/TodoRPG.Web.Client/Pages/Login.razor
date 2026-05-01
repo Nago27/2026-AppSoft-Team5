@@ -1,14 +1,19 @@
 @page "/"
 @page "/login"
 @layout TodoRPG.Web.Client.Layout.LoginLayout
+@using System.ComponentModel.DataAnnotations
+@using System.Text
+@using System.Text.Json
+@inject HttpClient Http
 @inject NavigationManager Navigation
+@inject IJSRuntime JS
 
 <PageTitle>Login - TodoRPG</PageTitle>
 
 <div class="login-card @(isOpening ? "is-opening" : "")">
     <h1 class="login-title">TodoRPG</h1>
 
-    <EditForm Model="model" OnValidSubmit="HandleLogin" FormName="login" class="login-form">
+    <EditForm Model="@model" OnValidSubmit="@HandleLogin" FormName="login" class="login-form">
         <DataAnnotationsValidator />
 
         <div class="field">
@@ -17,7 +22,7 @@
                        class="form-control"
                        @bind-Value="model.Username"
                        autocomplete="username"
-                       disabled="@isOpening" />
+                       disabled="@(isOpening || isSubmitting)" />
             <ValidationMessage For="@(() => model.Username)" />
         </div>
 
@@ -28,17 +33,17 @@
                        class="form-control"
                        @bind-Value="model.Password"
                        autocomplete="current-password"
-                       disabled="@isOpening" />
+                       disabled="@(isOpening || isSubmitting)" />
             <ValidationMessage For="@(() => model.Password)" />
         </div>
 
-        @if (!string.IsNullOrEmpty(errorMessage))
+        @if (!string.IsNullOrWhiteSpace(errorMessage))
         {
             <div class="error">@errorMessage</div>
         }
 
-        <button type="submit" class="btn-login" disabled="@isOpening">
-            @(isOpening ? "Opening..." : "Login")
+        <button type="submit" class="btn-login" disabled="@(isOpening || isSubmitting)">
+            @(isOpening ? "Opening..." : isSubmitting ? "Checking..." : "Login")
         </button>
 
         <div class="signup-row">
@@ -79,32 +84,78 @@
     private LoginModel model = new();
     private string? errorMessage;
     private bool isOpening;
+    private bool isSubmitting;
 
     private async Task HandleLogin()
     {
-        if (isOpening)
+        if (isOpening || isSubmitting)
         {
             return;
         }
 
         errorMessage = null;
+        isSubmitting = true;
 
-        // 나중에 실제 로그인 API를 연결하면,
-        // 로그인 성공 판정 이후에만 아래 코드를 실행하면 됩니다.
-        isOpening = true;
+        try
+        {
+            var loginRequest = new
+            {
+                Id = model.Username.Trim(),
+                Password = model.Password
+            };
 
-        // CSS 애니메이션 재생 시간과 맞춤
-        await Task.Delay(2300);
+            var json = JsonSerializer.Serialize(loginRequest);
 
-        Navigation.NavigateTo("/home");
+            var content = new StringContent(
+                json,
+                Encoding.UTF8,
+                "application/json"
+            );
+
+            var response = await Http.PostAsync("api/User/login", content);
+
+            if (!response.IsSuccessStatusCode)
+            {
+                var responseText = await response.Content.ReadAsStringAsync();
+
+                errorMessage = string.IsNullOrWhiteSpace(responseText)
+                    ? "ID 또는 비밀번호가 올바르지 않습니다."
+                    : responseText.Trim('"');
+
+                return;
+            }
+
+            await JS.InvokeVoidAsync(
+                "sessionStorage.setItem",
+                "todoRpg_user_id",
+                model.Username.Trim()
+            );
+
+            isOpening = true;
+
+            await Task.Delay(2300);
+
+            Navigation.NavigateTo("/home");
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"API 연결 실패: {ex.Message}";
+        }
+        finally
+        {
+            if (!isOpening)
+            {
+                isSubmitting = false;
+            }
+        }
     }
 
     private sealed class LoginModel
     {
-        [System.ComponentModel.DataAnnotations.Required(ErrorMessage = "ID를 입력하세요.")]
+        [Required(ErrorMessage = "ID를 입력하세요.")]
         public string Username { get; set; } = string.Empty;
 
-        [System.ComponentModel.DataAnnotations.Required(ErrorMessage = "비밀번호를 입력하세요.")]
+        [Required(ErrorMessage = "비밀번호를 입력하세요.")]
         public string Password { get; set; } = string.Empty;
     }
 }
