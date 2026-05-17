@@ -1,0 +1,156 @@
+/* Added for Todo edit + due date UI after Home.razor is split into child components. */
+
+/* In global CSS, the old CSS-isolation ::deep selector does not work.
+   These selectors intentionally repeat the existing input style for real browser CSS. */
+.mission-form .mission-input,
+.mission-form .mission-category,
+.mission-form .mission-date,
+.mission-edit-form .mission-input,
+.mission-edit-form .mission-category,
+.mission-edit-form .mission-date {
+    min-height: 42px;
+    padding: 10px 12px;
+    color: #d7ccb0;
+    background:
+        repeating-linear-gradient(
+            0deg,
+            rgba(255,255,255,0.022) 0px,
+            rgba(255,255,255,0.022) 1px,
+            transparent 1px,
+            transparent 6px
+        ),
+        linear-gradient(180deg, #12110e 0%, #1c1813 100%);
+    border: 2px solid #110f0c;
+    border-radius: 0;
+    box-shadow:
+        inset 0 0 12px rgba(0,0,0,0.48),
+        0 0 0 1px rgba(255,255,255,0.035);
+    font-family: "Courier New", "Malgun Gothic", monospace;
+    font-weight: 700;
+}
+
+.mission-form .mission-input::placeholder,
+.mission-edit-form .mission-input::placeholder {
+    color: rgba(215, 204, 176, 0.42);
+}
+
+.mission-form .mission-input:focus,
+.mission-form .mission-category:focus,
+.mission-form .mission-date:focus,
+.mission-edit-form .mission-input:focus,
+.mission-edit-form .mission-category:focus,
+.mission-edit-form .mission-date:focus {
+    outline: none;
+    border-color: var(--rust-soft);
+    box-shadow:
+        inset 0 0 14px rgba(0,0,0,0.6),
+        0 0 0 2px rgba(147, 98, 69, 0.34);
+}
+
+.mission-input-row-with-date {
+    grid-template-columns: 1fr 150px 160px 90px;
+}
+
+.m-dates {
+    display: inline-flex;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: 6px;
+}
+
+.deadline-muted {
+    opacity: 0.62;
+}
+
+.deadline-active {
+    background: rgba(76, 112, 86, 0.28);
+    border-color: rgba(61, 91, 70, 0.5);
+}
+
+.deadline-overdue {
+    color: #d7ccb0;
+    background: rgba(139, 67, 58, 0.78);
+    border-color: rgba(55, 25, 20, 0.68);
+}
+
+.mission-actions {
+    display: inline-flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 8px;
+}
+
+.mission-edit,
+.mission-save,
+.mission-cancel {
+    position: relative;
+    z-index: 3;
+    align-self: center;
+    padding: 8px 10px;
+    font-size: 0.72rem;
+    font-family: "Courier New", monospace;
+    font-weight: 950;
+    letter-spacing: 1px;
+    cursor: pointer;
+    border: 2px solid #20160f;
+    border-radius: 0;
+    box-shadow:
+        0 3px 0 rgba(20, 14, 10, 0.72),
+        inset 0 0 0 1px rgba(255,255,255,0.06);
+}
+
+.mission-edit,
+.mission-save {
+    color: #1b160f;
+    background: linear-gradient(180deg, #b68b55 0%, #936245 56%, #74432a 100%);
+}
+
+.mission-cancel {
+    color: #d7ccb0;
+    background: linear-gradient(180deg, #545a46 0%, #3f4435 100%);
+}
+
+.mission-edit:hover,
+.mission-save:hover,
+.mission-cancel:hover {
+    filter: brightness(1.07);
+}
+
+.mission-edit-panel {
+    grid-column: 2 / -1;
+}
+
+.mission-card.editing {
+    align-items: start;
+}
+
+.mission-edit-form {
+    width: 100%;
+}
+
+.mission-edit-row {
+    display: grid;
+    grid-template-columns: 1fr 150px 160px 88px 108px;
+    gap: 10px;
+    align-items: center;
+}
+
+@media (max-width: 900px) {
+    .mission-input-row-with-date,
+    .mission-edit-row {
+        grid-template-columns: 1fr;
+    }
+
+    .mission-actions {
+        justify-content: flex-start;
+        margin-top: 8px;
+    }
+
+    .mission-edit-panel {
+        grid-column: 1 / -1;
+    }
+
+    .m-dates {
+        justify-content: flex-start;
+    }
+}

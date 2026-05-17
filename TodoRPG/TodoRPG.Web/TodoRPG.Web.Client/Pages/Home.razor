@@ -1,16 +1,18 @@
 @page "/home"
 
-@inject HttpClient Http
 @inject IJSRuntime JS
 @inject NavigationManager Navigation
-@using System.ComponentModel.DataAnnotations
+@inject TodoApiService TodoApi
+
+@using TodoRPG.Web.Client.Components.Home
+@using TodoRPG.Web.Client.Models
+@using TodoRPG.Web.Client.Services
 
 <PageTitle>LAST SURVIVAL - SHELTER DOSSIER</PageTitle>
 
 <div class="bunker-terminal">
     <div class="scanlines"></div>
 
-    @* Header *@
     <header class="terminal-header">
         <div>
             <div class="system-title">SHELTER SURVIVAL DOSSIER</div>
@@ -20,323 +22,50 @@
         <div class="resource-panel">
             <div class="res-item">
                 <span class="res-label">LEVEL</span>
-                <span class="res-value">@Level</span>
+                <span class="res-value">@Character.Level</span>
             </div>
 
             <div class="res-item">
                 <span class="res-label">SUPPLY</span>
-                <span class="res-value">@Supply</span>
+                <span class="res-value">@Character.Supply</span>
             </div>
         </div>
 
         <img src="/images/decals/classified-stamp.png" alt="CLASSIFIED" class="header-stamp" />
     </header>
 
-    @* Main content *@
     <main class="terminal-body">
-
-        @* Character view *@
-        <section class="monitor-section">
-            <div class="section-tag">FIELD VIEW</div>
-
-            <div class="monitor-content">
-                <div class="depth-indicator">B@(10 - Level)F / EXIT ROUTE</div>
-
-                <div class="character-container">
-                    <img src="/images/survivor.png"
-                         alt="Survivor character"
-                         class="survivor-character" />
-                    <div class="char-shadow"></div>
-                </div>
-
-                <div class="monitor-warning">LOW LIGHT / FILTER REQUIRED / AREA UNSTABLE</div>
-            </div>
-
-            <div class="survivor-note">
-                <strong>SUBJECT #0471</strong>
-                <span>@Title</span>
-            </div>
-        </section>
-
-        @* Status panel *@
-        <aside class="stats-aside">
-            <h2>SURVIVAL PARAMS</h2>
-
-            <div class="vitals-group">
-                <div class="vital-row">
-                    <div class="vital-info">
-                        <span class="vital-name">FILTER HP</span>
-                        <span class="vital-num">@Hp / @MaxHp</span>
-                    </div>
-
-                    <div class="gauge-container hp">
-                        <div class="gauge-fill" style="width: @(HpPercent)%"></div>
-                    </div>
-                </div>
-
-                <div class="vital-row">
-                    <div class="vital-info">
-                        <span class="vital-name">LOAD EXP</span>
-                        <span class="vital-num">@Exp / @MaxExp</span>
-                    </div>
-
-                    <div class="gauge-container exp">
-                        <div class="gauge-fill" style="width: @(ExpPercent)%"></div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="params-grid">
-
-                <div class="param-box param-str">
-                    <img class="param-note-bg"
-                         src="/images/stats/stat-note-4.png"
-                         alt="" />
-
-                    <div class="param-content">
-                        <span class="p-label">STR</span>
-                        <span class="p-value">@Strength</span>
-                        <span class="p-desc">근력</span>
-                    </div>
-                </div>
-
-                <div class="param-box param-int">
-                    <img class="param-note-bg"
-                         src="/images/stats/stat-note-1.png"
-                         alt="" />
-
-                    <div class="param-content">
-                        <span class="p-label">INT</span>
-                        <span class="p-value">@Intelligence</span>
-                        <span class="p-desc">지능</span>
-                    </div>
-                </div>
-
-                <div class="param-box param-sta">
-                    <img class="param-note-bg"
-                         src="/images/stats/stat-note-3.png"
-                         alt="" />
-
-                    <div class="param-content">
-                        <span class="p-label">STA</span>
-                        <span class="p-value">@Hp</span>
-                        <span class="p-desc">체력</span>
-                    </div>
-                </div>
-
-                <div class="param-box param-luk">
-                    <img class="param-note-bg"
-                         src="/images/stats/stat-note-2.png"
-                         alt="" />
-
-                    <div class="param-content">
-                        <span class="p-label">LUK</span>
-                        <span class="p-value">@Luck</span>
-                        <span class="p-desc">행운</span>
-                    </div>
-                </div>
-
-            </div>
-
-            <div class="system-memo">
-                <strong>MEMO</strong>
-                <p>
-                    미션을 완료하면 생존 자원과 능력치가 증가합니다.<br />
-                    <span class="memo-warning">
-                        <span class="warning-mark">!</span>
-                        업무 미션은 보급품 보상이 크지만 체력이 일부 감소합니다.
-                    </span>
-                </p>
-            </div>
-        </aside>
-
+        <CharacterStatusPanel Character="@Character" />
     </main>
 
-    @* Mission list *@
-    <footer class="mission-log">
-        <div class="log-header">
-            <span>MISSION LOG</span>
-            <small>카테고리별 생존 미션을 등록하고 관리합니다.</small>
-        </div>
+    <TodoMissionLog Todos="@Todos"
+                    Categories="@Categories"
+                    SelectedCategory="@selectedCategory"
+                    IsLoading="@isLoading"
+                    ErrorMessage="@todoErrorMessage"
+                    OnCreate="@CreateTodo"
+                    OnUpdate="@UpdateTodo"
+                    OnDelete="@DeleteTodo"
+                    OnCompletedChanged="@ToggleTodoCompleted"
+                    OnCategorySelected="@SelectCategory" />
 
-        <EditForm Model="@newTodo" OnValidSubmit="@AddTodo" FormName="todo-create" class="mission-form">
-            <DataAnnotationsValidator />
-
-            <div class="mission-input-row">
-                <InputText class="mission-input"
-                        placeholder="새 미션을 입력하세요"
-                        @bind-Value="newTodo.Title"
-                        disabled="@isLoading" />
-
-                <InputSelect class="mission-category"
-                            @bind-Value="newTodo.Category"
-                            disabled="@isLoading">
-                    @foreach (var category in Categories)
-                    {
-                        <option value="@category">@GetCategoryLabel(category)</option>
-                    }
-                </InputSelect>
-
-                <button type="submit" class="mission-add" disabled="@isLoading">
-                    ADD
-                </button>
-            </div>
-
-            <ValidationMessage For="@(() => newTodo.Title)" />
-        </EditForm>
-
-        <div class="category-filter">
-            <button type="button"
-                    class="filter-btn @(selectedCategory == "전체" ? "active" : "")"
-                    @onclick="@(() => SelectCategory("전체"))">
-                전체
-            </button>
-
-            @foreach (var category in Categories)
-            {
-                <button type="button"
-                        class="filter-btn @(selectedCategory == category ? "active" : "")"
-                        @onclick="@(() => SelectCategory(category))">
-                    @GetCategoryLabel(category)
-                </button>
-            }
-        </div>
-
-        @if (!string.IsNullOrWhiteSpace(todoErrorMessage))
-        {
-            <div class="todo-error">@todoErrorMessage</div>
-        }
-
-        @if (isLoading)
-        {
-            <div class="todo-empty">MISSION DATA LOADING...</div>
-        }
-        else if (!FilteredTodos.Any())
-        {
-            <div class="todo-empty">등록된 미션이 없습니다.</div>
-        }
-        else
-        {
-            <div class="log-container">
-                @foreach (var todo in FilteredTodos)
-                {
-                    <article class="mission-card @(todo.IsCompleted ? "locked" : "")">
-                        <label class="checkbox-container">
-                            <input type="checkbox"
-                                checked="@todo.IsCompleted"
-                                @onchange="async e => await ToggleTodoCompleted(todo, e.Value is bool checkedValue && checkedValue)" />
-                            <span class="checkmark"></span>
-                        </label>
-
-                        <div class="mission-details">
-                            <div class="mission-top">
-                                <span class="m-cat @GetCategoryClass(todo.Category)">
-                                    @GetCategoryLabel(todo.Category)
-                                </span>
-
-                                <span class="m-reward">
-                                    @todo.CreatedAt.ToLocalTime().ToString("yyyy-MM-dd")
-                                </span>
-                            </div>
-
-                            <div class="m-title">@todo.Title</div>
-                        </div>
-
-                        @if (todo.IsCompleted)
-                        {
-                            <div class="stamp">SECURED</div>
-                        }
-                        else
-                        {
-                            <button type="button"
-                                    class="mission-delete"
-                                    title="삭제"
-                                    @onclick="async () => await DeleteTodo(todo.Id)">
-                                DELETE
-                            </button>
-                        }
-                    </article>
-                }
-            </div>
-        }
-    </footer>
-
-    @* Reward popup *@
-    @if (ShowRewardEffect)
-    {
-        <div class="alert-popup">
-            <div class="alert-header">RESOURCE ACQUIRED</div>
-            <div class="alert-msg">@EffectMessage</div>
-        </div>
-    }
+    <RewardEffect Show="@showRewardEffect"
+                  Message="@effectMessage" />
 </div>
 
 @code {
-    // =========================
-    // Character state
-    // 추후 User / Character 테이블과 연결 가능
-    // =========================
-
-    private int Level = 1;
-
-    private int Hp = 60;
-    private int MaxHp = 100;
-
-    private int Exp = 30;
-    private int MaxExp = 100;
-
-    private int Supply = 247;
-
-    private int Strength = 42;
-    private int Intelligence = 31;
-    private int Luck = 28;
-
-    private string Title = "벙커 신입 생존자";
-
-    private int HpPercent => MaxHp == 0 ? 0 : Math.Clamp(Hp * 100 / MaxHp, 0, 100);
-    private int ExpPercent => MaxExp == 0 ? 0 : Math.Clamp(Exp * 100 / MaxExp, 0, 100);
-
-    // =========================
-    // Reward / effect state
-    // 현재는 유지만 하고 Todo 완료와 연결하지 않음
-    // 추후 Todo 완료 시 스탯 증가 개발 때 사용
-    // =========================
-
-    private bool ShowRewardEffect = false;
-    private string EffectMessage = "";
-
-    // =========================
-    // Todo state
-    // =========================
+    private readonly CharacterStatus Character = new();
+    private readonly IReadOnlyList<string> Categories = TodoCategories.Values;
 
     private string? userId;
     private bool isLoading = true;
     private string? todoErrorMessage;
 
     private string selectedCategory = "전체";
-
-    private TodoCreateModel newTodo = new();
-
     private List<TodoItemDto> Todos = new();
 
-    private static readonly string[] Categories =
-    {
-        "운동",
-        "업무",
-        "자기개발",
-        "일상",
-        "기타"
-    };
-
-    private IEnumerable<TodoItemDto> FilteredTodos =>
-        selectedCategory == "전체"
-            ? Todos
-            : Todos.Where(todo => todo.Category == selectedCategory);
-
-    // =========================
-    // Initial load
-    // sessionStorage 접근 때문에 OnAfterRenderAsync 사용
-    // =========================
+    private bool showRewardEffect;
+    private string effectMessage = string.Empty;
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
@@ -357,17 +86,14 @@
         }
 
         await LoadTodos();
-
         await InvokeAsync(StateHasChanged);
     }
 
-    // =========================
-    // Todo API
-    // =========================
-
     private async Task LoadTodos()
     {
-        if (string.IsNullOrWhiteSpace(userId))
+        var currentUserId = GetCurrentUserIdOrRedirect();
+
+        if (currentUserId is null)
         {
             return;
         }
@@ -377,11 +103,7 @@
 
         try
         {
-            var encodedUserId = Uri.EscapeDataString(userId);
-
-            Todos = await Http.GetFromJsonAsync<List<TodoItemDto>>(
-                $"api/Todo/user/{encodedUserId}"
-            ) ?? new List<TodoItemDto>();
+            Todos = await TodoApi.GetByUserAsync(currentUserId);
         }
         catch (Exception ex)
         {
@@ -393,41 +115,30 @@
         }
     }
 
-    private async Task AddTodo()
+    private async Task<bool> CreateTodo(TodoCreateModel model)
     {
-        if (string.IsNullOrWhiteSpace(userId))
+        var currentUserId = GetCurrentUserIdOrRedirect();
+
+        if (currentUserId is null)
         {
-            Navigation.NavigateTo("/login", forceLoad: true);
-            return;
+            return false;
         }
 
         todoErrorMessage = null;
 
         var request = new CreateTodoRequest
         {
-            UserId = userId,
-            Title = newTodo.Title.Trim(),
-            Category = newTodo.Category
+            UserId = currentUserId,
+            Title = model.Title.Trim(),
+            Category = model.Category,
+            DueDate = model.DueDate
         };
 
         try
         {
-            var response = await Http.PostAsJsonAsync("api/Todo", request);
+            var createdTodo = await TodoApi.CreateAsync(request);
 
-            if (!response.IsSuccessStatusCode)
-            {
-                var responseText = await response.Content.ReadAsStringAsync();
-
-                todoErrorMessage = string.IsNullOrWhiteSpace(responseText)
-                    ? "Todo 추가에 실패했습니다."
-                    : responseText.Trim('"');
-
-                return;
-            }
-
-            var createdTodo = await response.Content.ReadFromJsonAsync<TodoItemDto>();
-
-            if (createdTodo != null)
+            if (createdTodo is not null)
             {
                 Todos.Insert(0, createdTodo);
             }
@@ -436,58 +147,95 @@
                 await LoadTodos();
             }
 
-            newTodo = new TodoCreateModel();
+            return true;
         }
         catch (Exception ex)
         {
             todoErrorMessage = $"Todo 추가 중 오류가 발생했습니다: {ex.Message}";
+            return false;
         }
     }
 
-    private async Task ToggleTodoCompleted(TodoItemDto todo, bool isCompleted)
+    private async Task<bool> UpdateTodo(TodoEditModel model)
     {
-        if (string.IsNullOrWhiteSpace(userId))
+        var currentUserId = GetCurrentUserIdOrRedirect();
+
+        if (currentUserId is null)
         {
-            Navigation.NavigateTo("/login", forceLoad: true);
+            return false;
+        }
+
+        var target = Todos.FirstOrDefault(todo => todo.Id == model.Id);
+
+        if (target is null)
+        {
+            todoErrorMessage = "수정할 Todo를 찾지 못했습니다.";
+            return false;
+        }
+
+        todoErrorMessage = null;
+
+        var request = new UpdateTodoRequest
+        {
+            UserId = currentUserId,
+            Title = model.Title.Trim(),
+            Category = model.Category,
+            IsCompleted = target.IsCompleted,
+            DueDate = model.DueDate
+        };
+
+        try
+        {
+            await TodoApi.UpdateAsync(model.Id, request);
+
+            target.Title = request.Title;
+            target.Category = request.Category;
+            target.DueDate = request.DueDate;
+
+            return true;
+        }
+        catch (Exception ex)
+        {
+            todoErrorMessage = $"Todo 수정 중 오류가 발생했습니다: {ex.Message}";
+            return false;
+        }
+    }
+
+    private async Task ToggleTodoCompleted(TodoCompletedChange change)
+    {
+        var currentUserId = GetCurrentUserIdOrRedirect();
+
+        if (currentUserId is null)
+        {
+            return;
+        }
+
+        var todo = Todos.FirstOrDefault(item => item.Id == change.TodoId);
+
+        if (todo is null)
+        {
+            todoErrorMessage = "상태를 변경할 Todo를 찾지 못했습니다.";
             return;
         }
 
         var previousValue = todo.IsCompleted;
 
-        // 먼저 UI에 반영
-        todo.IsCompleted = isCompleted;
+        todo.IsCompleted = change.IsCompleted;
         todoErrorMessage = null;
 
         try
         {
             var request = new SetTodoCompletedRequest
             {
-                UserId = userId,
-                IsCompleted = isCompleted
+                UserId = currentUserId,
+                IsCompleted = change.IsCompleted
             };
 
-            var response = await Http.PatchAsJsonAsync(
-                $"api/Todo/{todo.Id}/completed",
-                request
-            );
+            await TodoApi.SetCompletedAsync(todo.Id, request);
 
-            if (!response.IsSuccessStatusCode)
+            if (change.IsCompleted && !previousValue)
             {
-                todo.IsCompleted = previousValue;
-
-                var responseText = await response.Content.ReadAsStringAsync();
-
-                todoErrorMessage = string.IsNullOrWhiteSpace(responseText)
-                    ? "Todo 상태 변경에 실패했습니다."
-                    : responseText.Trim('"');
-
-                return;
-            }
-
-            // 추후 개발 위치:
-            // 여기서 isCompleted == true일 때 카테고리별 스탯 증가를 연결하면 됨.
-            if (isCompleted && !previousValue)
-            {
+                // 다음 기능 개발 위치:
                 // await ApplyTodoReward(todo);
                 await ShowTodoCompleteEffect(todo);
             }
@@ -499,31 +247,12 @@
         }
     }
 
-    private async Task ShowTodoCompleteEffect(TodoItemDto todo)
-{
-    EffectMessage = todo.Category switch
-    {
-        "운동" => "PATROL MISSION COMPLETED",
-        "업무" => "SUPPLY TASK COMPLETED",
-        "자기개발" => "INTEL MISSION COMPLETED",
-        "일상" => "SHELTER MISSION COMPLETED",
-        _ => "MISSION COMPLETED"
-    };
-
-    ShowRewardEffect = true;
-    await InvokeAsync(StateHasChanged);
-
-    await Task.Delay(1500);
-
-    ShowRewardEffect = false;
-    await InvokeAsync(StateHasChanged);
-}
-
     private async Task DeleteTodo(int id)
     {
-        if (string.IsNullOrWhiteSpace(userId))
+        var currentUserId = GetCurrentUserIdOrRedirect();
+
+        if (currentUserId is null)
         {
-            Navigation.NavigateTo("/login", forceLoad: true);
             return;
         }
 
@@ -531,26 +260,11 @@
 
         try
         {
-            var encodedUserId = Uri.EscapeDataString(userId);
-
-            var response = await Http.DeleteAsync(
-                $"api/Todo/{id}?userId={encodedUserId}"
-            );
-
-            if (!response.IsSuccessStatusCode)
-            {
-                var responseText = await response.Content.ReadAsStringAsync();
-
-                todoErrorMessage = string.IsNullOrWhiteSpace(responseText)
-                    ? "Todo 삭제에 실패했습니다."
-                    : responseText.Trim('"');
-
-                return;
-            }
+            await TodoApi.DeleteAsync(id, currentUserId);
 
             var target = Todos.FirstOrDefault(todo => todo.Id == id);
 
-            if (target != null)
+            if (target is not null)
             {
                 Todos.Remove(target);
             }
@@ -566,143 +280,82 @@
         selectedCategory = category;
     }
 
-    // =========================
-    // Future reward logic
-    // 현재는 호출하지 않음
-    // 추후 Todo 완료 시 스탯 증가 개발 때 활성화
-    // =========================
-
-    private async Task ApplyTodoReward(TodoItemDto todo)
+    private async Task ShowTodoCompleteEffect(TodoItemDto todo)
     {
-        Exp += 15;
-        Supply += 10;
+        effectMessage = TodoCategories.GetCompleteEffectMessage(todo.Category);
 
-        switch (todo.Category)
-        {
-            case "운동":
-                Strength += 1;
-                EffectMessage = "+15 EXP / +10 SUPPLY / STR +1";
-                break;
-
-            case "업무":
-                Supply += 10;
-                Hp = Math.Max(0, Hp - 5);
-                EffectMessage = "+15 EXP / +20 SUPPLY / HP -5";
-                break;
-
-            case "자기개발":
-                Intelligence += 1;
-                EffectMessage = "+15 EXP / +10 SUPPLY / INT +1";
-                break;
-
-            case "일상":
-                Hp = Math.Min(MaxHp, Hp + 5);
-                EffectMessage = "+15 EXP / +10 SUPPLY / HP +5";
-                break;
-
-            default:
-                Luck += 1;
-                EffectMessage = "+15 EXP / +10 SUPPLY / LUK +1";
-                break;
-        }
-
-        if (Exp >= MaxExp)
-        {
-            Exp -= MaxExp;
-            Level += 1;
-            MaxExp += 25;
-            Hp = MaxHp;
-            Title = "구역 정비 생존자";
-            EffectMessage = "LEVEL UP / HP REPAIRED";
-        }
-
-        ShowRewardEffect = true;
+        showRewardEffect = true;
         await InvokeAsync(StateHasChanged);
 
         await Task.Delay(1500);
 
-        ShowRewardEffect = false;
+        showRewardEffect = false;
         await InvokeAsync(StateHasChanged);
     }
 
-    // =========================
-    // Display helpers
-    // =========================
-
-    private string GetCategoryLabel(string category) => category switch
+    // 추후 "Todo 완료 보상 -> 카테고리별 스탯 증가" 기능을 붙일 때
+    // ToggleTodoCompleted 안에서 ShowTodoCompleteEffect 대신 호출하면 됨.
+    private async Task ApplyTodoReward(TodoItemDto todo)
     {
-        "운동" => "PATROL",
-        "업무" => "SUPPLY",
-        "자기개발" => "INTEL",
-        "일상" => "SHELTER",
-        "기타" => "CUSTOM",
-        _ => "CUSTOM"
-    };
+        Character.Exp += 15;
+        Character.Supply += 10;
 
-    private string GetCategoryClass(string category) => category switch
-    {
-        "운동" => "patrol",
-        "업무" => "supply",
-        "자기개발" => "intel",
-        "일상" => "shelter",
-        "기타" => "custom",
-        _ => "custom"
-    };
+        switch (todo.Category)
+        {
+            case "운동":
+                Character.Strength += 1;
+                effectMessage = "+15 EXP / +10 SUPPLY / STR +1";
+                break;
 
-    private string GetRewardText(string category) => category switch
-    {
-        "운동" => "+STR",
-        "업무" => "+SUP / -HP",
-        "자기개발" => "+INT",
-        "일상" => "+HP",
-        _ => "+LUK"
-    };
+            case "업무":
+                Character.Supply += 10;
+                Character.Hp = Math.Max(0, Character.Hp - 5);
+                effectMessage = "+15 EXP / +20 SUPPLY / HP -5";
+                break;
 
-    // =========================
-    // View models
-    // =========================
+            case "자기개발":
+                Character.Intelligence += 1;
+                effectMessage = "+15 EXP / +10 SUPPLY / INT +1";
+                break;
 
-    private sealed class TodoCreateModel
-    {
-        [Required(ErrorMessage = "내용을 입력하세요.")]
-        [StringLength(100, MinimumLength = 1, ErrorMessage = "내용은 1~100자여야 합니다.")]
-        public string Title { get; set; } = string.Empty;
+            case "일상":
+                Character.Hp = Math.Min(Character.MaxHp, Character.Hp + 5);
+                effectMessage = "+15 EXP / +10 SUPPLY / HP +5";
+                break;
 
-        public string Category { get; set; } = "일상";
+            default:
+                Character.Luck += 1;
+                effectMessage = "+15 EXP / +10 SUPPLY / LUK +1";
+                break;
+        }
+
+        if (Character.Exp >= Character.MaxExp)
+        {
+            Character.Exp -= Character.MaxExp;
+            Character.Level += 1;
+            Character.MaxExp += 25;
+            Character.Hp = Character.MaxHp;
+            Character.Title = "구역 정비 생존자";
+            effectMessage = "LEVEL UP / HP REPAIRED";
+        }
+
+        showRewardEffect = true;
+        await InvokeAsync(StateHasChanged);
+
+        await Task.Delay(1500);
+
+        showRewardEffect = false;
+        await InvokeAsync(StateHasChanged);
     }
 
-    private sealed class TodoItemDto
+    private string? GetCurrentUserIdOrRedirect()
     {
-        public int Id { get; set; }
+        if (!string.IsNullOrWhiteSpace(userId))
+        {
+            return userId;
+        }
 
-        public string UserId { get; set; } = string.Empty;
-
-        public string Title { get; set; } = string.Empty;
-
-        public bool IsCompleted { get; set; }
-
-        public string Category { get; set; } = "일상";
-
-        public DateTime CreatedAt { get; set; }
-
-        public DateTime? DueDate { get; set; }
-    }
-
-    private sealed class CreateTodoRequest
-    {
-        public string UserId { get; set; } = string.Empty;
-
-        public string Title { get; set; } = string.Empty;
-
-        public string Category { get; set; } = "일상";
-
-        public DateTime? DueDate { get; set; }
-    }
-
-    private sealed class SetTodoCompletedRequest
-    {
-        public string UserId { get; set; } = string.Empty;
-
-        public bool IsCompleted { get; set; }
+        Navigation.NavigateTo("/login", forceLoad: true);
+        return null;
     }
 }

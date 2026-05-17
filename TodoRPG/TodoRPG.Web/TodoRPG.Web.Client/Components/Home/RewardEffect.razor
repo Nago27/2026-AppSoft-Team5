@@ -1,0 +1,15 @@
+@if (Show && !string.IsNullOrWhiteSpace(Message))
+{
+    <div class="alert-popup">
+        <div class="alert-header">RESOURCE ACQUIRED</div>
+        <div class="alert-msg">@Message</div>
+    </div>
+}
+
+@code {
+    [Parameter]
+    public bool Show { get; set; }
+
+    [Parameter]
+    public string Message { get; set; } = string.Empty;
+}

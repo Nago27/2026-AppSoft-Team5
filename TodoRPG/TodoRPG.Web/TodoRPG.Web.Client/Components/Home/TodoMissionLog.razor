@@ -1,0 +1,307 @@
+@using TodoRPG.Web.Client.Models
+
+<footer class="mission-log">
+    <div class="log-header">
+        <span>MISSION LOG</span>
+        <small>카테고리별 생존 미션을 등록하고 관리합니다.</small>
+    </div>
+
+    <EditForm Model="@newTodo" OnValidSubmit="@SubmitCreate" FormName="todo-create" class="mission-form">
+        <DataAnnotationsValidator />
+
+        <div class="mission-input-row mission-input-row-with-date">
+            <InputText class="mission-input"
+                       placeholder="새 미션을 입력하세요"
+                       @bind-Value="newTodo.Title"
+                       disabled="@IsLoading" />
+
+            <InputSelect class="mission-category"
+                         @bind-Value="newTodo.Category"
+                         disabled="@IsLoading">
+                @foreach (var category in Categories)
+                {
+                    <option value="@category">@TodoCategories.GetLabel(category)</option>
+                }
+            </InputSelect>
+
+            <InputDate class="mission-date"
+                       @bind-Value="newTodo.DueDate"
+                       disabled="@IsLoading" />
+
+            <button type="submit" class="mission-add" disabled="@IsLoading">
+                ADD
+            </button>
+        </div>
+
+        <ValidationMessage For="@(() => newTodo.Title)" />
+    </EditForm>
+
+    <div class="category-filter">
+        <button type="button"
+                class="filter-btn @(SelectedCategory == "전체" ? "active" : "")"
+                @onclick="@(() => SelectCategory("전체"))">
+            전체
+        </button>
+
+        @foreach (var category in Categories)
+        {
+            <button type="button"
+                    class="filter-btn @(SelectedCategory == category ? "active" : "")"
+                    @onclick="@(() => SelectCategory(category))">
+                @TodoCategories.GetLabel(category)
+            </button>
+        }
+    </div>
+
+    @if (!string.IsNullOrWhiteSpace(ErrorMessage))
+    {
+        <div class="todo-error">@ErrorMessage</div>
+    }
+
+    @if (IsLoading)
+    {
+        <div class="todo-empty">MISSION DATA LOADING...</div>
+    }
+    else if (!FilteredTodos.Any())
+    {
+        <div class="todo-empty">등록된 미션이 없습니다.</div>
+    }
+    else
+    {
+        <div class="log-container">
+            @foreach (var todo in FilteredTodos)
+            {
+                <article class="mission-card @(todo.IsCompleted ? "locked" : "") @(editingTodoId == todo.Id ? "editing" : "")">
+                    <label class="checkbox-container">
+                        <input type="checkbox"
+                               checked="@todo.IsCompleted"
+                               @onchange="async e => await ChangeCompleted(todo.Id, e.Value is bool checkedValue && checkedValue)" />
+                        <span class="checkmark"></span>
+                    </label>
+
+                    @if (editingTodoId == todo.Id)
+                    {
+                        <div class="mission-edit-panel">
+                            <EditForm Model="@editTodo" OnValidSubmit="@SubmitEdit" FormName="@($"todo-edit-{todo.Id}")" class="mission-edit-form">
+                                <DataAnnotationsValidator />
+
+                                <div class="mission-edit-row">
+                                    <InputText class="mission-input"
+                                               placeholder="미션 내용을 수정하세요"
+                                               @bind-Value="editTodo.Title" />
+
+                                    <InputSelect class="mission-category"
+                                                 @bind-Value="editTodo.Category">
+                                        @foreach (var category in Categories)
+                                        {
+                                            <option value="@category">@TodoCategories.GetLabel(category)</option>
+                                        }
+                                    </InputSelect>
+
+                                    <InputDate class="mission-date"
+                                               @bind-Value="editTodo.DueDate" />
+
+                                    <button type="submit" class="mission-save">SAVE</button>
+
+                                    <button type="button"
+                                            class="mission-cancel"
+                                            @onclick="CancelEdit">
+                                        CANCEL
+                                    </button>
+                                </div>
+
+                                <ValidationMessage For="@(() => editTodo.Title)" />
+                            </EditForm>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="mission-details">
+                            <div class="mission-top">
+                                <span class="m-cat @TodoCategories.GetCssClass(todo.Category)">
+                                    @TodoCategories.GetLabel(todo.Category)
+                                </span>
+
+                                <span class="m-dates">
+                                    <span class="m-reward">
+                                        CREATED @todo.CreatedAt.ToLocalTime().ToString("yyyy-MM-dd")
+                                    </span>
+                                    <span class="@GetDueDateClass(todo)">
+                                        @GetDueDateText(todo)
+                                    </span>
+                                </span>
+                            </div>
+
+                            <div class="m-title">@todo.Title</div>
+                        </div>
+
+                        @if (todo.IsCompleted)
+                        {
+                            <div class="stamp">SECURED</div>
+                        }
+                        else
+                        {
+                            <div class="mission-actions">
+                                <button type="button"
+                                        class="mission-edit"
+                                        title="수정"
+                                        @onclick="() => BeginEdit(todo)">
+                                    EDIT
+                                </button>
+
+                                <button type="button"
+                                        class="mission-delete"
+                                        title="삭제"
+                                        @onclick="async () => await Delete(todo.Id)">
+                                    DELETE
+                                </button>
+                            </div>
+                        }
+                    }
+                </article>
+            }
+        </div>
+    }
+</footer>
+
+@code {
+    [Parameter]
+    public IReadOnlyList<TodoItemDto> Todos { get; set; } = Array.Empty<TodoItemDto>();
+
+    [Parameter]
+    public IReadOnlyList<string> Categories { get; set; } = TodoCategories.Values;
+
+    [Parameter]
+    public string SelectedCategory { get; set; } = "전체";
+
+    [Parameter]
+    public bool IsLoading { get; set; }
+
+    [Parameter]
+    public string? ErrorMessage { get; set; }
+
+    [Parameter]
+    public Func<TodoCreateModel, Task<bool>>? OnCreate { get; set; }
+
+    [Parameter]
+    public Func<TodoEditModel, Task<bool>>? OnUpdate { get; set; }
+
+    [Parameter]
+    public Func<int, Task>? OnDelete { get; set; }
+
+    [Parameter]
+    public Func<TodoCompletedChange, Task>? OnCompletedChanged { get; set; }
+
+    [Parameter]
+    public EventCallback<string> OnCategorySelected { get; set; }
+
+    private TodoCreateModel newTodo = new();
+    private TodoEditModel editTodo = new();
+    private int? editingTodoId;
+
+    private IEnumerable<TodoItemDto> FilteredTodos =>
+        SelectedCategory == "전체"
+            ? Todos
+            : Todos.Where(todo => todo.Category == SelectedCategory);
+
+    private async Task SubmitCreate()
+    {
+        var model = new TodoCreateModel
+        {
+            Title = newTodo.Title,
+            Category = newTodo.Category,
+            DueDate = newTodo.DueDate
+        };
+
+        var success = OnCreate is null || await OnCreate(model);
+
+        if (success)
+        {
+            newTodo = new TodoCreateModel();
+        }
+    }
+
+    private void BeginEdit(TodoItemDto todo)
+    {
+        editingTodoId = todo.Id;
+        editTodo = TodoEditModel.FromTodo(todo);
+    }
+
+    private void CancelEdit()
+    {
+        editingTodoId = null;
+        editTodo = new TodoEditModel();
+    }
+
+    private async Task SubmitEdit()
+    {
+        var model = new TodoEditModel
+        {
+            Id = editTodo.Id,
+            Title = editTodo.Title,
+            Category = editTodo.Category,
+            IsCompleted = editTodo.IsCompleted,
+            DueDate = editTodo.DueDate
+        };
+
+        var success = OnUpdate is null || await OnUpdate(model);
+
+        if (success)
+        {
+            CancelEdit();
+        }
+    }
+
+    private async Task Delete(int id)
+    {
+        if (OnDelete is not null)
+        {
+            await OnDelete(id);
+        }
+    }
+
+    private async Task ChangeCompleted(int todoId, bool isCompleted)
+    {
+        if (editingTodoId == todoId)
+        {
+            CancelEdit();
+        }
+
+        if (OnCompletedChanged is not null)
+        {
+            await OnCompletedChanged(new TodoCompletedChange
+            {
+                TodoId = todoId,
+                IsCompleted = isCompleted
+            });
+        }
+    }
+
+    private async Task SelectCategory(string category)
+    {
+        CancelEdit();
+        await OnCategorySelected.InvokeAsync(category);
+    }
+
+    private static string GetDueDateText(TodoItemDto todo)
+    {
+        return todo.DueDate is null
+            ? "NO DEADLINE"
+            : $"DUE {todo.DueDate.Value:yyyy-MM-dd}";
+    }
+
+    private static string GetDueDateClass(TodoItemDto todo)
+    {
+        if (todo.DueDate is null)
+        {
+            return "m-reward deadline-muted";
+        }
+
+        if (!todo.IsCompleted && todo.DueDate.Value.Date < DateTime.Today)
+        {
+            return "m-reward deadline-overdue";
+        }
+
+        return "m-reward deadline-active";
+    }
+}
