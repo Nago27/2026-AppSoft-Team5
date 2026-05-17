@@ -13,15 +13,9 @@ public static class TodoCategories
 
     public static string GetLabel(string category)
     {
-        return category switch
-        {
-            "운동" => "PATROL",
-            "업무" => "SUPPLY",
-            "자기개발" => "INTEL",
-            "일상" => "SHELTER",
-            "기타" => "CUSTOM",
-            _ => "CUSTOM"
-        };
+        return Values.Contains(category)
+            ? category
+            : "기타";
     }
 
     public static string GetCssClass(string category)
@@ -32,7 +26,6 @@ public static class TodoCategories
             "업무" => "supply",
             "자기개발" => "intel",
             "일상" => "shelter",
-            "기타" => "custom",
             _ => "custom"
         };
     }
@@ -41,10 +34,10 @@ public static class TodoCategories
     {
         return category switch
         {
-            "운동" => "PATROL MISSION COMPLETED",
-            "업무" => "SUPPLY TASK COMPLETED",
-            "자기개발" => "INTEL MISSION COMPLETED",
-            "일상" => "SHELTER MISSION COMPLETED",
+            "운동" => "운동 COMPLETED",
+            "업무" => "업무 COMPLETED",
+            "자기개발" => "자기개발 COMPLETED",
+            "일상" => "일상 COMPLETED",
             _ => "MISSION COMPLETED"
         };
     }

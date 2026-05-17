@@ -996,9 +996,41 @@
     position: relative;
     z-index: 3;
     align-self: center;
-    padding: 8px 10px;
-    margin-left: 10px;
+    padding: 8px 12px;
+    color: #d7ccb0;
+    background:
+        repeating-linear-gradient(
+            -45deg,
+            rgba(255,255,255,0.035) 0px,
+            rgba(255,255,255,0.035) 4px,
+            transparent 4px,
+            transparent 9px
+        ),
+        linear-gradient(180deg, #8b433a 0%, #6f2f29 58%, #3b1815 100%);
+    border: 2px solid #20160f;
+    border-radius: 0;
+    box-shadow:
+        0 3px 0 rgba(20, 14, 10, 0.82),
+        inset 0 0 0 1px rgba(255,255,255,0.07),
+        inset 0 -12px 16px rgba(0,0,0,0.22);
+    font-family: "Courier New", "Malgun Gothic", monospace;
     font-size: 0.72rem;
+    font-weight: 950;
+    letter-spacing: 1px;
+    cursor: pointer;
+}
+
+.mission-delete:hover {
+    filter: brightness(1.08);
+    transform: translateY(-1px);
+}
+
+.mission-delete:active {
+    transform: translateY(1px);
+    box-shadow:
+        0 1px 0 rgba(20, 14, 10, 0.82),
+        inset 0 0 0 1px rgba(255,255,255,0.05),
+        inset 0 -8px 12px rgba(0,0,0,0.28);
 }
 
 .todo-error,
