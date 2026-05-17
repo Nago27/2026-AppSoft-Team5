@@ -1,0 +1,299 @@
+.signup-card {
+    --paper-1: #9d9078;
+    --paper-2: #887b66;
+    --paper-3: #746854;
+    --ink: #15120f;
+    --rust: #74432a;
+    --rust-soft: #936245;
+    --mold: #545a46;
+    --line: #312b24;
+
+    width: min(440px, 92vw);
+    position: relative;
+    z-index: 2;
+    padding: 34px 32px 26px;
+
+    color: var(--ink);
+    font-family: "Segoe UI", "Malgun Gothic", sans-serif;
+
+    background:
+        radial-gradient(circle at 12% 18%, rgba(76, 60, 42, 0.18), transparent 18%),
+        radial-gradient(circle at 88% 16%, rgba(103, 64, 38, 0.16), transparent 19%),
+        radial-gradient(circle at 20% 84%, rgba(67, 74, 54, 0.14), transparent 22%),
+        radial-gradient(circle at 78% 75%, rgba(48, 38, 26, 0.18), transparent 24%),
+        repeating-linear-gradient(
+            45deg,
+            rgba(255,255,255,0.012) 0px,
+            rgba(255,255,255,0.012) 1px,
+            transparent 1px,
+            transparent 6px
+        ),
+        repeating-linear-gradient(
+            0deg,
+            rgba(0,0,0,0.022) 0px,
+            rgba(0,0,0,0.022) 2px,
+            transparent 2px,
+            transparent 9px
+        ),
+        linear-gradient(180deg, var(--paper-1) 0%, var(--paper-2) 58%, var(--paper-3) 100%);
+
+    border: 1px solid #2b241d;
+    box-shadow:
+        0 0 0 1px rgba(255,255,255,0.04),
+        14px 14px 28px rgba(0,0,0,0.42),
+        inset 0 0 36px rgba(46, 33, 22, 0.28),
+        inset 0 0 0 1px rgba(255,255,255,0.035);
+}
+
+.signup-card::before {
+    content: "";
+    position: absolute;
+    left: 34px;
+    top: -17px;
+    width: 148px;
+    height: 32px;
+    z-index: 6;
+    pointer-events: none;
+
+    background:
+        repeating-linear-gradient(
+            90deg,
+            rgba(255,255,255,0.08) 0px,
+            rgba(255,255,255,0.08) 1px,
+            transparent 1px,
+            transparent 5px
+        ),
+        linear-gradient(180deg, rgba(97,120,116,0.92), rgba(70,88,84,0.92));
+
+    transform: rotate(-2.2deg);
+    box-shadow: 0 2px 6px rgba(0,0,0,0.25);
+    clip-path: polygon(0 8%, 100% 0, 98% 100%, 2% 92%);
+}
+
+.signup-card::after {
+    content: "";
+    position: absolute;
+    right: -1px;
+    bottom: -1px;
+    width: 46px;
+    height: 46px;
+    pointer-events: none;
+    z-index: 5;
+
+    background:
+        linear-gradient(135deg, transparent 0 47%, rgba(42,36,29,0.35) 48% 56%, transparent 57%),
+        linear-gradient(135deg, rgba(255,255,255,0.08), rgba(0,0,0,0.18));
+
+    clip-path: polygon(100% 0, 0 100%, 100% 100%);
+    opacity: 0.7;
+}
+
+.signup-title {
+    margin: 0 0 30px;
+    text-align: center;
+
+    color: #110f0d;
+    font-size: 2.35rem;
+    font-weight: 950;
+    line-height: 1;
+    letter-spacing: -1px;
+
+    text-shadow:
+        1px 1px 0 rgba(255,255,255,0.08),
+        0 3px 0 rgba(0,0,0,0.12);
+}
+
+.signup-form {
+    display: grid;
+    gap: 15px;
+}
+
+.field {
+    position: relative;
+}
+
+.field label {
+    display: block;
+    margin-bottom: 7px;
+
+    color: #6d422c;
+    font-size: 0.78rem;
+    font-weight: 900;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+}
+
+.field ::deep .form-control {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 12px 13px;
+
+    color: #d7ccb0;
+    background:
+        repeating-linear-gradient(
+            0deg,
+            rgba(255,255,255,0.022) 0px,
+            rgba(255,255,255,0.022) 1px,
+            transparent 1px,
+            transparent 6px
+        ),
+        linear-gradient(180deg, #12110e 0%, #1c1813 100%);
+
+    border: 2px solid #110f0c;
+    border-radius: 0;
+    box-shadow:
+        inset 0 0 12px rgba(0,0,0,0.45),
+        0 0 0 1px rgba(255,255,255,0.035);
+
+    font-family: "Courier New", monospace;
+    font-size: 0.95rem;
+    transition:
+        border-color 0.14s ease,
+        box-shadow 0.14s ease,
+        filter 0.14s ease;
+}
+
+.field ::deep .form-control:focus {
+    outline: none;
+    border-color: #6d7659;
+    box-shadow:
+        inset 0 0 14px rgba(0,0,0,0.55),
+        0 0 0 2px rgba(109, 118, 89, 0.32);
+    filter: brightness(1.08);
+}
+
+.field ::deep .form-control:disabled {
+    opacity: 0.72;
+    cursor: not-allowed;
+}
+
+.field ::deep .validation-message {
+    display: block;
+    margin-top: 6px;
+
+    color: #7e3028;
+    font-size: 0.78rem;
+    font-weight: 800;
+}
+
+.error,
+.success {
+    padding: 11px 13px;
+
+    color: #171411;
+    border: 2px solid #1c1711;
+    box-shadow:
+        5px 5px 12px rgba(0,0,0,0.22),
+        inset 0 0 18px rgba(73, 53, 36, 0.12);
+
+    font-size: 0.86rem;
+    font-weight: 800;
+}
+
+.error {
+    background:
+        radial-gradient(circle at 86% 15%, rgba(123, 68, 40, 0.12), transparent 18%),
+        repeating-linear-gradient(
+            -45deg,
+            rgba(139,67,58,0.08) 0px,
+            rgba(139,67,58,0.08) 8px,
+            transparent 8px,
+            transparent 16px
+        ),
+        linear-gradient(180deg, #a59880 0%, #8c7e67 100%);
+}
+
+.success {
+    background:
+        radial-gradient(circle at 86% 15%, rgba(84, 90, 70, 0.16), transparent 18%),
+        repeating-linear-gradient(
+            -45deg,
+            rgba(84,90,70,0.08) 0px,
+            rgba(84,90,70,0.08) 8px,
+            transparent 8px,
+            transparent 16px
+        ),
+        linear-gradient(180deg, #a8a083 0%, #878466 100%);
+}
+
+.btn-signup {
+    width: 100%;
+    margin-top: 4px;
+    padding: 13px 16px;
+
+    color: #1b160f;
+    background:
+        radial-gradient(circle at 16% 20%, rgba(255,255,255,0.12), transparent 18%),
+        linear-gradient(180deg, #b68b55 0%, #936245 54%, #74432a 100%);
+
+    border: 2px solid #20160f;
+    border-radius: 0;
+    box-shadow:
+        0 4px 0 rgba(20, 14, 10, 0.85),
+        inset 0 0 0 1px rgba(255,255,255,0.08),
+        inset 0 -18px 20px rgba(0,0,0,0.18);
+
+    font-weight: 950;
+    letter-spacing: 1.4px;
+    text-transform: uppercase;
+    cursor: pointer;
+
+    transition:
+        transform 0.14s ease,
+        filter 0.14s ease,
+        box-shadow 0.14s ease;
+}
+
+.btn-signup:hover:not(:disabled) {
+    filter: brightness(1.06);
+    transform: translateY(-1px);
+    box-shadow:
+        0 5px 0 rgba(20, 14, 10, 0.85),
+        inset 0 0 0 1px rgba(255,255,255,0.1),
+        inset 0 -18px 20px rgba(0,0,0,0.18);
+}
+
+.btn-signup:active:not(:disabled) {
+    transform: translateY(2px);
+    box-shadow:
+        0 2px 0 rgba(20, 14, 10, 0.85),
+        inset 0 0 0 1px rgba(255,255,255,0.08),
+        inset 0 -18px 20px rgba(0,0,0,0.22);
+}
+
+.btn-signup:disabled {
+    opacity: 0.65;
+    cursor: not-allowed;
+}
+
+.login-row {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 10px;
+}
+
+.login-row a {
+    color: #74432a;
+    font-size: 0.82rem;
+    font-weight: 900;
+    text-decoration: none;
+    letter-spacing: 0.4px;
+    border-bottom: 2px solid #74432a;
+}
+
+.login-row a:hover {
+    color: #74432a;
+    border-bottom-color: #74432a;
+}
+
+@media (max-width: 520px) {
+    .signup-card {
+        width: min(390px, 92vw);
+        padding: 30px 24px 24px;
+    }
+
+    .signup-title {
+        font-size: 2.1rem;
+        margin-bottom: 26px;
+    }
+}

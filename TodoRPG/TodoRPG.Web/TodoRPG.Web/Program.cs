@@ -3,6 +3,13 @@ using TodoRPG.Web.Components;
 
 var builder = WebApplication.CreateBuilder(args);
 
+builder.Services.AddScoped(sp =>
+    new HttpClient
+    {
+        BaseAddress = new Uri("http://localhost:5187/")
+    });
+
+
 // Add services to the container.
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents()

@@ -9,8 +9,9 @@ namespace TodoRPG.Api
         {
             var builder = WebApplication.CreateBuilder(args);
 
-            // Add services to the container.
+            const string AllowTodoRpgWeb = "AllowTodoRpgWeb";
 
+            // Add services to the container.
             builder.Services.AddControllers();
             // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
             builder.Services.AddEndpointsApiExplorer();
@@ -18,6 +19,20 @@ namespace TodoRPG.Api
 
             builder.Services.AddDbContext<AppDbContext>(options =>
                 options.UseSqlite("Data Source=todorpg.db"));
+
+            // Blazor web CORS
+            builder.Services.AddCors(options =>
+            {
+                options.AddPolicy(AllowTodoRpgWeb, policy =>
+                {
+                    policy.WithOrigins(
+                            "https://localhost:7137",
+                            "http://localhost:5093"
+                        )
+                        .AllowAnyHeader()
+                        .AllowAnyMethod();
+                });
+            });
 
             var app = builder.Build();
 
@@ -27,8 +42,9 @@ namespace TodoRPG.Api
 
             app.UseHttpsRedirection();
 
-            app.UseAuthorization();
+            app.UseCors(AllowTodoRpgWeb);
 
+            app.UseAuthorization();
 
             app.MapControllers();
 
