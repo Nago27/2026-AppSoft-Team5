@@ -1,5 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Text.Json.Serialization;
 
 namespace TodoRPG.Api.Models
 {
@@ -19,9 +20,7 @@ namespace TodoRPG.Api.Models
         [StringLength(20, MinimumLength = 4, ErrorMessage = "비밀번호는 4~20자여야 합니다.")]
         public string Password { get; set; } = string.Empty;
 
-        // RPG 요소를 위해 기본적으로 필요한 컬럼들도 미리 넣어두면 좋습니다.
-        // 초기 레벨 경험치 초기화
-        public int Level { get; set; } = 1;
-        public int Experience { get; set; } = 0;
+        [JsonIgnore]
+        public Character? Character { get; set; }
     }
 }

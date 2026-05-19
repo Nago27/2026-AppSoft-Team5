@@ -1,0 +1,52 @@
+using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
+using System.Text.Json.Serialization;
+
+namespace TodoRPG.Api.Models
+{
+	public class Character
+	{
+		[Key]
+		[ForeignKey("User")]
+		[StringLength(10)]
+		public string UserId { get; set; } = string.Empty;
+
+		[Required]
+		[Range(1, int.MaxValue, ErrorMessage = "레벨은 1 이상이어야 합니다.")]
+		public int Level { get; set; } = 1;
+
+		[Required]
+		[Range(0, int.MaxValue, ErrorMessage = "경험치는 0 이상이어야 합니다.")]
+		public int Experience { get; set; } = 0;
+
+		[Required]
+		[Range(0, int.MaxValue, ErrorMessage = "코인은 0 이상이어야 합니다.")]
+		public int Coin { get; set; } = 0;
+
+		[Required]
+		[Range(0, int.MaxValue)]
+		public int Strength { get; set; } = 0;
+
+		[Required]
+		[Range(0, int.MaxValue)]
+		public int Intelligence { get; set; } = 0;
+
+		[Required]
+		[Range(0, int.MaxValue)]
+		public int Fortune { get; set; } = 0;
+
+		[Required]
+		[Range(0, int.MaxValue)]
+		public int Health { get; set; } = 0;
+
+		[Required]
+		public int CurrentDungeonIndex { get; set; } = 1;
+
+		// EF Core 관계 설정을 위한 네비게이션 프로퍼티
+		[JsonIgnore]
+		public User? User { get; set; }
+
+		[JsonIgnore]
+		public Dungeon? CurrentDungeon { get; set; }
+	}
+}
