@@ -200,9 +200,35 @@
     private int? editingTodoId;
 
     private IEnumerable<TodoItemDto> FilteredTodos =>
-        SelectedCategory == "전체"
-            ? Todos
-            : Todos.Where(todo => todo.Category == SelectedCategory);
+        Todos
+            .Where(ShouldDisplayTodoOnHome)
+            .Where(IsSelectedCategory)
+            .OrderBy(todo => todo.DueDate is null)
+            .ThenBy(todo => todo.DueDate?.Date ?? todo.CreatedAt.ToLocalTime().Date)
+            .ThenByDescending(todo => todo.CreatedAt);
+
+    private bool IsSelectedCategory(TodoItemDto todo)
+    {
+        return SelectedCategory == "전체"
+            || todo.Category == SelectedCategory;
+    }
+
+    private static bool ShouldDisplayTodoOnHome(TodoItemDto todo)
+    {
+        if (todo.IsCompleted)
+        {
+            return false;
+        }
+
+        var today = DateTime.Today;
+
+        if (todo.DueDate is not null)
+        {
+            return todo.DueDate.Value.Date >= today;
+        }
+
+        return todo.CreatedAt.ToLocalTime().Date == today;
+    }
 
     private async Task SubmitCreate()
     {
