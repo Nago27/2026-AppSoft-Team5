@@ -100,8 +100,6 @@
                 Id = model.Id.Trim(),
                 Nickname = model.Nickname.Trim(),
                 Password = model.Password,
-                Level = 1,
-                Experience = 0
             };
 
             var response = await Http.PostAsJsonAsync("api/User", user);
