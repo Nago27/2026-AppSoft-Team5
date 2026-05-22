@@ -1,6 +1,336 @@
 ﻿@page "/store"
 
-<PageTitle>Store</PageTitle>
+<PageTitle>SUPPLY DEPOT</PageTitle>
 
-<h1>상점</h1>
+<section class="store-page">
+    <header class="store-header">
+        <div class="store-title-area">
+            <div class="dy-label">SUPPLY DEPOT</div>
+            <h1>벙커 자동 보급기</h1>
+        </div>
 
+        <div class="balance-board">
+            <div class="balance-card supply">
+                <span class="balance-label">AVAILABLE SUPPLY</span>
+                <strong class="balance-value">@currentSupply</strong>
+            </div>
+        </div>
+    </header>
+
+    <div class="store-log">
+        <strong>TRANSACTION LOG</strong>
+        <span>@storeLog</span>
+    </div>
+
+    <main class="store-layout">
+        <!-- Random capsule machine -->
+        <section class="machine-panel">
+            <div class="panel-title-row">
+                <div>
+                    <div class="dy-label small">RANDOM CAPSULE SLOT</div>
+                    <h2>랜덤 보급 투입구</h2>
+                </div>
+
+                <span class="panel-code">@gachaCost SUPPLY / 1 DRAW</span>
+            </div>
+
+            <div class="machine-body">
+                <div class="machine-left">
+                    <div class="machine-shell">
+                        <div class="machine-top-light"></div>
+
+                        <div class="machine-window @(isDrawing ? "drawing" : "")">
+                            @if (isDrawing)
+                            {
+                                <div class="spinner-track">
+                                    <span>✚</span>
+                                    <span>◉</span>
+                                    <span>▲</span>
+                                    <span>▣</span>
+                                    <span>★</span>
+                                    <span>✚</span>
+                                    <span>◉</span>
+                                    <span>▲</span>
+                                </div>
+                            }
+                            else if (lastGachaReward is null)
+                            {
+                                <div class="machine-idle">
+                                    <span class="idle-mark">?</span>
+                                    <strong>CAPSULE READY</strong>
+                                </div>
+                            }
+                            else
+                            {
+                                <div class="machine-result">
+                                    <span class="reward-rank @lastGachaReward.RankClass">@lastGachaReward.Rank</span>
+                                    <div class="reward-icon">@lastGachaReward.Icon</div>
+                                    <strong>@lastGachaReward.Name</strong>
+                                    <p>@lastGachaReward.Effect</p>
+                                </div>
+                            }
+                        </div>
+
+                        <div class="machine-bottom">
+                            <div class="dispenser-slot"></div>
+
+                            <button type="button"
+                                    class="draw-btn"
+                                    @onclick="RunGacha"
+                                    disabled="@(isDrawing || currentSupply < gachaCost)">
+                                @(isDrawing ? "PROCESSING..." : "DRAW CAPSULE")
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="machine-right">
+                    <div class="machine-info-card">
+                        <span class="info-label">MODE</span>
+                        <strong>TACTICAL SUPPLY DRAW</strong>
+                    </div>
+
+                    <div class="machine-info-card">
+                        <span class="info-label">POOL</span>
+                        <strong>BUFF / ITEM / RECOVERY</strong>
+                    </div>
+
+                    <div class="machine-info-card">
+                        <span class="info-label">RESULT</span>
+                        <strong>@(lastGachaReward?.Name ?? "NO OUTPUT")</strong>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Fixed supply slot -->
+        <section class="shop-panel">
+            <div class="panel-title-row">
+                <div>
+                    <div class="dy-label small">FIXED SUPPLY SLOT</div>
+                    <h2>확정 보급 슬롯</h2>
+                </div>
+
+                <span class="panel-code">DIRECT PURCHASE</span>
+            </div>
+
+            <div class="shop-grid">
+                @foreach (var item in shopItems)
+                {
+                    <article class="shop-card @(item.IsComingSoon ? "coming-soon" : "")">
+                        <div class="shop-card-top">
+                            <span class="item-type">@item.Type</span>
+                            <span class="item-code">@item.Code</span>
+                        </div>
+
+                        <div class="shop-icon">@item.Icon</div>
+
+                        <h3>@item.Name</h3>
+
+                        <div class="effect-box">
+                            <span>EFFECT</span>
+                            <strong>@item.Effect</strong>
+                        </div>
+
+                        <div class="price-row">
+                            <div class="price-box">
+                                <span>PRICE</span>
+                                <strong>@(item.IsComingSoon ? "TBD" : $"{item.Price} SUPPLY")</strong>
+                            </div>
+
+                            <button type="button"
+                                    class="buy-btn"
+                                    disabled="@item.IsComingSoon"
+                                    @onclick="() => BuyItem(item)">
+                                @(item.IsComingSoon ? "입고 예정" : "BUY")
+                            </button>
+                        </div>
+
+                        @if (approvedItemId == item.Id)
+                        {
+                            <div class="approved-stamp">APPROVED</div>
+                        }
+                    </article>
+                }
+            </div>
+        </section>
+    </main>
+</section>
+
+@code {
+    private int currentSupply = 260;
+    private const int gachaCost = 100;
+
+    private string storeLog = "자동 보급기 대기 중. 필요한 보급 방식을 선택하세요.";
+    private bool isDrawing;
+    private int? approvedItemId;
+    private GachaReward? lastGachaReward;
+
+    private readonly List<ShopItem> shopItems = new()
+    {
+        new ShopItem
+        {
+            Id = 1,
+            Code = "MED-01",
+            Type = "RECOVERY",
+            Icon = "✚",
+            Name = "응급 회복 키트",
+            Effect = "HP +30",
+            Price = 60
+        },
+        new ShopItem
+        {
+            Id = 2,
+            Code = "SAFE-02",
+            Type = "DEFENSE",
+            Icon = "▣",
+            Name = "섹터 강등 방지권",
+            Effect = "SECTOR FALL BLOCK",
+            Price = 120
+        },
+        new ShopItem
+        {
+            Id = 3,
+            Code = "EXP-03",
+            Type = "BOOST",
+            Icon = "▲",
+            Name = "경험치 부스터",
+            Effect = "NEXT EXP BONUS",
+            Price = 90
+        },
+        new ShopItem
+        {
+            Id = 4,
+            Code = "FLT-04",
+            Type = "FILTER",
+            Icon = "◉",
+            Name = "필터 교체권",
+            Effect = "DUNGEON READY",
+            Price = 100
+        },
+        new ShopItem
+        {
+            Id = 5,
+            Code = "NEXT-05",
+            Type = "PENDING",
+            Icon = "…",
+            Name = "입고 예정",
+            Effect = "???",
+            Price = 0,
+            IsComingSoon = true
+        }
+    };
+
+    private readonly List<GachaReward> gachaRewards = new()
+    {
+        new GachaReward
+        {
+            Rank = "COMMON",
+            RankClass = "common",
+            Icon = "✚",
+            Name = "낡은 회복 패치",
+            Effect = "HP SMALL RECOVERY"
+        },
+        new GachaReward
+        {
+            Rank = "COMMON",
+            RankClass = "common",
+            Icon = "▣",
+            Name = "소형 보급팩",
+            Effect = "SUPPLY REFUND"
+        },
+        new GachaReward
+        {
+            Rank = "RARE",
+            RankClass = "rare",
+            Icon = "▲",
+            Name = "고농축 경험치 앰플",
+            Effect = "EXP BONUS"
+        },
+        new GachaReward
+        {
+            Rank = "RARE",
+            RankClass = "rare",
+            Icon = "★",
+            Name = "행운 보조 칩",
+            Effect = "LUK BONUS"
+        },
+        new GachaReward
+        {
+            Rank = "EPIC",
+            RankClass = "epic",
+            Icon = "◉",
+            Name = "비상 필터 세트",
+            Effect = "RARE DUNGEON ITEM"
+        }
+    };
+
+    private void BuyItem(ShopItem item)
+    {
+        approvedItemId = null;
+
+        if (item.IsComingSoon)
+        {
+            storeLog = $"{item.Name}은 아직 입고 예정입니다.";
+            return;
+        }
+
+        if (currentSupply < item.Price)
+        {
+            storeLog = "SUPPLY가 부족합니다.";
+            return;
+        }
+
+        currentSupply -= item.Price;
+        approvedItemId = item.Id;
+        storeLog = $"{item.Name} 보급 승인. 남은 SUPPLY: {currentSupply}";
+    }
+
+    private async Task RunGacha()
+    {
+        if (isDrawing)
+        {
+            return;
+        }
+
+        if (currentSupply < gachaCost)
+        {
+            storeLog = "SUPPLY가 부족해 캡슐을 뽑을 수 없습니다.";
+            return;
+        }
+
+        approvedItemId = null;
+        currentSupply -= gachaCost;
+        isDrawing = true;
+        storeLog = "랜덤 보급 투입구 작동 중...";
+
+        await Task.Delay(1200);
+
+        var index = Random.Shared.Next(gachaRewards.Count);
+        lastGachaReward = gachaRewards[index];
+
+        isDrawing = false;
+        storeLog = $"보급 캡슐 배출 완료: {lastGachaReward.Name}";
+    }
+
+    private sealed class ShopItem
+    {
+        public int Id { get; set; }
+        public string Code { get; set; } = "";
+        public string Type { get; set; } = "";
+        public string Icon { get; set; } = "";
+        public string Name { get; set; } = "";
+        public string Effect { get; set; } = "";
+        public int Price { get; set; }
+        public bool IsComingSoon { get; set; }
+    }
+
+    private sealed class GachaReward
+    {
+        public string Rank { get; set; } = "";
+        public string RankClass { get; set; } = "";
+        public string Icon { get; set; } = "";
+        public string Name { get; set; } = "";
+        public string Effect { get; set; } = "";
+    }
+}
