@@ -1,7 +1,7 @@
 /* Added for Todo edit + due date UI after Home.razor is split into child components. */
 
 /* In global CSS, the old CSS-isolation ::deep selector does not work.
-   These selectors intentionally repeat the existing input style for real browser CSS. */
+   These selectors intentionally repeat the existing input style for real browser CSS. *
 .mission-form .mission-input,
 .mission-form .mission-category,
 .mission-form .mission-date,

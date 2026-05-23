@@ -2,30 +2,37 @@ namespace TodoRPG.Web.Client.Models;
 
 public static class TodoCategories
 {
+    public const string Exercise = "운동";
+    public const string Work = "업무";
+    public const string Study = "자기개발";
+    public const string Daily = "일상";
+    public const string Custom = "기타";
+
     public static readonly string[] Values =
     {
-        "운동",
-        "업무",
-        "자기개발",
-        "일상",
-        "기타"
+        Exercise,
+        Work,
+        Study,
+        Daily,
+        Custom
     };
 
     public static string GetLabel(string category)
     {
         return Values.Contains(category)
             ? category
-            : "기타";
+            : Custom;
     }
 
     public static string GetCssClass(string category)
     {
         return category switch
         {
-            "운동" => "patrol",
-            "업무" => "supply",
-            "자기개발" => "intel",
-            "일상" => "shelter",
+            Exercise => "strength",
+            Work => "work",
+            Study => "study",
+            Daily => "daily",
+            Custom => "custom",
             _ => "custom"
         };
     }
@@ -34,11 +41,12 @@ public static class TodoCategories
     {
         return category switch
         {
-            "운동" => "운동 COMPLETED",
-            "업무" => "업무 COMPLETED",
-            "자기개발" => "자기개발 COMPLETED",
-            "일상" => "일상 COMPLETED",
-            _ => "MISSION COMPLETED"
+            Exercise => "운동 미션 완료",
+            Work => "업무 미션 완료",
+            Study => "자기개발 미션 완료",
+            Daily => "일상 미션 완료",
+            Custom => "기타 미션 완료",
+            _ => "미션 완료"
         };
     }
 
@@ -46,11 +54,12 @@ public static class TodoCategories
     {
         return category switch
         {
-            "운동" => "+STR",
-            "업무" => "+SUP / -HP",
-            "자기개발" => "+INT",
-            "일상" => "+HP",
-            _ => "+LUK"
+            Exercise => "+STR",
+            Work => "+SUPPLY / -HP",
+            Study => "+INT",
+            Daily => "+MAX HP",
+            Custom => "+CUSTOM",
+            _ => "+CUSTOM"
         };
     }
 }
