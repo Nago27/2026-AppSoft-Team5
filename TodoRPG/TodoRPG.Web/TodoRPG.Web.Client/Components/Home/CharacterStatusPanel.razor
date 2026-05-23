@@ -1,10 +1,15 @@
 @using TodoRPG.Web.Client.Models
+@implements IDisposable
 
 <section class="monitor-section">
     <div class="section-tag field-view-label">FIELD VIEW</div>
 
     <div class="monitor-content">
         <div class="depth-indicator">B@(10 - Character.Level)F / EXIT ROUTE</div>
+
+        <div class="camera-clock">
+            CAM-04 REC / @currentTime.ToString("yyyy-MM-dd HH:mm:ss")
+        </div>
 
         <div class="character-container">
             <img src="/images/survivor.png"
@@ -17,8 +22,22 @@
     </div>
 
     <div class="survivor-note">
-        <strong>SUBJECT #0471</strong>
+        <strong>SURVIVOR #0471</strong>
         <span>@Character.Title</span>
+        <em>CALLSIGN: @DisplayNickname</em>
+    </div>
+
+    <ActiveLoadoutPanel />
+
+    <div class="system-memo survival-rule-memo">
+        <strong>DAILY SURVIVAL CHECK</strong>
+        <p>
+            매일 최소 1개의 미션을 완료해야 합니다.<br />
+            <span class="memo-warning">
+                <span class="warning-mark">!</span>
+                미달성 시 FILTER HP가 감소합니다.
+            </span>
+        </p>
     </div>
 </section>
 
@@ -91,19 +110,50 @@
         </div>
     </div>
 
-    <div class="system-memo">
-        <strong>MEMO</strong>
-        <p>
-            미션을 완료하면 생존 자원과 능력치가 증가합니다.<br />
-            <span class="memo-warning">
-                <span class="warning-mark">!</span>
-                업무 미션은 보급품 보상이 크지만 체력이 일부 감소합니다.
-            </span>
-        </p>
-    </div>
+    <SectorProgressPanel Character="@Character" />
 </aside>
 
 @code {
     [Parameter]
     public CharacterStatus Character { get; set; } = new();
+
+    [Parameter]
+    public string? Nickname { get; set; }
+
+    private string DisplayNickname =>
+        string.IsNullOrWhiteSpace(Nickname)
+            ? "UNKNOWN"
+            : Nickname;
+
+    private DateTime currentTime = DateTime.Now;
+    private System.Threading.Timer? clockTimer;
+
+    protected override void OnInitialized()
+    {
+        clockTimer = new System.Threading.Timer(_ =>
+        {
+            currentTime = DateTime.Now;
+            InvokeAsync(StateHasChanged);
+        }, null, TimeSpan.Zero, TimeSpan.FromSeconds(1));
+    }
+
+    private string GetMonitorStatus()
+    {
+        if (Character.HpPercent <= 30)
+        {
+            return "CRITICAL CONDITION / FILTER FAILURE RISK / AREA UNSTABLE";
+        }
+
+        if (Character.HpPercent <= 60)
+        {
+            return "FILTER DAMAGE DETECTED / LOW LIGHT / CAUTION";
+        }
+
+        return "LOW LIGHT / FILTER REQUIRED / AREA UNSTABLE";
+    }
+
+    public void Dispose()
+    {
+        clockTimer?.Dispose();
+    }
 }
