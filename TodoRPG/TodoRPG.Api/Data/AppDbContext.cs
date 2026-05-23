@@ -16,6 +16,8 @@ namespace TodoRPG.Api.Data
         public DbSet<User> Users { get; set; } // ID, 닉네임, PW 담은 Users 테이블
         public DbSet<Character> Characters { get; set; }
         public DbSet<Dungeon> Dungeons { get; set; }
+        public DbSet<ShopItem> ShopItems { get; set; }
+        public DbSet<Inventory> Inventories { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -52,6 +54,20 @@ namespace TodoRPG.Api.Data
                 new Dungeon { Index = 3, Name = "오크 요새", RequiredCondition = 10 },
                 new Dungeon { Index = 4, Name = "드래곤의 둥지", RequiredCondition = 20 }
             );
+
+            // 1. Inventory - User 외래키 연동 및 연쇄 삭제 규칙
+            modelBuilder.Entity<Inventory>()
+                .HasOne(i => i.User)
+                .WithMany()
+                .HasForeignKey(i => i.UserId)
+                .OnDelete(DeleteBehavior.Cascade); // 유저 회원 탈퇴 시 해당 가방 데이터도 완전 자동 삭제
+
+            // 2. Inventory - ShopItem 외래키 연동 및 연쇄 삭제 규칙
+            modelBuilder.Entity<Inventory>()
+                .HasOne(i => i.ShopItem)
+                .WithMany()
+                .HasForeignKey(i => i.ShopItemId)
+                .OnDelete(DeleteBehavior.Cascade); // 상점에서 상품 삭제 시 유저 인벤토리 내 해당 아이템 일괄 제거
         }
     }
 }
