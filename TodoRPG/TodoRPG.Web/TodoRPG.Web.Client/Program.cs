@@ -11,5 +11,6 @@ builder.Services.AddScoped(sp =>
     });
 
 builder.Services.AddScoped<TodoApiService>();
+builder.Services.AddScoped<CharacterApiService>();
 
 await builder.Build().RunAsync();

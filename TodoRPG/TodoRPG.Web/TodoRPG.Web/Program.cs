@@ -11,6 +11,7 @@ builder.Services.AddScoped(sp =>
     });
 
 builder.Services.AddScoped<TodoApiService>();
+builder.Services.AddScoped<CharacterApiService>();
 
 // Add services to the container.
 builder.Services.AddRazorComponents()

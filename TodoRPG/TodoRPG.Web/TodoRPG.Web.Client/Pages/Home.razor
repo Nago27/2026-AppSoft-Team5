@@ -3,6 +3,7 @@
 @inject IJSRuntime JS
 @inject NavigationManager Navigation
 @inject TodoApiService TodoApi
+@inject CharacterApiService CharacterApi
 
 @using TodoRPG.Web.Client.Components.Home
 @using TodoRPG.Web.Client.Models
@@ -86,7 +87,35 @@
         }
 
         await LoadTodos();
+        await LoadCharacter();
         await InvokeAsync(StateHasChanged);
+    }
+
+    private async Task LoadCharacter()
+    {
+        var currentUserId = GetCurrentUserIdOrRedirect();
+
+        if (currentUserId is null)
+        {
+            return;
+        }
+
+        try
+        {
+            var character = await CharacterApi.GetByUserAsync(currentUserId);
+
+            if (character is null)
+            {
+                todoErrorMessage = "캐릭터 정보를 불러오지 못했습니다.";
+                return;
+            }
+
+            ApplyCharacterToViewModel(character);
+        }
+        catch (Exception ex)
+        {
+            todoErrorMessage = $"캐릭터 정보를 불러오지 못했습니다: {ex.Message}";
+        }
     }
 
     private async Task LoadTodos()
@@ -113,6 +142,31 @@
         {
             isLoading = false;
         }
+    }
+
+    private void ApplyCharacterToViewModel(CharacterDto character)
+    {
+        Character.Level = character.Level;
+        Character.Exp = character.Experience;
+        Character.Supply = character.Coin;
+
+        Character.Strength = character.Strength;
+        Character.Intelligence = character.Intelligence;
+        Character.Luck = character.Fortune;
+        Character.Hp = character.Health;
+
+        Character.Title = GetCharacterTitle(character.Level);
+    }
+
+    private static string GetCharacterTitle(int level)
+    {
+        return level switch
+        {
+            >= 20 => "심층 구역 생존자",
+            >= 10 => "구역 정비 생존자",
+            >= 5 => "숙련 생존자",
+            _ => "벙커 신입 생존자"
+        };
     }
 
     private async Task<bool> CreateTodo(TodoCreateModel model)

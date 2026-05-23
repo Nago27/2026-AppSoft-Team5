@@ -71,7 +71,7 @@ namespace TodoRPG.Api.Controllers
                 Strength = 0,
                 Intelligence = 0,
                 Fortune = 0,
-                Health = 0,
+                Health = 100,
                 CurrentDungeonIndex = 1 // OnModelCreating에서 시딩한 '초보자의 숲' 번호
             };
 

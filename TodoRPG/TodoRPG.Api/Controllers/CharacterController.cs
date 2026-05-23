@@ -19,7 +19,7 @@ namespace TodoRPG.Api.Controllers
 			_context = context;
 		}
 
-		// GET: /api/Character/{userId} - Ä³¸¯ÅÍ Á¤º¸ Á¶È¸
+		// GET: /api/Character/{userId} - Ä³ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½È¸
 		[HttpGet("{userId}")]
 		public async Task<ActionResult<Character>> GetCharacter(string userId)
 		{
@@ -28,13 +28,13 @@ namespace TodoRPG.Api.Controllers
 
 			if (character == null)
 			{
-				return NotFound("ÇØ´ç »ç¿ëÀÚÀÇ Ä³¸¯ÅÍ Á¤º¸¸¦ Ã£À» ¼ö ¾ø½À´Ï´Ù.");
+				return NotFound("ï¿½Ø´ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ Ä³ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ Ã£ï¿½ï¿½ ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Ï´ï¿½.");
 			}
 
 			return Ok(character);
 		}
 
-		// POST: /api/Character - Ä³¸¯ÅÍ »ý¼º (ÃÊ±âÈ­)
+		// POST: /api/Character - Ä³ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ (ï¿½Ê±ï¿½È­)
 		[HttpPost]
 		public async Task<ActionResult<Character>> PostCharacter(CreateCharacterRequest request)
 		{
@@ -43,13 +43,13 @@ namespace TodoRPG.Api.Controllers
 			var userExists = await _context.Users.AnyAsync(u => u.Id == userId);
 			if (!userExists)
 			{
-				return NotFound("ÇØ´ç »ç¿ëÀÚ°¡ Á¸ÀçÇÏÁö ¾Ê½À´Ï´Ù.");
+				return NotFound("ï¿½Ø´ï¿½ ï¿½ï¿½ï¿½ï¿½Ú°ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½Ê½ï¿½ï¿½Ï´ï¿½.");
 			}
 
 			var characterExists = await _context.Characters.AnyAsync(c => c.UserId == userId);
 			if (characterExists)
 			{
-				return BadRequest("ÀÌ¹Ì Ä³¸¯ÅÍ°¡ »ý¼ºµÈ »ç¿ëÀÚÀÔ´Ï´Ù.");
+				return BadRequest("ï¿½Ì¹ï¿½ Ä³ï¿½ï¿½ï¿½Í°ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ô´Ï´ï¿½.");
 			}
 
 			var character = new Character
@@ -61,7 +61,7 @@ namespace TodoRPG.Api.Controllers
 				Strength = 0,
 				Intelligence = 0,
 				Fortune = 0,
-				Health = 0,
+				Health = 100,
 				CurrentDungeonIndex = 1
 			};
 
@@ -71,17 +71,17 @@ namespace TodoRPG.Api.Controllers
 			return CreatedAtAction(nameof(GetCharacter), new { userId = character.UserId }, character);
 		}
 
-		// PATCH: /api/Character/{userId}/stats - Ä³¸¯ÅÍ ½ºÅÈ ¾÷µ¥ÀÌÆ®
+		// PATCH: /api/Character/{userId}/stats - Ä³ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Æ®
 		[HttpPatch("{userId}/stats")]
 		public async Task<IActionResult> UpdateStats(string userId, UpdateStatsRequest request)
 		{
 			var character = await _context.Characters.FirstOrDefaultAsync(c => c.UserId == userId);
 			if (character == null)
 			{
-				return NotFound("Ä³¸¯ÅÍ¸¦ Ã£À» ¼ö ¾ø½À´Ï´Ù.");
+				return NotFound("Ä³ï¿½ï¿½ï¿½Í¸ï¿½ Ã£ï¿½ï¿½ ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Ï´ï¿½.");
 			}
 
-			// Àü´Þ¹ÞÀº ½ºÅÈ °ª¸¸Å­ ´©Àû °¡»ê (È¤Àº ÇÊ¿ä¿¡ µû¶ó µ¤¾î¾²±â·Î º¯°æ °¡´É)
+			// ï¿½ï¿½ï¿½Þ¹ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½Å­ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ (È¤ï¿½ï¿½ ï¿½Ê¿ä¿¡ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½î¾²ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½)
 			character.Strength += request.Strength;
 			character.Intelligence += request.Intelligence;
 			character.Fortune += request.Fortune;
@@ -94,26 +94,26 @@ namespace TodoRPG.Api.Controllers
 			return NoContent();
 		}
 
-		// PATCH: /api/Character/{userId}/dungeon - ÇöÀç ´øÀü À§Ä¡ °»½Å
+		// PATCH: /api/Character/{userId}/dungeon - ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½Ä¡ ï¿½ï¿½ï¿½ï¿½
 		[HttpPatch("{userId}/dungeon")]
 		public async Task<IActionResult> UpdateDungeon(string userId, UpdateDungeonRequest request)
 		{
 			var character = await _context.Characters.FirstOrDefaultAsync(c => c.UserId == userId);
 			if (character == null)
 			{
-				return NotFound("Ä³¸¯ÅÍ¸¦ Ã£À» ¼ö ¾ø½À´Ï´Ù.");
+				return NotFound("Ä³ï¿½ï¿½ï¿½Í¸ï¿½ Ã£ï¿½ï¿½ ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Ï´ï¿½.");
 			}
 
 			var dungeon = await _context.Dungeons.FindAsync(request.DungeonIndex);
 			if (dungeon == null)
 			{
-				return NotFound("Á¸ÀçÇÏÁö ¾Ê´Â ´øÀüÀÔ´Ï´Ù.");
+				return NotFound("ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½Ê´ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Ô´Ï´ï¿½.");
 			}
 
-			// ÀÔÀå ·¹º§ Á¦ÇÑ Ã¼Å©
+			// ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ Ã¼Å©
 			if (character.Level < dungeon.RequiredCondition)
 			{
-				return BadRequest($"ÇØ´ç ´øÀü¿¡ ÀÔÀåÇÏ±â À§ÇÑ ·¹º§({dungeon.RequiredCondition})ÀÌ ºÎÁ·ÇÕ´Ï´Ù.");
+				return BadRequest($"ï¿½Ø´ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Ï±ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½({dungeon.RequiredCondition})ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Õ´Ï´ï¿½.");
 			}
 
 			character.CurrentDungeonIndex = request.DungeonIndex;
@@ -135,7 +135,7 @@ namespace TodoRPG.Api.Controllers
 		public int Intelligence { get; set; }
 		public int Fortune { get; set; }
 		public int Health { get; set; }
-		public int CoinDelta { get; set; } // ÄÚÀÎ °¡°¨¿ë (+50, -20 µî)
+		public int CoinDelta { get; set; } // ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ (+50, -20 ï¿½ï¿½)
 	}
 
 	public class UpdateDungeonRequest

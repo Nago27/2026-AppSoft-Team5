@@ -4,7 +4,7 @@ public sealed class CharacterStatus
 {
     public int Level { get; set; } = 1;
 
-    public int Hp { get; set; } = 60;
+    public int Hp { get; set; } = 100;
     public int MaxHp { get; set; } = 100;
 
     public int Exp { get; set; } = 30;
