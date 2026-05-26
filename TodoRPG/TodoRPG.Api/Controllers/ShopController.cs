@@ -93,6 +93,18 @@ namespace TodoRPG.Api.Controllers
                 UpdatedCharacter = character
             });
         }
+
+
+        // 상점의 모든 아이템 목록 조회 (GET /api/Shop)
+        [HttpGet]
+        public async Task<ActionResult<IEnumerable<ShopItem>>> GetShopItems()
+        {
+            // 데이터베이스의 ShopItems 테이블에서 모든 아이템 리스트를 비동기로 스캔하여 가져옵니다.
+            var items = await _context.ShopItems.ToListAsync();
+
+            // 가져온 리스트를 성공 상태(200 OK)와 함께 반환합니다.
+            return Ok(items);
+        }
     }
 
     // 명세서 요청 형식 맵핑 DTO
