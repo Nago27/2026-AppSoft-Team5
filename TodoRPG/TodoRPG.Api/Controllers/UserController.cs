@@ -72,6 +72,7 @@ namespace TodoRPG.Api.Controllers
                 Intelligence = 0,
                 Fortune = 0,
                 Health = 100,
+                MaxHealth = 100,
                 CurrentDungeonIndex = 1 // OnModelCreating에서 시딩한 '초보자의 숲' 번호
             };
 
@@ -107,12 +108,14 @@ namespace TodoRPG.Api.Controllers
             }
 
             return Ok(new
-            {
+            {  
                 user.Id,
                 user.Nickname,
                 Level = user.Character?.Level ?? 1,
                 Experience = user.Character?.Experience ?? 0,
-                Coin = user.Character?.Coin ?? 0
+                Coin = user.Character?.Coin ?? 10,
+                Health = user.Character?.Health ?? 100,
+                MaxHealth = user.Character?.MaxHealth ?? 100
             });
         }
 

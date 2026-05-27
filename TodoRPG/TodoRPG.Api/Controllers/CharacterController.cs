@@ -19,7 +19,7 @@ namespace TodoRPG.Api.Controllers
 			_context = context;
 		}
 
-		// GET: /api/Character/{userId} - ĳ���� ���� ��ȸ
+		// GET: /api/Character/{userId} - ��???? ???? ???
 		[HttpGet("{userId}")]
 		public async Task<ActionResult<Character>> GetCharacter(string userId)
 		{
@@ -28,13 +28,13 @@ namespace TodoRPG.Api.Controllers
 
 			if (character == null)
 			{
-				return NotFound("�ش� ������� ĳ���� ������ ã�� �� �����ϴ�.");
+				return NotFound("??? ??????? ��???? ?????? ??? ?? ???????.");
 			}
 
 			return Ok(character);
 		}
 
-		// POST: /api/Character - ĳ���� ���� (�ʱ�ȭ)
+		// POST: /api/Character - ��???? ???? (????)
 		[HttpPost]
 		public async Task<ActionResult<Character>> PostCharacter(CreateCharacterRequest request)
 		{
@@ -43,13 +43,13 @@ namespace TodoRPG.Api.Controllers
 			var userExists = await _context.Users.AnyAsync(u => u.Id == userId);
 			if (!userExists)
 			{
-				return NotFound("�ش� ����ڰ� �������� �ʽ��ϴ�.");
+				return NotFound("??? ?????? ???????? ??????.");
 			}
 
 			var characterExists = await _context.Characters.AnyAsync(c => c.UserId == userId);
 			if (characterExists)
 			{
-				return BadRequest("�̹� ĳ���Ͱ� ������ ������Դϴ�.");
+				return BadRequest("??? ��????? ?????? ?????????.");
 			}
 
 			var character = new Character
@@ -71,17 +71,17 @@ namespace TodoRPG.Api.Controllers
 			return CreatedAtAction(nameof(GetCharacter), new { userId = character.UserId }, character);
 		}
 
-		// PATCH: /api/Character/{userId}/stats - ĳ���� ���� ������Ʈ
+		// PATCH: /api/Character/{userId}/stats - ��???? ???? ???????
 		[HttpPatch("{userId}/stats")]
 		public async Task<IActionResult> UpdateStats(string userId, UpdateStatsRequest request)
 		{
 			var character = await _context.Characters.FirstOrDefaultAsync(c => c.UserId == userId);
 			if (character == null)
 			{
-				return NotFound("ĳ���͸� ã�� �� �����ϴ�.");
+				return NotFound("��????? ??? ?? ???????.");
 			}
 
-			// ���޹��� ���� ����ŭ ���� ���� (Ȥ�� �ʿ信 ���� ������ ���� ����)
+			// ??????? ???? ????? ???? ???? (??? ??�� ???? ??????? ???? ????)
 			character.Strength += request.Strength;
 			character.Intelligence += request.Intelligence;
 			character.Fortune += request.Fortune;
@@ -94,26 +94,26 @@ namespace TodoRPG.Api.Controllers
 			return NoContent();
 		}
 
-		// PATCH: /api/Character/{userId}/dungeon - ���� ���� ��ġ ����
+		// PATCH: /api/Character/{userId}/dungeon - ???? ???? ??? ????
 		[HttpPatch("{userId}/dungeon")]
 		public async Task<IActionResult> UpdateDungeon(string userId, UpdateDungeonRequest request)
 		{
 			var character = await _context.Characters.FirstOrDefaultAsync(c => c.UserId == userId);
 			if (character == null)
 			{
-				return NotFound("ĳ���͸� ã�� �� �����ϴ�.");
+				return NotFound("��????? ??? ?? ???????.");
 			}
 
 			var dungeon = await _context.Dungeons.FindAsync(request.DungeonIndex);
 			if (dungeon == null)
 			{
-				return NotFound("�������� �ʴ� �����Դϴ�.");
+				return NotFound("???????? ??? ????????.");
 			}
 
-			// ���� ���� ���� üũ
+			// ???? ???? ???? ??
 			if (character.Level < dungeon.RequiredCondition)
 			{
-				return BadRequest($"�ش� ������ �����ϱ� ���� ����({dungeon.RequiredCondition})�� �����մϴ�.");
+				return BadRequest($"??? ?????? ??????? ???? ????({dungeon.RequiredCondition})?? ????????.");
 			}
 
 			character.CurrentDungeonIndex = request.DungeonIndex;
@@ -135,7 +135,7 @@ namespace TodoRPG.Api.Controllers
 		public int Intelligence { get; set; }
 		public int Fortune { get; set; }
 		public int Health { get; set; }
-		public int CoinDelta { get; set; } // ���� ������ (+50, -20 ��)
+		public int CoinDelta { get; set; } // ???? ?????? (+50, -20 ??)
 	}
 
 	public class UpdateDungeonRequest

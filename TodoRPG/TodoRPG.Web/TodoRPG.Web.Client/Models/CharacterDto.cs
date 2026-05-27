@@ -18,5 +18,7 @@ public sealed class CharacterDto
 
     public int Health { get; set; }
 
+    public int MaxHealth { get; set; }
+
     public int CurrentDungeonIndex { get; set; }
 }

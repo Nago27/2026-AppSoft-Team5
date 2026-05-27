@@ -21,7 +21,10 @@ namespace TodoRPG.Api.Models
         public string Category { get; set; } = "일상";
 
         public DateTime CreatedAt { get; set; } = DateTime.Now;
+
         public DateTime? DueDate { get; set; } // 던전 시스템용 (nullable)
+
+        public DateTime? CompletedAt { get; set; } // Todo 완료 일자 (마감기한 비교)
 
         [JsonIgnore]
         public User? User { get; set; }

@@ -6,15 +6,15 @@ namespace TodoRPG.Api.Models
     public class Dungeon
     {
         [Key]
-        [DatabaseGenerated(DatabaseGeneratedOption.None)] // ÀÚµ¿ Áõ°¡ ²¨Áü (¼öµ¿ ÁöÁ¤)
+        [DatabaseGenerated(DatabaseGeneratedOption.None)] // ï¿½Úµï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ (ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½)
         public int Index { get; set; }
 
         [Required]
-        [StringLength(50, ErrorMessage = "´øÀü ÀÌ¸§Àº ÃÖ´ë 50ÀÚÀÔ´Ï´Ù.")] // ÀÓÀÇ ÁöÁ¤ Á¦¾àÁ¶°Ç
+        [StringLength(50, ErrorMessage = "ï¿½ï¿½ï¿½ï¿½ ï¿½Ì¸ï¿½ï¿½ï¿½ ï¿½Ö´ï¿½ 50ï¿½ï¿½ï¿½Ô´Ï´ï¿½.")] // ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
         public string Name { get; set; } = string.Empty;
 
         [Required]
-        [Range(0, int.MaxValue, ErrorMessage = "ÀÔÀå °¡´É ·¹º§Àº 0 ÀÌ»óÀÌ¾î¾ß ÇÕ´Ï´Ù.")]
+        [Range(0, int.MaxValue, ErrorMessage = "ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ 0 ï¿½Ì»ï¿½ï¿½Ì¾ï¿½ï¿½ ï¿½Õ´Ï´ï¿½.")]
         public int RequiredCondition { get; set; } = 0;
     }
 }

@@ -75,11 +75,12 @@
                     <label class="checkbox-container">
                         <input type="checkbox"
                                checked="@todo.IsCompleted"
+                               disabled="@todo.IsCompleted"
                                @onchange="async e => await ChangeCompleted(todo.Id, e.Value is bool checkedValue && checkedValue)" />
                         <span class="checkmark"></span>
                     </label>
 
-                    @if (editingTodoId == todo.Id)
+                    @if (editingTodoId == todo.Id && !todo.IsCompleted)
                     {
                         <div class="mission-edit-panel">
                             <EditForm Model="@editTodo" OnValidSubmit="@SubmitEdit" FormName="@($"todo-edit-{todo.Id}")" class="mission-edit-form">
@@ -124,7 +125,7 @@
 
                                 <span class="m-dates">
                                     <span class="m-reward">
-                                        CREATED @todo.CreatedAt.ToLocalTime().ToString("yyyy-MM-dd")
+                                        @GetMissionDateText(todo)
                                     </span>
                                     <span class="@GetDueDateClass(todo)">
                                         @GetDueDateText(todo)
@@ -139,12 +140,13 @@
                         {
                             <div class="stamp">SECURED</div>
                         }
-                        else
+                        else 
                         {
                             <div class="mission-actions">
                                 <button type="button"
                                         class="mission-edit"
                                         title="수정"
+                                        disabled="@todo.IsCompleted"
                                         @onclick="() => BeginEdit(todo)">
                                     EDIT
                                 </button>
@@ -152,11 +154,12 @@
                                 <button type="button"
                                         class="mission-delete"
                                         title="삭제"
+                                        disabled="@todo.IsCompleted"
                                         @onclick="async () => await Delete(todo.Id)">
                                     DELETE
                                 </button>
                             </div>
-                        }
+                        }           
                     }
                 </article>
             }
@@ -203,7 +206,8 @@
         Todos
             .Where(ShouldDisplayTodoOnHome)
             .Where(IsSelectedCategory)
-            .OrderBy(todo => todo.DueDate is null)
+            .OrderBy(todo => todo.IsCompleted)
+            .ThenBy(todo => todo.DueDate is null)
             .ThenBy(todo => todo.DueDate?.Date ?? todo.CreatedAt.ToLocalTime().Date)
             .ThenByDescending(todo => todo.CreatedAt);
 
@@ -215,12 +219,12 @@
 
     private static bool ShouldDisplayTodoOnHome(TodoItemDto todo)
     {
+        var today = DateTime.Today;
+
         if (todo.IsCompleted)
         {
-            return false;
+            return todo.CompletedAt?.ToLocalTime().Date == today;
         }
-
-        var today = DateTime.Today;
 
         if (todo.DueDate is not null)
         {
@@ -249,6 +253,11 @@
 
     private void BeginEdit(TodoItemDto todo)
     {
+        if (todo.IsCompleted)
+        {
+            return;
+        }
+
         editingTodoId = todo.Id;
         editTodo = TodoEditModel.FromTodo(todo);
     }
@@ -307,6 +316,16 @@
     {
         CancelEdit();
         await OnCategorySelected.InvokeAsync(category);
+    }
+
+    private static string GetMissionDateText(TodoItemDto todo)
+    {
+        if (todo.IsCompleted && todo.CompletedAt is not null)
+        {
+            return $"COMPLETED {todo.CompletedAt.Value.ToLocalTime():yyyy-MM-dd}";
+        }
+
+        return $"CREATED {todo.CreatedAt.ToLocalTime():yyyy-MM-dd}";
     }
 
     private static string GetDueDateText(TodoItemDto todo)

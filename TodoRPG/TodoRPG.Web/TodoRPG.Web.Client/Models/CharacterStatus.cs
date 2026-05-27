@@ -7,14 +7,14 @@ public sealed class CharacterStatus
     public int Hp { get; set; } = 100;
     public int MaxHp { get; set; } = 100;
 
-    public int Exp { get; set; } = 30;
+    public int Exp { get; set; } = 0;
     public int MaxExp { get; set; } = 100;
 
-    public int Supply { get; set; } = 247;
+    public int Supply { get; set; } = 10;
 
-    public int Strength { get; set; } = 42;
-    public int Intelligence { get; set; } = 31;
-    public int Luck { get; set; } = 28;
+    public int Strength { get; set; } = 0;
+    public int Intelligence { get; set; } = 0;
+    public int Luck { get; set; } = 0;
 
     public string Title { get; set; } = "벙커 신입 생존자";
 

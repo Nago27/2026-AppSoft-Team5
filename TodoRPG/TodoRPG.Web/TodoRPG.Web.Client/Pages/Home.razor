@@ -36,7 +36,7 @@
     </header>
 
     <main class="terminal-body">
-        <CharacterStatusPanel Character="@Character" />
+        <CharacterStatusPanel Character="@Character" UserName="@userName" />
     </main>
 
     <TodoMissionLog Todos="@Todos"
@@ -59,6 +59,7 @@
     private readonly IReadOnlyList<string> Categories = TodoCategories.Values;
 
     private string? userId;
+    private string userName = string.Empty;
     private bool isLoading = true;
     private string? todoErrorMessage;
 
@@ -80,10 +81,20 @@
             "todoRpg_user_id"
         );
 
+        userName = await JS.InvokeAsync<string?>(
+            "sessionStorage.getItem",
+            "todoRpg_user_name"
+        ) ?? string.Empty;
+
         if (string.IsNullOrWhiteSpace(userId))
         {
             Navigation.NavigateTo("/login", forceLoad: true);
             return;
+        }
+
+        if (string.IsNullOrWhiteSpace(userName))
+        {
+            userName = userId;
         }
 
         await LoadTodos();
@@ -148,14 +159,21 @@
     {
         Character.Level = character.Level;
         Character.Exp = character.Experience;
+        Character.MaxExp = GetRequiredExperience(character.Level);
         Character.Supply = character.Coin;
 
         Character.Strength = character.Strength;
         Character.Intelligence = character.Intelligence;
         Character.Luck = character.Fortune;
         Character.Hp = character.Health;
+        Character.MaxHp = character.MaxHealth <= 0 ? 100 : character.MaxHealth;
 
         Character.Title = GetCharacterTitle(character.Level);
+    }
+
+    private static int GetRequiredExperience(int level)
+    {
+        return (int)Math.Floor(90 + (10 * level) + (0.5 * level * level));
     }
 
     private static string GetCharacterTitle(int level)
@@ -227,6 +245,12 @@
             return false;
         }
 
+        if (target.IsCompleted)
+        {
+            todoErrorMessage = "완료된 Todo는 수정할 수 없습니다.";
+            return false;
+        }
+
         todoErrorMessage = null;
 
         var request = new UpdateTodoRequest
@@ -272,6 +296,11 @@
             return;
         }
 
+        if (todo.IsCompleted)
+        {
+            return;
+        }
+
         var previousValue = todo.IsCompleted;
 
         todo.IsCompleted = change.IsCompleted;
@@ -285,13 +314,20 @@
                 IsCompleted = change.IsCompleted
             };
 
-            await TodoApi.SetCompletedAsync(todo.Id, request);
+            var result = await TodoApi.SetCompletedAsync(todo.Id, request);
+
+            if (result is not null)
+            {
+                ApplyTodoFromResponse(todo, result.TodoItem);
+                ApplyCharacterToViewModel(result.Character);
+            }
 
             if (change.IsCompleted && !previousValue)
             {
-                // 다음 기능 개발 위치:
-                // await ApplyTodoReward(todo);
-                await ShowTodoCompleteEffect(todo);
+                await ShowTodoCompleteEffect(
+                    todo,
+                    result?.Reward?.Message
+                );
             }
         }
         catch (Exception ex)
@@ -310,13 +346,19 @@
             return;
         }
 
+        var target = Todos.FirstOrDefault(todo => todo.Id == id);
+
+        if (target?.IsCompleted == true)
+        {
+            todoErrorMessage = "완료된 Todo는 삭제할 수 없습니다.";
+            return;
+        }
+
         todoErrorMessage = null;
 
         try
         {
             await TodoApi.DeleteAsync(id, currentUserId);
-
-            var target = Todos.FirstOrDefault(todo => todo.Id == id);
 
             if (target is not null)
             {
@@ -329,69 +371,26 @@
         }
     }
 
+    private static void ApplyTodoFromResponse(TodoItemDto target, TodoItemDto source)
+    {
+        target.Title = source.Title;
+        target.Category = source.Category;
+        target.IsCompleted = source.IsCompleted;
+        target.CreatedAt = source.CreatedAt;
+        target.CompletedAt = source.CompletedAt;
+        target.DueDate = source.DueDate;
+    }
+
     private void SelectCategory(string category)
     {
         selectedCategory = category;
     }
 
-    private async Task ShowTodoCompleteEffect(TodoItemDto todo)
+    private async Task ShowTodoCompleteEffect(TodoItemDto todo, string? rewardMessage)
     {
-        effectMessage = TodoCategories.GetCompleteEffectMessage(todo.Category);
-
-        showRewardEffect = true;
-        await InvokeAsync(StateHasChanged);
-
-        await Task.Delay(1500);
-
-        showRewardEffect = false;
-        await InvokeAsync(StateHasChanged);
-    }
-
-    // 추후 "Todo 완료 보상 -> 카테고리별 스탯 증가" 기능을 붙일 때
-    // ToggleTodoCompleted 안에서 ShowTodoCompleteEffect 대신 호출하면 됨.
-    private async Task ApplyTodoReward(TodoItemDto todo)
-    {
-        Character.Exp += 15;
-        Character.Supply += 10;
-
-        switch (todo.Category)
-        {
-            case "운동":
-                Character.Strength += 1;
-                effectMessage = "+15 EXP / +10 SUPPLY / STR +1";
-                break;
-
-            case "업무":
-                Character.Supply += 10;
-                Character.Hp = Math.Max(0, Character.Hp - 5);
-                effectMessage = "+15 EXP / +20 SUPPLY / HP -5";
-                break;
-
-            case "자기개발":
-                Character.Intelligence += 1;
-                effectMessage = "+15 EXP / +10 SUPPLY / INT +1";
-                break;
-
-            case "일상":
-                Character.Hp = Math.Min(Character.MaxHp, Character.Hp + 5);
-                effectMessage = "+15 EXP / +10 SUPPLY / HP +5";
-                break;
-
-            default:
-                Character.Luck += 1;
-                effectMessage = "+15 EXP / +10 SUPPLY / LUK +1";
-                break;
-        }
-
-        if (Character.Exp >= Character.MaxExp)
-        {
-            Character.Exp -= Character.MaxExp;
-            Character.Level += 1;
-            Character.MaxExp += 25;
-            Character.Hp = Character.MaxHp;
-            Character.Title = "구역 정비 생존자";
-            effectMessage = "LEVEL UP / HP REPAIRED";
-        }
+        effectMessage = string.IsNullOrWhiteSpace(rewardMessage)
+            ? TodoCategories.GetCompleteEffectMessage(todo.Category)
+            : rewardMessage;
 
         showRewardEffect = true;
         await InvokeAsync(StateHasChanged);

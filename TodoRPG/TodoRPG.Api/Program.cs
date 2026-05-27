@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using TodoRPG.Api.Data;
+using TodoRPG.Api.Services;
 
 namespace TodoRPG.Api
 {
@@ -19,6 +20,8 @@ namespace TodoRPG.Api
 
             builder.Services.AddDbContext<AppDbContext>(options =>
                 options.UseSqlite("Data Source=todorpg.db"));
+
+            builder.Services.AddScoped<TodoRewardService>();
 
             // Blazor web CORS
             builder.Services.AddCors(options =>

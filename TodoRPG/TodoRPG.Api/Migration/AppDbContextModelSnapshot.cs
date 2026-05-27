@@ -37,6 +37,9 @@ namespace TodoRPG.Api.Migrations
 
                     b.Property<int>("Health")
                         .HasColumnType("INTEGER");
+                    
+                    b.Property<int>("MaxHealth")
+    .HasColumnType("INTEGER");
 
                     b.Property<int>("Intelligence")
                         .HasColumnType("INTEGER");

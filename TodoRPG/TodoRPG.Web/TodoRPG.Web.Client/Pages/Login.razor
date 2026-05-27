@@ -83,7 +83,7 @@
     private bool isSubmitting;
     private bool shouldNavigateHome;
 
-    private async Task HandleLogin()
+   private async Task HandleLogin()
     {
         if (isOpening || isSubmitting)
         {
@@ -110,11 +110,10 @@
             );
 
             var response = await Http.PostAsync("api/User/login", content);
+            var responseText = await response.Content.ReadAsStringAsync();
 
             if (!response.IsSuccessStatusCode)
             {
-                var responseText = await response.Content.ReadAsStringAsync();
-
                 errorMessage = string.IsNullOrWhiteSpace(responseText)
                     ? "ID 또는 비밀번호가 올바르지 않습니다."
                     : responseText.Trim('"');
@@ -122,16 +121,31 @@
                 return;
             }
 
+            var loginUser = JsonSerializer.Deserialize<LoginUserResponse>(
+                responseText,
+                new JsonSerializerOptions { PropertyNameCaseInsensitive = true }
+            );
+
+            var userId = loginUser?.Id ?? model.Username.Trim();
+
+            var userName = string.IsNullOrWhiteSpace(loginUser?.Nickname)
+                ? userId
+                : loginUser.Nickname;
+
             await JS.InvokeVoidAsync(
                 "sessionStorage.setItem",
                 "todoRpg_user_id",
-                model.Username.Trim()
+                userId
+            );
+
+            await JS.InvokeVoidAsync(
+                "sessionStorage.setItem",
+                "todoRpg_user_name",
+                userName
             );
 
             isOpening = true;
             shouldNavigateHome = true;
-
-            return;
         }
         catch (Exception ex)
         {
@@ -153,6 +167,12 @@
 
         [Required(ErrorMessage = "비밀번호를 입력하세요.")]
         public string Password { get; set; } = string.Empty;
+    }
+
+    private sealed class LoginUserResponse
+    {
+        public string Id { get; set; } = string.Empty;
+        public string Nickname { get; set; } = string.Empty;
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)

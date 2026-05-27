@@ -77,3 +77,39 @@ public sealed class TodoCompletedChange
 
     public bool IsCompleted { get; set; }
 }
+
+public sealed class TodoRewardResultDto
+{
+    public int ExperienceGained { get; set; }
+
+    public int CoinGained { get; set; }
+
+    public int StrengthGained { get; set; }
+
+    public int IntelligenceGained { get; set; }
+
+    public int FortuneGained { get; set; }
+
+    public int HealthChanged { get; set; }
+
+    public int MaxHealthGained { get; set; }
+
+    public int LevelUpCount { get; set; }
+
+    public bool DeadlineBonusApplied { get; set; }
+
+    public bool DeadlinePenaltyApplied { get; set; }
+
+    public bool HealthPenaltyApplied { get; set; }
+
+    public string Message { get; set; } = string.Empty;
+}
+
+public sealed class TodoCompletionResultDto
+{
+    public TodoItemDto TodoItem { get; set; } = new();
+
+    public CharacterDto Character { get; set; } = new();
+
+    public TodoRewardResultDto Reward { get; set; } = new();
+}

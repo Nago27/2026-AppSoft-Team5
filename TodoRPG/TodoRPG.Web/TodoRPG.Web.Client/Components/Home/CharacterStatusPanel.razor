@@ -17,7 +17,7 @@
     </div>
 
     <div class="survivor-note">
-        <strong>SUBJECT #0471</strong>
+        <strong>@DisplayUserName</strong>
         <span>@Character.Title</span>
     </div>
 </section>
@@ -75,8 +75,8 @@
 
             <div class="param-content">
                 <span class="p-label">STA</span>
-                <span class="p-value">@Character.Hp</span>
-                <span class="p-desc">체력</span>
+                <span class="p-value">@Character.MaxHp</span>
+                <span class="p-desc">최대 체력</span>
             </div>
         </div>
 
@@ -106,4 +106,11 @@
 @code {
     [Parameter]
     public CharacterStatus Character { get; set; } = new();
+
+    [Parameter]
+    public string UserName { get; set; } = string.Empty;
+
+    private string DisplayUserName => string.IsNullOrWhiteSpace(UserName)
+        ? "UNKNOWN USER"
+        : UserName;
 }

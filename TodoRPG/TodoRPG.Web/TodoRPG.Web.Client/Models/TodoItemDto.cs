@@ -14,5 +14,7 @@ public sealed class TodoItemDto
 
     public DateTime CreatedAt { get; set; }
 
+    public DateTime? CompletedAt { get; set; }
+
     public DateTime? DueDate { get; set; }
 }

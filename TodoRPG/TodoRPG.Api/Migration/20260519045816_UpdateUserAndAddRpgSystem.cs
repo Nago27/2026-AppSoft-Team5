@@ -45,6 +45,7 @@ namespace TodoRPG.Api.Migrations
                     Intelligence = table.Column<int>(type: "INTEGER", nullable: false),
                     Fortune = table.Column<int>(type: "INTEGER", nullable: false),
                     Health = table.Column<int>(type: "INTEGER", nullable: false),
+                    MaxHealth = table.Column<int>(type: "INTEGER", nullable: false),
                     CurrentDungeonIndex = table.Column<int>(type: "INTEGER", nullable: false)
                 },
                 constraints: table =>

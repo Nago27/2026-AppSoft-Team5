@@ -37,7 +37,9 @@ public sealed class TodoApiService
         await EnsureSuccessAsync(response, "Todo 수정에 실패했습니다.");
     }
 
-    public async Task SetCompletedAsync(int id, SetTodoCompletedRequest request)
+    public async Task<TodoCompletionResultDto?> SetCompletedAsync(
+        int id,
+        SetTodoCompletedRequest request)
     {
         var response = await http.PatchAsJsonAsync(
             $"api/Todo/{id}/completed",
@@ -45,6 +47,8 @@ public sealed class TodoApiService
         );
 
         await EnsureSuccessAsync(response, "Todo 상태 변경에 실패했습니다.");
+
+        return await response.Content.ReadFromJsonAsync<TodoCompletionResultDto>();
     }
 
     public async Task DeleteAsync(int id, string userId)

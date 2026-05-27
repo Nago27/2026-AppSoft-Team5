@@ -41,6 +41,9 @@ namespace TodoRPG.Api.Migrations
                     b.Property<int>("Health")
                         .HasColumnType("INTEGER");
 
+                    b.Property<int>("MaxHealth")
+                        .HasColumnType("INTEGER");
+
                     b.Property<int>("Intelligence")
                         .HasColumnType("INTEGER");
 
@@ -115,6 +118,9 @@ namespace TodoRPG.Api.Migrations
                         .HasColumnType("TEXT");
 
                     b.Property<DateTime?>("DueDate")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("CompletedAt")
                         .HasColumnType("TEXT");
 
                     b.Property<bool>("IsCompleted")
