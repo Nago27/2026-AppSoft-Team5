@@ -296,14 +296,13 @@
             return;
         }
 
-        if (todo.IsCompleted)
+        if (todo.IsCompleted || !change.IsCompleted)
         {
             return;
         }
 
         var previousValue = todo.IsCompleted;
 
-        todo.IsCompleted = change.IsCompleted;
         todoErrorMessage = null;
 
         try
@@ -316,17 +315,21 @@
 
             var result = await TodoApi.SetCompletedAsync(todo.Id, request);
 
-            if (result is not null)
+            if (result is null)
             {
-                ApplyTodoFromResponse(todo, result.TodoItem);
-                ApplyCharacterToViewModel(result.Character);
+                todo.IsCompleted = previousValue;
+                todoErrorMessage = "Todo 완료 처리 응답을 받지 못했습니다.";
+                return;
             }
+
+            ApplyTodoFromResponse(todo, result.TodoItem);
+            ApplyCharacterToViewModel(result.Character);
 
             if (change.IsCompleted && !previousValue)
             {
                 await ShowTodoCompleteEffect(
                     todo,
-                    result?.Reward?.Message
+                    result.Reward.Message
                 );
             }
         }

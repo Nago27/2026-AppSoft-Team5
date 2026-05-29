@@ -1,5 +1,6 @@
 namespace TodoRPG.Api.Models;
 
+// 각 이벤트에 대한 스탯 변화량 응답값 저장용
 public sealed class TodoRewardResult
 {
     public int ExperienceGained { get; set; }
@@ -10,6 +11,10 @@ public sealed class TodoRewardResult
     public int HealthChanged { get; set; }
     public int MaxHealthGained { get; set; }
     public int LevelUpCount { get; set; }
+
+    public int ExperienceLost { get; set; }
+    public int CoinLost { get; set; }
+    public int HealthRecovered { get; set; }
 
     public bool DeadlineBonusApplied { get; set; }
     public bool DeadlinePenaltyApplied { get; set; }

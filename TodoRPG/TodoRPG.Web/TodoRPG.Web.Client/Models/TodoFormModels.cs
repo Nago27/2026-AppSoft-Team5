@@ -96,6 +96,10 @@ public sealed class TodoRewardResultDto
 
     public int LevelUpCount { get; set; }
 
+    public int ExperienceLost { get; set; }
+    public int CoinLost { get; set; }
+    public int HealthRecovered { get; set; }
+
     public bool DeadlineBonusApplied { get; set; }
 
     public bool DeadlinePenaltyApplied { get; set; }

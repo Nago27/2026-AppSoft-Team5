@@ -76,20 +76,24 @@ public sealed class TodoRewardService
         };
     }
 
+    // Todo에 대한 보상/패널티
     private TodoRewardResult ApplyCompletionReward(TodoItem todo, Character character)
     {
         var before = CharacterSnapshot.From(character);
         var reward = new TodoRewardResult();
 
+        // 기본 보상안
         var baseExperience = 20 + (character.Level / 2);
         var baseCoin = 10 + (character.Level / 5);
 
+        // 마감 기한 Todo 추가 보상
         reward.ExperienceGained = IsDeadlineSuccess(todo)
             ? RPGCalculator.FloorMultiply(baseExperience, 1.2)
             : baseExperience;
 
         reward.DeadlineBonusApplied = IsDeadlineSuccess(todo);
 
+        // "업무" 추가 보상
         reward.CoinGained = todo.Category == "업무"
             ? RPGCalculator.FloorMultiply(baseCoin, 1.2)
             : baseCoin;
@@ -100,6 +104,7 @@ public sealed class TodoRewardService
         ApplyCategoryReward(todo.Category, character, reward);
         ChangeHealth(character, 1);
 
+        // 마감 기한 실패 시 
         if (IsDeadlineFailed(todo))
         {
             var penalty = RPGCalculator.Percent(character.MaxHealth, 0.1);
@@ -124,6 +129,8 @@ public sealed class TodoRewardService
         return reward;
     }
 
+
+    // 카테고리 별 스탯 보상안
     private void ApplyCategoryReward(
         string category,
         Character character,
@@ -162,13 +169,13 @@ public sealed class TodoRewardService
         character.Health = Math.Min(character.MaxHealth, character.Health + amount);
     }
 
+    // 마감기한 성공/실패 확인
     private static bool IsDeadlineSuccess(TodoItem todo)
     {
         return todo.DueDate is not null
             && todo.CompletedAt is not null
             && todo.CompletedAt.Value.Date <= todo.DueDate.Value.Date;
     }
-
     private static bool IsDeadlineFailed(TodoItem todo)
     {
         return todo.DueDate is not null
@@ -176,20 +183,44 @@ public sealed class TodoRewardService
             && todo.CompletedAt.Value.Date > todo.DueDate.Value.Date;
     }
 
-    private static void ApplyHealthZeroPenalty(
-        Character character,
-        TodoRewardResult reward)
+    // 캐릭터 체력 0에 대한 패널티 
+    private static void ApplyHealthZeroPenalty(Character character, TodoRewardResult reward)
     {
-        var experiencePenalty = RPGCalculator.Percent(character.Experience, 0.1);
+        var experiencePenalty = CalculateExperiencePenalty(character.Experience);
         var coinPenalty = 10 + (character.Level * 2);
+        var actualCoinPenalty = Math.Min(character.Coin, coinPenalty);
+        var recoveredHealth = Math.Max(
+            1,
+            RPGCalculator.Percent(character.MaxHealth, 0.5)
+        );
 
         character.Experience = Math.Max(0, character.Experience - experiencePenalty);
-        character.Coin = Math.Max(0, character.Coin - coinPenalty);
-        character.Health = Math.Max(1, RPGCalculator.Percent(character.MaxHealth, 0.5));
+        character.Coin = Math.Max(0, character.Coin - actualCoinPenalty);
+        character.Health = recoveredHealth;
 
+        reward.ExperienceLost += experiencePenalty;
+        reward.CoinLost += actualCoinPenalty;
+        reward.HealthRecovered = recoveredHealth;
         reward.HealthPenaltyApplied = true;
     }
 
+    // 경험치 감소 로직
+    private static int CalculateExperiencePenalty(int currentExperience)
+    {
+        if (currentExperience <= 0)
+        {
+            return 0;
+        }
+
+        var penalty = Math.Max(
+            1,
+            RPGCalculator.Percent(currentExperience, 0.1)
+        );
+
+        return Math.Min(currentExperience, penalty);
+    }
+
+    // 보상 이벤트 메세지
     private static string BuildRewardMessage(TodoRewardResult reward)
     {
         var messages = new List<string>
