@@ -19,8 +19,13 @@ namespace TodoRPG.Api.Models
 
         // 💡 [외래키 연결] UserId 필드가 아래 User 객체 정보와 맵핑됨을 직접 명시합니다.
         [ForeignKey("UserId")]
-        [JsonIgnore] // 가방 조회 시 유저 정보가 중복 출력되어 연산이 무거워지는 것을 방지
+        [JsonIgnore]
         public virtual User? User { get; set; }
+
+        // 🌟 [추가/수정] Character와의 맵핑 관계를 명시하여 AppDbContext와의 뼈대 싱크를 맞춥니다.
+        [ForeignKey("UserId")]
+        [JsonIgnore]
+        public virtual Character? Character { get; set; }
 
         // 3. 소지 중인 상점 아이템 ID (외래키 설정)
         [Required]

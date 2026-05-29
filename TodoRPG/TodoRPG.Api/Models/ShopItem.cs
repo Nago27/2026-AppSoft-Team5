@@ -40,5 +40,13 @@ namespace TodoRPG.Api.Models
         // 아이템 분류 "Equip" (장착아이템), "NoneEquip" (비장착아이템), "Consume" (소모성아이템)
         [Required]
         public string ItemType { get; set; } = "Consume";
+
+        // [뽑기용 추가 컬럼]
+        [Required]
+        public string Rarity { get; set; } = "Common"; // "Common", "Rare", "Epic", "Legendary"
+
+        [Required]
+        [Range(1, int.MaxValue)] // 가중치는 최소 1 이상이어야 확률 계산에 포함됩니다.
+        public int DropWeight { get; set; } = 100;
     }
 }
