@@ -1,0 +1,129 @@
+﻿@using TodoRPG.Web.Client.Models
+
+<div class="sector-progress-panel">
+    <div class="sector-progress-header">
+        <div>
+            <span class="sector-label">
+                @(IsFloorClearance ? "FLOOR CLEARANCE" : "SECTOR CLEARANCE")
+            </span>
+
+            <h3>
+                @(IsFloorClearance
+                    ? "B9F / SECTOR-04 → B8F ACCESS"
+                    : "SECTOR-04 → SECTOR-05 ACCESS")
+            </h3>
+        </div>
+
+        <span class="sector-state @(IsAccessReady ? "ready" : "locked")">
+            @(IsAccessReady ? "ACCESS READY" : "ACCESS LOCKED")
+        </span>
+    </div>
+
+    <div class="sector-checklist">
+        @foreach (var requirement in DisplayRequirements)
+        {
+            if (requirement is null)
+            {
+                <div class="sector-check-row empty">
+                    <span class="check-icon">-</span>
+                    <span class="check-name">EMPTY</span>
+                    <span class="check-value">-- / --</span>
+                </div>
+            }
+            else
+            {
+                <div class="sector-check-row @(requirement.IsCleared ? "cleared" : "locked")">
+                    <span class="check-icon">@(requirement.IsCleared ? "✓" : "×")</span>
+                    <span class="check-name">@requirement.Name</span>
+                    <span class="check-value">@requirement.Current / @requirement.Required</span>
+                </div>
+            }
+        }
+    </div>
+
+    <button type="button"
+            class="sector-next-button"
+            disabled="@(!IsAccessReady)">
+        @(IsAccessReady ? "MOVE TO NEXT AREA" : "CLEARANCE REQUIRED")
+    </button>
+</div>
+
+@code {
+    [Parameter]
+    public CharacterStatus Character { get; set; } = new();
+
+    // true = 층 이동 조건, false = 섹터 이동 조건
+    [Parameter]
+    public bool IsFloorClearance { get; set; } = true;
+
+    // TODO: 나중에 Todo API와 연결
+    [Parameter]
+    public int CompletedMissionCount { get; set; } = 8;
+
+    [Parameter]
+    public int RequiredMissionCount { get; set; } = 10;
+
+    // TODO: 나중에 Dungeon API와 연결
+    [Parameter]
+    public int DungeonClearCount { get; set; } = 0;
+
+    [Parameter]
+    public int RequiredDungeonClearCount { get; set; } = 1;
+
+    private IReadOnlyList<SectorRequirement> Requirements
+    {
+        get
+        {
+            var requirements = new List<SectorRequirement>
+            {
+                new("STR", Character.Strength, 40),
+                new("INT", Character.Intelligence, 35),
+                new("STA", Character.Hp, 50),
+                new("MISSIONS", CompletedMissionCount, RequiredMissionCount)
+            };
+
+            if (IsFloorClearance)
+            {
+                requirements.Insert(0, new SectorRequirement("LEVEL", Character.Level, 2));
+                requirements.Add(new SectorRequirement("DUNGEON", DungeonClearCount, RequiredDungeonClearCount));
+            }
+
+            return requirements;
+        }
+    }
+
+    private IEnumerable<SectorRequirement?> DisplayRequirements
+    {
+        get
+        {
+            const int fixedSlotCount = 6;
+
+            foreach (var requirement in Requirements.Take(fixedSlotCount))
+            {
+                yield return requirement;
+            }
+
+            for (var i = Requirements.Count; i < fixedSlotCount; i++)
+            {
+                yield return null;
+            }
+        }
+    }
+
+    private bool IsAccessReady => Requirements.All(requirement => requirement.IsCleared);
+
+    private sealed class SectorRequirement
+    {
+        public SectorRequirement(string name, int current, int required)
+        {
+            Name = name;
+            Current = current;
+            Required = required;
+        }
+
+        public string Name { get; }
+        public int Current { get; }
+        public int Required { get; }
+        public bool IsCleared => Current >= Required;
+    }
+}
