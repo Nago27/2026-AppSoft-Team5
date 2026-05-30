@@ -22,9 +22,8 @@
     </div>
 
     <div class="survivor-note">
-        <strong>SURVIVOR #0471</strong>
+        <strong>@DisplayUserName #0000</strong>
         <span>@Character.Title</span>
-        <em>CALLSIGN: @DisplayNickname</em>
     </div>
 
     <ActiveLoadoutPanel />
@@ -93,7 +92,7 @@
             <img class="stat-icon" src="/images/stats/icons/sta.png" alt="" />
 
             <div class="param-content">
-                <span class="p-label">STA</span>
+                <span class="p-label">Max HP</span>
                 <span class="p-value">@Character.MaxHp</span>
                 <span class="p-desc">최대 체력</span>
             </div>
@@ -118,12 +117,11 @@
     public CharacterStatus Character { get; set; } = new();
 
     [Parameter]
-    public string? Nickname { get; set; }
+    public string? UserName { get; set; }
 
-    private string DisplayNickname =>
-        string.IsNullOrWhiteSpace(Nickname)
-            ? "UNKNOWN"
-            : Nickname;
+    private string DisplayUserName => string.IsNullOrWhiteSpace(UserName)
+        ? "UNKNOWN USER"
+        : UserName;
 
     private DateTime currentTime = DateTime.Now;
     private System.Threading.Timer? clockTimer;
