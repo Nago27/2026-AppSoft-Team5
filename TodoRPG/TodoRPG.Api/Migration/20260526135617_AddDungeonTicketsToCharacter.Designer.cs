@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using TodoRPG.Api.Data;
 
@@ -10,9 +11,11 @@ using TodoRPG.Api.Data;
 namespace TodoRPG.Api.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260526135617_AddDungeonTicketsToCharacter")]
+    partial class AddDungeonTicketsToCharacter
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "8.0.0");
@@ -39,9 +42,6 @@ namespace TodoRPG.Api.Migrations
                         .HasColumnType("INTEGER");
 
                     b.Property<int>("Health")
-                        .HasColumnType("INTEGER");
-                    
-                    b.Property<int>("MaxHealth")
                         .HasColumnType("INTEGER");
 
                     b.Property<int>("Intelligence")
@@ -146,9 +146,6 @@ namespace TodoRPG.Api.Migrations
                         .IsRequired()
                         .HasColumnType("TEXT");
 
-                    b.Property<int>("DropWeight")
-                        .HasColumnType("INTEGER");
-
                     b.Property<string>("ItemType")
                         .IsRequired()
                         .HasColumnType("TEXT");
@@ -165,10 +162,6 @@ namespace TodoRPG.Api.Migrations
                     b.Property<int>("PlusStatValue")
                         .HasColumnType("INTEGER");
 
-                    b.Property<string>("Rarity")
-                        .IsRequired()
-                        .HasColumnType("TEXT");
-
                     b.Property<int>("Stock")
                         .HasColumnType("INTEGER");
 
@@ -182,12 +175,10 @@ namespace TodoRPG.Api.Migrations
                             Id = 1,
                             Cost = 60,
                             Description = "가방에 군용 소총을 소지하는 것만으로 생존을 위한 강력한 완력이 솟아납니다. (근력 +10)",
-                            DropWeight = 50,
                             ItemType = "NoneEquip",
                             Name = "k2소총",
                             PlusStat = "STR",
                             PlusStatValue = 10,
-                            Rarity = "Rare",
                             Stock = 999
                         },
                         new
@@ -195,12 +186,10 @@ namespace TodoRPG.Api.Migrations
                             Id = 2,
                             Cost = 150,
                             Description = "쉘터 한구석에 거대한 운동 기구를 들여놓았습니다. 보기만 해도 근육이 성장합니다. (근력 +20)",
-                            DropWeight = 15,
                             ItemType = "NoneEquip",
                             Name = "스미스머신",
                             PlusStat = "STR",
                             PlusStatValue = 20,
-                            Rarity = "Epic",
                             Stock = 999
                         },
                         new
@@ -208,12 +197,10 @@ namespace TodoRPG.Api.Migrations
                             Id = 3,
                             Cost = 300,
                             Description = "[장착 장비] 최첨단 기계 수트를 몸에 걸쳐 인간의 한계를 초월한 괴력을 발휘합니다. (근력 +30)",
-                            DropWeight = 5,
                             ItemType = "Equip",
                             Name = "마크42",
                             PlusStat = "STR",
                             PlusStatValue = 30,
-                            Rarity = "Legendary",
                             Stock = 999
                         },
                         new
@@ -221,12 +208,10 @@ namespace TodoRPG.Api.Migrations
                             Id = 4,
                             Cost = 60,
                             Description = "[장착 장비] 방사능과 외부 독소로부터 신체를 보호하여 생존력을 높여주는 두꺼운 의류입니다. (체력 +10)",
-                            DropWeight = 50,
                             ItemType = "Equip",
                             Name = "황색 방호복",
                             PlusStat = "STA",
                             PlusStatValue = 10,
-                            Rarity = "Rare",
                             Stock = 999
                         },
                         new
@@ -234,12 +219,10 @@ namespace TodoRPG.Api.Migrations
                             Id = 5,
                             Cost = 150,
                             Description = "[장착 장비] 가고일의 단단한 피부처럼 물리적 타격을 완벽히 흡수하는 석조 갑옷입니다. (체력 +20)",
-                            DropWeight = 15,
                             ItemType = "Equip",
                             Name = "가고일돌갑옷",
                             PlusStat = "STA",
                             PlusStatValue = 20,
-                            Rarity = "Epic",
                             Stock = 999
                         },
                         new
@@ -247,12 +230,10 @@ namespace TodoRPG.Api.Migrations
                             Id = 6,
                             Cost = 300,
                             Description = "언제든 달릴 수 있는 유산소 기구입니다. 가방에 두는 것(?)만으로 심폐지구력이 강화됩니다. (체력 +30)",
-                            DropWeight = 5,
                             ItemType = "NoneEquip",
                             Name = "런닝머신",
                             PlusStat = "STA",
                             PlusStatValue = 30,
-                            Rarity = "Legendary",
                             Stock = 999
                         },
                         new
@@ -260,12 +241,10 @@ namespace TodoRPG.Api.Migrations
                             Id = 7,
                             Cost = 60,
                             Description = "인근 황무지의 지형 구조가 상세히 기록된 지도입니다. 탐색 시 판단력이 상승합니다. (지능 +10)",
-                            DropWeight = 50,
                             ItemType = "NoneEquip",
                             Name = "지도",
                             PlusStat = "INT",
                             PlusStatValue = 10,
-                            Rarity = "Rare",
                             Stock = 999
                         },
                         new
@@ -273,12 +252,10 @@ namespace TodoRPG.Api.Migrations
                             Id = 8,
                             Cost = 150,
                             Description = "[장착 장비] 손목이나 장비에 연동하여 실시간으로 인공지능의 전술 연산 서포트를 받습니다. (지능 +20)",
-                            DropWeight = 15,
                             ItemType = "Equip",
                             Name = "아이폰 시리",
                             PlusStat = "INT",
                             PlusStatValue = 20,
-                            Rarity = "Epic",
                             Stock = 999
                         },
                         new
@@ -286,12 +263,10 @@ namespace TodoRPG.Api.Migrations
                             Id = 9,
                             Cost = 300,
                             Description = "무너진 문명의 지식이 담긴 두꺼운 학술서입니다. 읽을 때마다 연산 능력이 깊어집니다. (지능 +30)",
-                            DropWeight = 5,
                             ItemType = "NoneEquip",
                             Name = "교과서",
                             PlusStat = "INT",
                             PlusStatValue = 30,
-                            Rarity = "Legendary",
                             Stock = 999
                         },
                         new
@@ -299,12 +274,10 @@ namespace TodoRPG.Api.Migrations
                             Id = 10,
                             Cost = 60,
                             Description = "종말 전 발행된 유효기간 지난 복권입니다. 왠지 모르게 좋은 일이 생길 것 같은 예감을 줍니다. (행운 +10)",
-                            DropWeight = 50,
                             ItemType = "NoneEquip",
                             Name = "복권",
                             PlusStat = "LUK",
                             PlusStatValue = 10,
-                            Rarity = "Rare",
                             Stock = 999
                         },
                         new
@@ -312,12 +285,10 @@ namespace TodoRPG.Api.Migrations
                             Id = 11,
                             Cost = 150,
                             Description = "오염된 수풀 사이에서 기적적으로 발견한 돌연변이 식물입니다. 기묘한 운이 따릅니다. (행운 +20)",
-                            DropWeight = 15,
                             ItemType = "NoneEquip",
                             Name = "네잎클로버",
                             PlusStat = "LUK",
                             PlusStatValue = 20,
-                            Rarity = "Epic",
                             Stock = 999
                         },
                         new
@@ -325,12 +296,10 @@ namespace TodoRPG.Api.Migrations
                             Id = 12,
                             Cost = 300,
                             Description = "[장착 장비] 이 편지는 영국에서부터 시작되었습니다... 부적처럼 몸에 품으면 불운을 막아줍니다. (행운 +30)",
-                            DropWeight = 5,
                             ItemType = "Equip",
                             Name = "행운의편지",
                             PlusStat = "LUK",
                             PlusStatValue = 30,
-                            Rarity = "Legendary",
                             Stock = 999
                         },
                         new
@@ -338,12 +307,10 @@ namespace TodoRPG.Api.Migrations
                             Id = 13,
                             Cost = 20,
                             Description = "위험지대로 분류된 황무지 던전에 안전하게 진입할 수 있도록 인가된 일회성 패스권",
-                            DropWeight = 100,
                             ItemType = "Consume",
                             Name = "던전 입장권",
                             PlusStat = "DUN GEON",
                             PlusStatValue = 1,
-                            Rarity = "Common",
                             Stock = 999
                         },
                         new
@@ -351,12 +318,10 @@ namespace TodoRPG.Api.Migrations
                             Id = 14,
                             Cost = 15,
                             Description = "[소모품] 마시는 즉시 단백질을 급속 충전하여 일시적으로 파괴적인 힘을 냅니다. (근력 +10)",
-                            DropWeight = 120,
                             ItemType = "Consume",
                             Name = "프로틴쉐이크",
                             PlusStat = "STR",
                             PlusStatValue = 10,
-                            Rarity = "Common",
                             Stock = 999
                         },
                         new
@@ -364,12 +329,10 @@ namespace TodoRPG.Api.Migrations
                             Id = 15,
                             Cost = 15,
                             Description = "[소모품] 심장에 주사하면 일시적으로 신체 세포가 복구되며 대사 연산 기능이 극대화됩니다. (체력 +10)",
-                            DropWeight = 120,
                             ItemType = "Consume",
                             Name = "슈퍼솔져혈청",
                             PlusStat = "STA",
                             PlusStatValue = 10,
-                            Rarity = "Common",
                             Stock = 999
                         },
                         new
@@ -377,12 +340,10 @@ namespace TodoRPG.Api.Migrations
                             Id = 16,
                             Cost = 15,
                             Description = "[소모품] 신비한 물을 한 모금 마시자 막혔던 뇌의 신경 회로 연산이 뚫리며 총명해집니다. (지능 +10)",
-                            DropWeight = 120,
                             ItemType = "Consume",
                             Name = "무안단물",
                             PlusStat = "INT",
                             PlusStatValue = 10,
-                            Rarity = "Common",
                             Stock = 999
                         },
                         new
@@ -390,12 +351,10 @@ namespace TodoRPG.Api.Migrations
                             Id = 17,
                             Cost = 10,
                             Description = "[소모품] 긍정적인 마음으로 한 번 크게 웃으면 쉘터 안에 긍정적인 파동과 운이 찾아옵니다. (행운 +10)",
-                            DropWeight = 150,
                             ItemType = "Consume",
                             Name = "웃음",
                             PlusStat = "LUK",
                             PlusStatValue = 10,
-                            Rarity = "Common",
                             Stock = 999
                         });
                 });

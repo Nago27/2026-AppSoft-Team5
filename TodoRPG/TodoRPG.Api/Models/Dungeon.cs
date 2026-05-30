@@ -6,15 +6,15 @@ namespace TodoRPG.Api.Models
     public class Dungeon
     {
         [Key]
-        [DatabaseGenerated(DatabaseGeneratedOption.None)] // ìë™ ì¦ê°€ êº¼ì§ (ìˆ˜ë™ ì§€ì •)
+        [DatabaseGenerated(DatabaseGeneratedOption.None)] // ÀÚµ¿ Áõ°¡ ²¨Áü (¼öµ¿ ÁöÁ¤)
         public int Index { get; set; }
 
         [Required]
-        [StringLength(50, ErrorMessage = "ë˜ì „ ì´ë¦„ì€ ìµœëŒ€ 50ìì…ë‹ˆë‹¤.")] // ì„ì˜ ì§€ì • ì œì•½ì¡°ê±´
+        [StringLength(50, ErrorMessage = "´øÀü ÀÌ¸§Àº ÃÖ´ë 50ÀÚÀÔ´Ï´Ù.")] // ÀÓÀÇ ÁöÁ¤ Á¦¾àÁ¶°Ç
         public string Name { get; set; } = string.Empty;
 
         [Required]
-        [Range(0, int.MaxValue, ErrorMessage = "ì…ì¥ ê°€ëŠ¥ ë ˆë²¨ì€ 0 ì´ìƒì´ì–´ì•¼ í•©ë‹ˆë‹¤.")]
+        [Range(0, int.MaxValue, ErrorMessage = "ÀÔÀå °¡´É ·¹º§Àº 0 ÀÌ»óÀÌ¾î¾ß ÇÕ´Ï´Ù.")]
         public int RequiredCondition { get; set; } = 0;
     }
 }
