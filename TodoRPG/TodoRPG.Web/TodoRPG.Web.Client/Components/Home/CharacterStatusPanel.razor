@@ -109,7 +109,7 @@
         </div>
     </div>
 
-    <SectorProgressPanel Character="@Character" />
+    <SectorProgressPanel UserId="@UserId" RefreshKey="@SectorProgressRefreshKey" />
 </aside>
 
 @code {
@@ -118,6 +118,12 @@
 
     [Parameter]
     public string? UserName { get; set; }
+
+    [Parameter]
+    public string? UserId { get; set; }
+
+    [Parameter]
+    public int SectorProgressRefreshKey { get; set; }
 
     private string DisplayUserName => string.IsNullOrWhiteSpace(UserName)
         ? "UNKNOWN USER"

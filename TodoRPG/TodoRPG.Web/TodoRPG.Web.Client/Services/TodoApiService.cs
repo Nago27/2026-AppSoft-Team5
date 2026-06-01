@@ -21,6 +21,15 @@ public sealed class TodoApiService
         ) ?? new List<TodoItemDto>();
     }
 
+    public async Task<int> GetCompletedCountAsync(string userId)
+    {
+        var encodedUserId = Uri.EscapeDataString(userId);
+
+        return await http.GetFromJsonAsync<int>(
+            $"api/Todo/user/{encodedUserId}/completed-count"
+        );
+    }
+    
     public async Task<TodoItemDto?> CreateAsync(CreateTodoRequest request)
     {
         var response = await http.PostAsJsonAsync("api/Todo", request);

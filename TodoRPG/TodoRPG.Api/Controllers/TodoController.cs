@@ -65,6 +65,17 @@ namespace TodoRPG.Api.Controllers
             return Ok(todos);
         }
 
+
+        [HttpGet("user/{userId}/completed-count")]
+        public async Task<ActionResult<int>> GetCompletedCount(string userId)
+        {
+            var completedCount = await context.TodoItems
+                .AsNoTracking()
+                .CountAsync(todo => todo.UserId == userId && todo.IsCompleted);
+
+            return Ok(completedCount);
+        }
+
         [HttpPost]
         public async Task<ActionResult<TodoItem>> PostTodoItem(CreateTodoRequest request)
         {
@@ -224,6 +235,11 @@ namespace TodoRPG.Api.Controllers
                 ? trimmed
                 : "기타";
         }
+    }
+
+    public sealed class TodoCompletedCountResponse
+    {
+        public int Count { get; set; }
     }
 
     public sealed class CreateTodoRequest

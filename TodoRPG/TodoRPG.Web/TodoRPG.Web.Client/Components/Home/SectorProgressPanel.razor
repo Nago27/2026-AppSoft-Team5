@@ -1,4 +1,9 @@
-﻿@using TodoRPG.Web.Client.Models
+@using TodoRPG.Web.Client.Models
+@using TodoRPG.Web.Client.Services
+
+@inject CharacterApiService CharacterApi
+@inject TodoApiService TodoApi
+@inject DungeonApiService DungeonApi
 
 <div class="sector-progress-panel">
     <div class="sector-progress-header">
@@ -20,23 +25,42 @@
     </div>
 
     <div class="sector-checklist">
-        @foreach (var requirement in DisplayRequirements)
+        @if (isLoading)
         {
-            if (requirement is null)
+            <div class="sector-check-row locked">
+                <span class="check-icon">…</span>
+                <span class="check-name">LOADING</span>
+                <span class="check-value">-- / --</span>
+            </div>
+        }
+        else if (!string.IsNullOrWhiteSpace(loadErrorMessage))
+        {
+            <div class="sector-check-row locked">
+                <span class="check-icon">×</span>
+                <span class="check-name">API ERROR</span>
+                <span class="check-value">-- / --</span>
+            </div>
+        }
+        else
+        {
+            @foreach (var requirement in DisplayRequirements)
             {
-                <div class="sector-check-row empty">
-                    <span class="check-icon">-</span>
-                    <span class="check-name">EMPTY</span>
-                    <span class="check-value">-- / --</span>
-                </div>
-            }
-            else
-            {
-                <div class="sector-check-row @(requirement.IsCleared ? "cleared" : "locked")">
-                    <span class="check-icon">@(requirement.IsCleared ? "✓" : "×")</span>
-                    <span class="check-name">@requirement.Name</span>
-                    <span class="check-value">@requirement.Current / @requirement.Required</span>
-                </div>
+                if (requirement is null)
+                {
+                    <div class="sector-check-row empty">
+                        <span class="check-icon">-</span>
+                        <span class="check-name">EMPTY</span>
+                        <span class="check-value">-- / --</span>
+                    </div>
+                }
+                else
+                {
+                    <div class="sector-check-row @(requirement.IsCleared ? "cleared" : "locked")">
+                        <span class="check-icon">@(requirement.IsCleared ? "✓" : "×")</span>
+                        <span class="check-name">@requirement.Name</span>
+                        <span class="check-value">@requirement.Current / @requirement.Required</span>
+                    </div>
+                }
             }
         }
     </div>
@@ -50,25 +74,94 @@
 
 @code {
     [Parameter]
-    public CharacterStatus Character { get; set; } = new();
+    public string? UserId { get; set; }
 
     // true = 층 이동 조건, false = 섹터 이동 조건
     [Parameter]
     public bool IsFloorClearance { get; set; } = true;
 
-    // TODO: 나중에 Todo API와 연결
+    // Home에서 Todo 완료/캐릭터 변경 후 값을 증가시키면 이 패널이 API를 다시 호출한다.
     [Parameter]
-    public int CompletedMissionCount { get; set; } = 8;
+    public int RefreshKey { get; set; }
 
     [Parameter]
     public int RequiredMissionCount { get; set; } = 10;
 
-    // TODO: 나중에 Dungeon API와 연결
-    [Parameter]
-    public int DungeonClearCount { get; set; } = 0;
-
     [Parameter]
     public int RequiredDungeonClearCount { get; set; } = 1;
+
+    private const int RequiredLevel = 2;
+    private const int RequiredStrength = 40;
+    private const int RequiredIntelligence = 35;
+    private const int RequiredStamina = 150;
+
+    private CharacterDto? character;
+    private int completedMissionCount;
+    private int dungeonClearCount;
+
+    private bool isLoading = true;
+    private string? loadErrorMessage;
+
+    private string? lastLoadedUserId;
+    private int lastLoadedRefreshKey = -1;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (string.IsNullOrWhiteSpace(UserId))
+        {
+            return;
+        }
+
+        if (lastLoadedUserId == UserId && lastLoadedRefreshKey == RefreshKey)
+        {
+            return;
+        }
+
+        lastLoadedUserId = UserId;
+        lastLoadedRefreshKey = RefreshKey;
+
+        await LoadSectorProgressAsync(UserId);
+    }
+
+    private async Task LoadSectorProgressAsync(string currentUserId)
+    {
+        isLoading = true;
+        loadErrorMessage = null;
+
+        try
+        {
+            var characterTask = CharacterApi.GetByUserAsync(currentUserId);
+            var missionCountTask = TodoApi.GetCompletedCountAsync(currentUserId);
+            var dungeonClearCountTask = DungeonApi.GetClearCountAsync(currentUserId);
+
+            await Task.WhenAll(characterTask, missionCountTask, dungeonClearCountTask);
+
+            character = await characterTask;
+            completedMissionCount = await missionCountTask;
+            dungeonClearCount = await dungeonClearCountTask;
+
+            if (character is null)
+            {
+                loadErrorMessage = "캐릭터 정보를 불러오지 못했습니다.";
+            }
+        }
+        catch (Exception ex)
+        {
+            loadErrorMessage = $"섹터 진행 데이터를 불러오지 못했습니다: {ex.Message}";
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private int CurrentLevel => character?.Level ?? 0;
+
+    private int CurrentStrength => character?.Strength ?? 0;
+
+    private int CurrentIntelligence => character?.Intelligence ?? 0;
+
+    private int CurrentStamina => character?.MaxHealth ?? 0;
 
     private IReadOnlyList<SectorRequirement> Requirements
     {
@@ -76,16 +169,16 @@
         {
             var requirements = new List<SectorRequirement>
             {
-                new("STR", Character.Strength, 40),
-                new("INT", Character.Intelligence, 35),
-                new("STA", Character.Hp, 50),
-                new("MISSIONS", CompletedMissionCount, RequiredMissionCount)
+                new("STR", CurrentStrength, RequiredStrength),
+                new("INT", CurrentIntelligence, RequiredIntelligence),
+                new("STA", CurrentStamina, RequiredStamina),
+                new("MISSIONS", completedMissionCount, RequiredMissionCount)
             };
 
             if (IsFloorClearance)
             {
-                requirements.Insert(0, new SectorRequirement("LEVEL", Character.Level, 2));
-                requirements.Add(new SectorRequirement("DUNGEON", DungeonClearCount, RequiredDungeonClearCount));
+                requirements.Insert(0, new SectorRequirement("LEVEL", CurrentLevel, RequiredLevel));
+                requirements.Add(new SectorRequirement("DUNGEON", dungeonClearCount, RequiredDungeonClearCount));
             }
 
             return requirements;
@@ -110,7 +203,10 @@
         }
     }
 
-    private bool IsAccessReady => Requirements.All(requirement => requirement.IsCleared);
+    private bool IsAccessReady =>
+        !isLoading
+        && string.IsNullOrWhiteSpace(loadErrorMessage)
+        && Requirements.All(requirement => requirement.IsCleared);
 
     private sealed class SectorRequirement
     {

@@ -36,7 +36,10 @@
     </header>
 
     <main class="terminal-body">
-        <CharacterStatusPanel Character="@Character" UserName="@userName" />
+        <CharacterStatusPanel Character="@Character"
+                              UserName="@userName"
+                              UserId="@userId"
+                              SectorProgressRefreshKey="@sectorProgressRefreshKey" />
     </main>
 
     <TodoMissionLog Todos="@Todos"
@@ -62,6 +65,7 @@
     private string userName = string.Empty;
     private bool isLoading = true;
     private string? todoErrorMessage;
+    private int sectorProgressRefreshKey;
 
     private string selectedCategory = "전체";
     private List<TodoItemDto> Todos = new();
@@ -99,6 +103,7 @@
 
         await LoadTodos();
         await LoadCharacter();
+        sectorProgressRefreshKey++;
         await InvokeAsync(StateHasChanged);
     }
 
@@ -324,6 +329,7 @@
 
             ApplyTodoFromResponse(todo, result.TodoItem);
             ApplyCharacterToViewModel(result.Character);
+            sectorProgressRefreshKey++;
 
             if (change.IsCompleted && !previousValue)
             {

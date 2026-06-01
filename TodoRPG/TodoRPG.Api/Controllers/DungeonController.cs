@@ -1,7 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using System.Collections.Generic;
-using System.Threading.Tasks;
 using TodoRPG.Api.Data;
 using TodoRPG.Api.Models;
 
@@ -18,25 +16,54 @@ namespace TodoRPG.Api.Controllers
             _context = context;
         }
 
-        // GET: /api/Dungeon - ÀüÃ¼ ´øÀü ¸ñ·Ï Á¶È¸
+        // GET: /api/Dungeon - ì „ì²´ ë˜ì „ ëª©ë¡ ì¡°íšŒ
         [HttpGet]
         public async Task<ActionResult<IEnumerable<Dungeon>>> GetDungeons()
         {
-            return await _context.Dungeons.OrderBy(d => d.Index).ToListAsync();
+            return await _context.Dungeons
+                .AsNoTracking()
+                .OrderBy(d => d.Index)
+                .ToListAsync();
         }
 
-        // GET: /api/Dungeon/{index} - Æ¯Á¤ ´øÀü Á¤º¸ Á¶È¸
+        // GET: /api/Dungeon/{index} - íŠ¹ì • ë˜ì „ ì •ë³´ ì¡°íšŒ
         [HttpGet("{index}")]
         public async Task<ActionResult<Dungeon>> GetDungeon(int index)
         {
-            var dungeon = await _context.Dungeons.FindAsync(index);
+            var dungeon = await _context.Dungeons
+                .AsNoTracking()
+                .FirstOrDefaultAsync(d => d.Index == index);
 
             if (dungeon == null)
             {
-                return NotFound("ÇØ´ç ´øÀü Á¤º¸¸¦ Ã£À» ¼ö ¾ø½À´Ï´Ù.");
+                return NotFound("í•´ë‹¹ ë˜ì „ ì •ë³´ë¥¼ ì°¾ì„ ìˆ˜ ì—†ìŠµë‹ˆë‹¤.");
             }
 
             return Ok(dungeon);
         }
+
+        // í˜„ì¬ ì§„í–‰ ë˜ì „ ì¸ë±ìŠ¤ë¥¼ ê¸°ì¤€ìœ¼ë¡œ í´ë¦¬ì–´í•œ ë˜ì „ ìˆ˜ë¥¼ ê³„ì‚°.
+        // ì˜ˆ: CurrentDungeonIndex = 1 => 0íšŒ, 2 => 1íšŒ, 3 => 2íšŒ
+        [HttpGet("user/{userId}/clear-count")]
+        public async Task<ActionResult<int>> GetClearCount(string userId)
+        {
+            var character = await _context.Characters
+                .AsNoTracking()
+                .FirstOrDefaultAsync(character => character.UserId == userId);
+
+            if (character is null)
+            {
+                return NotFound("ìºë¦­í„° ì •ë³´ë¥¼ ì°¾ì„ ìˆ˜ ì—†ìŠµë‹ˆë‹¤.");
+            }
+
+            var clearCount = Math.Max(0, character.CurrentDungeonIndex - 1);
+
+            return Ok(clearCount);
+        }
+    }
+
+    public sealed class DungeonClearCountResponse
+    {
+        public int Count { get; set; }
     }
 }
