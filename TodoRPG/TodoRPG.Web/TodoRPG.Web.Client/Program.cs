@@ -12,5 +12,7 @@ builder.Services.AddScoped(sp =>
 
 builder.Services.AddScoped<TodoApiService>();
 builder.Services.AddScoped<CharacterApiService>();
+builder.Services.AddScoped<ShopApiService>();
+builder.Services.AddScoped<InventoryApiService>();
 
 await builder.Build().RunAsync();

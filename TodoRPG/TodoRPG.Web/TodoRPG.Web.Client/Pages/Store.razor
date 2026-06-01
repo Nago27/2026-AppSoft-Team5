@@ -1,4 +1,14 @@
-﻿@page "/store"
+@page "/store"
+
+@using Microsoft.JSInterop
+@using TodoRPG.Web.Client.Models
+@using TodoRPG.Web.Client.Services
+
+@inject IJSRuntime JS
+@inject NavigationManager Navigation
+@inject CharacterApiService CharacterApi
+@inject ShopApiService ShopApi
+@inject InventoryApiService InventoryApi
 
 <PageTitle>SUPPLY DEPOT</PageTitle>
 
@@ -17,20 +27,95 @@
         </div>
     </header>
 
+<!--
     <div class="store-log">
         <strong>TRANSACTION LOG</strong>
         <span>@storeLog</span>
     </div>
-
+-->
     <main class="store-layout">
+        <!-- User inventory slot -->
+        <section class="shop-panel">
+            <div class="panel-title-row">
+                <div>
+                    <div class="dy-label small">USER INVENTORY</div>
+                    <h2>내 인벤토리</h2>
+                </div>
+            </div>
+
+            @if (isLoading)
+            {
+                <div class="store-log">
+                    <strong>LOADING</strong>
+                    <span>인벤토리 데이터를 불러오는 중입니다.</span>
+                </div>
+            }
+            else if (inventoryItems.Count == 0)
+            {
+                <div class="store-log">
+                    <strong>EMPTY</strong>
+                    <span>현재 소지 중인 아이템이 없습니다.</span>
+                </div>
+            }
+            else
+            {
+                <div class="shop-grid">
+                    @foreach (var inventory in inventoryItems)
+                    {
+                        var item = inventory.ShopItem;
+
+                        <article class="shop-card">
+                            <div class="shop-card-top">
+                                <span class="item-type">@DisplayItemType(item?.ItemType)</span>
+                                <span class="item-code">@($"INV-{inventory.Id:D2}")</span>
+                            </div>
+
+                            <div class="shop-icon">@GetItemIcon(item)</div>
+
+                            <h3>@(item?.Name ?? "알 수 없는 아이템")</h3>
+
+                            <div class="effect-box">
+                                <span>EFFECT</span>
+                                <strong>@GetEffectText(item)</strong>
+                            </div>
+
+                            <div class="effect-box">
+                                <span>DESCRIPTION</span>
+                                <strong>@GetItemDescription(item)</strong>
+                            </div>
+
+                            <div class="effect-box">
+                                <span>COUNT / STATE</span>
+                                <strong>@inventory.Count / @GetInventoryStateText(inventory)</strong>
+                            </div>
+
+                            <div class="price-row">
+                                <div class="price-box">
+                                    <span>ACTION</span>
+                                    <strong>@GetInventoryActionTypeText(inventory)</strong>
+                                </div>
+
+                                <button type="button"
+                                        class="buy-btn"
+                                        disabled="@(!CanUseInventoryAction(inventory))"
+                                        @onclick="() => HandleInventoryActionAsync(inventory)">
+                                    @GetInventoryButtonText(inventory)
+                                </button>
+                            </div>
+                        </article>
+                    }
+                </div>
+            }
+        </section>
+
         <!-- Random capsule machine -->
+        <!-- 추후 뽑기 기능 연결용 UI 초안. 현재 작업 범위에서는 백엔드 API와 연결하지 않는다. -->
         <section class="machine-panel">
             <div class="panel-title-row">
                 <div>
                     <div class="dy-label small">RANDOM CAPSULE SLOT</div>
                     <h2>랜덤 보급 투입구</h2>
                 </div>
-
                 <span class="panel-code">@gachaCost SUPPLY / 1 DRAW</span>
             </div>
 
@@ -110,116 +195,105 @@
                     <div class="dy-label small">FIXED SUPPLY SLOT</div>
                     <h2>확정 보급 슬롯</h2>
                 </div>
-
-                <span class="panel-code">DIRECT PURCHASE</span>
             </div>
 
-            <div class="shop-grid">
-                @foreach (var item in shopItems)
-                {
-                    <article class="shop-card @(item.IsComingSoon ? "coming-soon" : "")">
-                        <div class="shop-card-top">
-                            <span class="item-type">@item.Type</span>
-                            <span class="item-code">@item.Code</span>
-                        </div>
+            @if (isLoading)
+            {
+                <div class="store-log">
+                    <strong>LOADING</strong>
+                    <span>상점 데이터를 불러오는 중입니다.</span>
+                </div>
+            }
+            else if (shopItems.Count == 0)
+            {
+                <div class="store-log">
+                    <strong>EMPTY</strong>
+                    <span>현재 판매 중인 아이템이 없습니다.</span>
+                </div>
+            }
+            else
+            {
+                <div class="shop-grid">
+                    @foreach (var item in shopItems)
+                    {
+                        var isSoldOut = IsSoldOut(item);
 
-                        <div class="shop-icon">@item.Icon</div>
-
-                        <h3>@item.Name</h3>
-
-                        <div class="effect-box">
-                            <span>EFFECT</span>
-                            <strong>@item.Effect</strong>
-                        </div>
-
-                        <div class="price-row">
-                            <div class="price-box">
-                                <span>PRICE</span>
-                                <strong>@(item.IsComingSoon ? "TBD" : $"{item.Price} SUPPLY")</strong>
+                        <article class="shop-card @(isSoldOut ? "coming-soon" : "")">
+                            <div class="shop-card-top">
+                                <span class="item-type">@DisplayItemType(item.ItemType)</span>
+                                <span class="item-code">@($"SHOP-{item.Id:D2}")</span>
                             </div>
 
-                            <button type="button"
-                                    class="buy-btn"
-                                    disabled="@item.IsComingSoon"
-                                    @onclick="() => BuyItem(item)">
-                                @(item.IsComingSoon ? "입고 예정" : "BUY")
-                            </button>
-                        </div>
+                            <div class="shop-icon">@GetItemIcon(item)</div>
 
-                        @if (approvedItemId == item.Id)
-                        {
-                            <div class="approved-stamp">APPROVED</div>
-                        }
-                    </article>
-                }
-            </div>
+                            <h3>@item.Name</h3>
+
+                            <div class="effect-box">
+                                <span>EFFECT</span>
+                                <strong>@GetEffectText(item)</strong>
+                            </div>
+
+                            <div class="effect-box">
+                                <span>DESCRIPTION</span>
+                                <strong>@GetItemDescription(item)</strong>
+                            </div>
+
+                            <div class="price-row">
+                                <div class="price-box">
+                                    <span>PRICE</span>
+                                    <strong>@item.Cost SUPPLY</strong>
+                                </div>
+
+                                <button type="button"
+                                        class="buy-btn"
+                                        disabled="@(!CanBuy(item))"
+                                        @onclick="() => BuyItemAsync(item)">
+                                    @GetBuyButtonText(item)
+                                </button>
+                            </div>
+
+                            <div class="effect-box">
+                                <span>STOCK / RARITY</span>
+                                <strong>@item.Stock / @item.Rarity</strong>
+                            </div>
+
+                            @if (approvedItemId == item.Id)
+                            {
+                                <div class="approved-stamp">APPROVED</div>
+                            }
+                        </article>
+                    }
+                </div>
+            }
         </section>
     </main>
 </section>
 
 @code {
-    private int currentSupply = 260;
+    private int currentSupply => currentCharacter?.Coin ?? 0;
+
     private const int gachaCost = 100;
 
+    private string? userId;
+    private string userName = string.Empty;
+
+    private CharacterDto? currentCharacter;
+
+    private List<ShopItemDto> shopItems = new();
+    private List<InventoryItemDto> inventoryItems = new();
+
     private string storeLog = "자동 보급기 대기 중. 필요한 보급 방식을 선택하세요.";
+
+    private bool isLoading = true;
     private bool isDrawing;
+
     private int? approvedItemId;
+    private int? processingShopItemId;
+    private int? processingInventoryId;
+
     private GachaReward? lastGachaReward;
 
-    private readonly List<ShopItem> shopItems = new()
-    {
-        new ShopItem
-        {
-            Id = 1,
-            Code = "MED-01",
-            Type = "RECOVERY",
-            Icon = "✚",
-            Name = "응급 회복 키트",
-            Effect = "HP +30",
-            Price = 60
-        },
-        new ShopItem
-        {
-            Id = 2,
-            Code = "SAFE-02",
-            Type = "DEFENSE",
-            Icon = "▣",
-            Name = "구역 후퇴 방지권",
-            Effect = "ZONE RETREAT BLOCK",
-            Price = 120
-        },
-        new ShopItem
-        {
-            Id = 3,
-            Code = "EXP-03",
-            Type = "BOOST",
-            Icon = "▲",
-            Name = "경험치 부스터",
-            Effect = "NEXT EXP BONUS",
-            Price = 90
-        },
-       new ShopItem
-        {
-            Id = 4,
-            Code = "DGN-04",
-            Type = "DUNGEON",
-            Icon = "▣",
-            Name = "긴급 구역 진입권",
-            Effect = "EMERGENCY ZONE ACCESS",
-            Price = 150
-        },
-        new ShopItem
-        {
-            Id = 5,
-            Code = "NEXT-05",
-            Type = "PENDING",
-            Icon = "…",
-            Name = "입고 예정",
-            Effect = "???",
-            Price = 0,
-            IsComingSoon = true
-        }
-    };
+    private bool IsBusy => processingShopItemId.HasValue || processingInventoryId.HasValue;
 
     private readonly List<GachaReward> gachaRewards = new()
     {
@@ -265,25 +339,250 @@
         }
     };
 
-    private void BuyItem(ShopItem item)
+    protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        approvedItemId = null;
-
-        if (item.IsComingSoon)
+        if (!firstRender)
         {
-            storeLog = $"{item.Name}은 아직 입고 예정입니다.";
             return;
         }
 
-        if (currentSupply < item.Price)
+        userId = await JS.InvokeAsync<string?>(
+            "sessionStorage.getItem",
+            "todoRpg_user_id"
+        );
+
+        userName = await JS.InvokeAsync<string?>(
+            "sessionStorage.getItem",
+            "todoRpg_user_name"
+        ) ?? string.Empty;
+
+        if (string.IsNullOrWhiteSpace(userId))
+        {
+            Navigation.NavigateTo("/login", forceLoad: true);
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(userName))
+        {
+            userName = userId;
+        }
+
+        await LoadStoreDataAsync();
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private async Task LoadStoreDataAsync()
+    {
+        var currentUserId = GetCurrentUserIdOrRedirect();
+
+        if (currentUserId is null)
+        {
+            return;
+        }
+
+        isLoading = true;
+        approvedItemId = null;
+        storeLog = "상점과 인벤토리 데이터를 불러오는 중입니다.";
+
+        try
+        {
+            await ReloadCharacterAsync(currentUserId);
+            await ReloadShopItemsAsync();
+            await ReloadInventoryAsync(currentUserId);
+
+            storeLog = "상점과 인벤토리 데이터 동기화가 완료되었습니다.";
+        }
+        catch (Exception ex)
+        {
+            storeLog = $"상점 데이터 로딩 실패: {ex.Message}";
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private async Task ReloadCharacterAsync(string currentUserId)
+    {
+        currentCharacter = await CharacterApi.GetByUserAsync(currentUserId);
+
+        if (currentCharacter is null)
+        {
+            storeLog = "캐릭터 정보를 불러오지 못했습니다.";
+        }
+    }
+
+    private async Task ReloadShopItemsAsync()
+    {
+        shopItems = (await ShopApi.GetItemsAsync())
+            .OrderBy(item => item.Id)
+            .ToList();
+    }
+
+    private async Task ReloadInventoryAsync(string currentUserId)
+    {
+        inventoryItems = (await InventoryApi.GetByUserAsync(currentUserId))
+            .OrderByDescending(item => item.IsEquipped)
+            .ThenBy(item => item.ShopItem?.Id ?? item.ShopItemId)
+            .ThenBy(item => item.Id)
+            .ToList();
+    }
+
+    private async Task ReloadAllAfterMutationAsync(string currentUserId)
+    {
+        await ReloadCharacterAsync(currentUserId);
+        await ReloadShopItemsAsync();
+        await ReloadInventoryAsync(currentUserId);
+    }
+
+    private async Task BuyItemAsync(ShopItemDto item)
+    {
+        var currentUserId = GetCurrentUserIdOrRedirect();
+
+        if (currentUserId is null)
+        {
+            return;
+        }
+
+        approvedItemId = null;
+
+        if (IsSoldOut(item))
+        {
+            storeLog = $"{item.Name}은 재고가 없습니다.";
+            return;
+        }
+
+        if (currentSupply < item.Cost)
         {
             storeLog = "SUPPLY가 부족합니다.";
             return;
         }
 
-        currentSupply -= item.Price;
-        approvedItemId = item.Id;
-        storeLog = $"{item.Name} 보급 승인. 남은 SUPPLY: {currentSupply}";
+        processingShopItemId = item.Id;
+        storeLog = $"{item.Name} 구매 요청을 전송했습니다.";
+
+        try
+        {
+            var result = await ShopApi.PurchaseAsync(currentUserId, item.Id);
+
+            if (result?.UpdatedCharacter is not null)
+            {
+                currentCharacter = result.UpdatedCharacter;
+            }
+
+            approvedItemId = item.Id;
+
+            await ReloadAllAfterMutationAsync(currentUserId);
+
+            storeLog = string.IsNullOrWhiteSpace(result?.Message)
+                ? $"{item.Name} 구매가 완료되었습니다."
+                : result.Message;
+        }
+        catch (Exception ex)
+        {
+            storeLog = $"구매 실패: {ex.Message}";
+        }
+        finally
+        {
+            processingShopItemId = null;
+        }
+    }
+
+    private async Task HandleInventoryActionAsync(InventoryItemDto inventory)
+    {
+        if (inventory.ShopItem is null)
+        {
+            storeLog = "인벤토리 아이템의 ShopItem 정보를 찾을 수 없습니다.";
+            return;
+        }
+
+        if (IsConsumable(inventory.ShopItem))
+        {
+            await ConsumeInventoryItemAsync(inventory);
+            return;
+        }
+
+        await ToggleInventoryItemAsync(inventory);
+    }
+
+    private async Task ConsumeInventoryItemAsync(InventoryItemDto inventory)
+    {
+        var currentUserId = GetCurrentUserIdOrRedirect();
+
+        if (currentUserId is null || inventory.ShopItem is null)
+        {
+            return;
+        }
+
+        processingInventoryId = inventory.Id;
+        storeLog = $"{inventory.ShopItem.Name} 사용 요청을 전송했습니다.";
+
+        try
+        {
+            var result = await InventoryApi.ConsumeAsync(
+                currentUserId,
+                inventory.ShopItemId
+            );
+
+            if (result?.UpdatedCharacter is not null)
+            {
+                currentCharacter = result.UpdatedCharacter;
+            }
+
+            await ReloadAllAfterMutationAsync(currentUserId);
+
+            storeLog = string.IsNullOrWhiteSpace(result?.Message)
+                ? $"{inventory.ShopItem.Name}을(를) 사용했습니다."
+                : result.Message;
+        }
+        catch (Exception ex)
+        {
+            storeLog = $"아이템 사용 실패: {ex.Message}";
+        }
+        finally
+        {
+            processingInventoryId = null;
+        }
+    }
+
+    private async Task ToggleInventoryItemAsync(InventoryItemDto inventory)
+    {
+        var currentUserId = GetCurrentUserIdOrRedirect();
+
+        if (currentUserId is null || inventory.ShopItem is null)
+        {
+            return;
+        }
+
+        processingInventoryId = inventory.Id;
+        storeLog = $"{inventory.ShopItem.Name} 장착/효과 상태 변경 요청을 전송했습니다.";
+
+        try
+        {
+            var result = await InventoryApi.ToggleEquipAsync(
+                currentUserId,
+                inventory.Id
+            );
+
+            if (result?.UpdatedCharacter is not null)
+            {
+                currentCharacter = result.UpdatedCharacter;
+            }
+
+            await ReloadAllAfterMutationAsync(currentUserId);
+
+            storeLog = string.IsNullOrWhiteSpace(result?.Message)
+                ? $"{inventory.ShopItem.Name} 상태가 변경되었습니다."
+                : result.Message;
+        }
+        catch (Exception ex)
+        {
+            storeLog = $"아이템 효과 변경 실패: {ex.Message}";
+        }
+        finally
+        {
+            processingInventoryId = null;
+        }
     }
 
     private async Task RunGacha()
@@ -300,9 +599,8 @@
         }
 
         approvedItemId = null;
-        currentSupply -= gachaCost;
         isDrawing = true;
-        storeLog = "랜덤 보급 투입구 작동 중...";
+        storeLog = "랜덤 보급 투입구 UI 프리뷰 작동 중입니다. 실제 DB 반영은 아직 하지 않습니다.";
 
         await Task.Delay(1200);
 
@@ -310,27 +608,219 @@
         lastGachaReward = gachaRewards[index];
 
         isDrawing = false;
-        storeLog = $"보급 캡슐 배출 완료: {lastGachaReward.Name}";
+        storeLog = $"UI 프리뷰 결과: {lastGachaReward.Name}. 실제 지급/차감은 아직 처리하지 않습니다.";
     }
 
-    private sealed class ShopItem
+    private string? GetCurrentUserIdOrRedirect()
     {
-        public int Id { get; set; }
-        public string Code { get; set; } = "";
-        public string Type { get; set; } = "";
-        public string Icon { get; set; } = "";
-        public string Name { get; set; } = "";
-        public string Effect { get; set; } = "";
-        public int Price { get; set; }
-        public bool IsComingSoon { get; set; }
+        if (!string.IsNullOrWhiteSpace(userId))
+        {
+            return userId;
+        }
+
+        Navigation.NavigateTo("/login", forceLoad: true);
+        return null;
+    }
+
+    private bool CanBuy(ShopItemDto item)
+    {
+        if (IsBusy)
+        {
+            return false;
+        }
+
+        if (IsSoldOut(item))
+        {
+            return false;
+        }
+
+        return currentSupply >= item.Cost;
+    }
+
+    private bool CanUseInventoryAction(InventoryItemDto inventory)
+    {
+        if (IsBusy)
+        {
+            return false;
+        }
+
+        if (inventory.ShopItem is null)
+        {
+            return false;
+        }
+
+        return inventory.Count > 0;
+    }
+
+    private string GetBuyButtonText(ShopItemDto item)
+    {
+        if (processingShopItemId == item.Id)
+        {
+            return "BUYING...";
+        }
+
+        if (IsSoldOut(item))
+        {
+            return "SOLD OUT";
+        }
+
+        if (currentSupply < item.Cost)
+        {
+            return "NO SUPPLY";
+        }
+
+        return "BUY";
+    }
+
+    private string GetInventoryButtonText(InventoryItemDto inventory)
+    {
+        if (processingInventoryId == inventory.Id)
+        {
+            return "PROCESSING...";
+        }
+
+        if (inventory.ShopItem is null)
+        {
+            return "NO DATA";
+        }
+
+        if (IsConsumable(inventory.ShopItem))
+        {
+            return "USE";
+        }
+
+        return inventory.ShopItem.ItemType switch
+        {
+            "Equip" => inventory.IsEquipped ? "UNEQUIP" : "EQUIP",
+            "NoneEquip" => inventory.IsEquipped ? "EFFECT OFF" : "EFFECT ON",
+            _ => inventory.IsEquipped ? "OFF" : "ON"
+        };
+    }
+
+    private string GetInventoryActionTypeText(InventoryItemDto inventory)
+    {
+        if (inventory.ShopItem is null)
+        {
+            return "NO DATA";
+        }
+
+        if (IsConsumable(inventory.ShopItem))
+        {
+            return "CONSUME";
+        }
+
+        return inventory.ShopItem.ItemType switch
+        {
+            "Equip" => "EQUIP TOGGLE",
+            "NoneEquip" => "PASSIVE TOGGLE",
+            _ => "EFFECT TOGGLE"
+        };
+    }
+
+    private string GetInventoryStateText(InventoryItemDto inventory)
+    {
+        if (inventory.ShopItem is null)
+        {
+            return "NO DATA";
+        }
+
+        if (IsConsumable(inventory.ShopItem))
+        {
+            return "CONSUMABLE";
+        }
+
+        return inventory.IsEquipped ? "ACTIVE" : "STANDBY";
+    }
+
+    private static bool IsSoldOut(ShopItemDto item)
+    {
+        return item.Stock <= 0;
+    }
+
+    private static bool IsConsumable(ShopItemDto item)
+    {
+        return item.ItemType == "Consume";
+    }
+
+    private static string DisplayItemType(string? itemType)
+    {
+        return itemType switch
+        {
+            "Consume" => "CONSUME",
+            "Equip" => "EQUIP",
+            "NoneEquip" => "PASSIVE",
+            _ => "ITEM"
+        };
+    }
+
+    private static string GetItemIcon(ShopItemDto? item)
+    {
+        if (item is null)
+        {
+            return "?";
+        }
+
+        return item.PlusStat switch
+        {
+            "strength" => "STR",
+            "intelligence" => "INT",
+            "fortune" => "LUK",
+            "health" => "STA",
+            _ => "□"
+        };
+    }
+
+    private static string GetEffectText(ShopItemDto? item)
+    {
+        if (item is null || string.IsNullOrWhiteSpace(item.PlusStat))
+        {
+            return "효과 정보 없음";
+        }
+
+        return $"{item.PlusStat} {GetSignedValueText(item.PlusStatValue)}";
+    }
+    private static string GetSignedValueText(int value)
+    {
+        if (value > 0)
+        {
+            return $"+{value}";
+        }
+
+        return value.ToString();
+    }
+
+    private static string GetItemDescription(ShopItemDto? item)
+    {
+        if (item is null || string.IsNullOrWhiteSpace(item.Description))
+        {
+            return "설명 없음";
+        }
+
+        return item.Description;
+    }
+
+    private static string GetStatLabel(string? plusStat)
+    {
+        return plusStat switch
+        {
+            "strength" => "STR",
+            "intelligence" => "INT",
+            "fortune" => "LUK",
+            "health" => "STA",
+            _ => string.Empty
+        };
     }
 
     private sealed class GachaReward
     {
-        public string Rank { get; set; } = "";
-        public string RankClass { get; set; } = "";
-        public string Icon { get; set; } = "";
-        public string Name { get; set; } = "";
-        public string Effect { get; set; } = "";
+        public string Rank { get; set; } = string.Empty;
+
+        public string RankClass { get; set; } = string.Empty;
+
+        public string Icon { get; set; } = string.Empty;
+
+        public string Name { get; set; } = string.Empty;
+
+        public string Effect { get; set; } = string.Empty;
     }
 }

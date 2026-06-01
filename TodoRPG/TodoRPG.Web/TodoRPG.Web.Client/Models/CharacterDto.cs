@@ -21,4 +21,6 @@ public sealed class CharacterDto
     public int MaxHealth { get; set; }
 
     public int CurrentDungeonIndex { get; set; }
+
+    public int DungeonTickets { get; set; }
 }
