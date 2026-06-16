@@ -19,6 +19,7 @@ public sealed class TodoRewardService
         string userId,
         bool isCompleted)
     {
+        var now = DateTime.UtcNow;
         var todo = await context.TodoItems
             .FirstOrDefaultAsync(item => item.Id == todoId && item.UserId == userId);
 
@@ -61,10 +62,12 @@ public sealed class TodoRewardService
             };
         }
 
-        todo.IsCompleted = true;
-        todo.CompletedAt = DateTime.UtcNow;
+        var lastTodoCreatedAt = await GetLastTodoCreatedAtAsync(userId);
 
-        var reward = ApplyCompletionReward(todo, character);
+        todo.IsCompleted = true;
+        todo.CompletedAt = now;
+
+        var reward = ApplyCompletionReward(todo, character, lastTodoCreatedAt, now);
 
         await context.SaveChangesAsync();
 
@@ -76,11 +79,43 @@ public sealed class TodoRewardService
         };
     }
 
+    public async Task ApplyTodoInactivityPenaltyAsync(string userId)
+    {
+        var now = DateTime.UtcNow;
+        var character = await context.Characters
+            .FirstOrDefaultAsync(item => item.UserId == userId);
+
+        if (character is null)
+        {
+            return;
+        }
+
+        var lastTodoCreatedAt = await GetLastTodoCreatedAtAsync(userId);
+        var result = ApplyTodoInactivityPenalty(character, lastTodoCreatedAt, now);
+
+        if (result.PenaltyApplied)
+        {
+            await context.SaveChangesAsync();
+        }
+    }
+
     // Todo에 대한 보상/패널티
-    private TodoRewardResult ApplyCompletionReward(TodoItem todo, Character character)
+    private TodoRewardResult ApplyCompletionReward(
+        TodoItem todo,
+        Character character,
+        DateTime? lastTodoCreatedAt,
+        DateTime now)
     {
         var before = CharacterSnapshot.From(character);
         var reward = new TodoRewardResult();
+        var inactivityPenalty = ApplyTodoInactivityPenalty(
+            character,
+            lastTodoCreatedAt,
+            now
+        );
+
+        reward.TodoInactivityPenaltyApplied = inactivityPenalty.PenaltyApplied;
+        reward.TodoInactivityHealthLost = inactivityPenalty.HealthLost;
 
         // 기본 보상안
         var baseExperience = 20 + (character.Level / 2);
@@ -97,6 +132,20 @@ public sealed class TodoRewardService
         reward.CoinGained = todo.Category == "업무"
             ? RPGCalculator.FloorMultiply(baseCoin, 1.2)
             : baseCoin;
+
+        reward.RewardReductionApplied = IsRewardReductionActive(character, now);
+
+        if (reward.RewardReductionApplied)
+        {
+            reward.ExperienceGained = RPGCalculator.FloorMultiply(
+                reward.ExperienceGained,
+                0.9
+            );
+            reward.CoinGained = RPGCalculator.FloorMultiply(
+                reward.CoinGained,
+                0.9
+            );
+        }
 
         character.Experience += reward.ExperienceGained;
         character.Coin += reward.CoinGained;
@@ -129,6 +178,47 @@ public sealed class TodoRewardService
         return reward;
     }
 
+    private async Task<DateTime?> GetLastTodoCreatedAtAsync(string userId)
+    {
+        return await context.TodoItems
+            .Where(todo => todo.UserId == userId)
+            .OrderByDescending(todo => todo.CreatedAt)
+            .Select(todo => (DateTime?)todo.CreatedAt)
+            .FirstOrDefaultAsync();
+    }
+
+    private static TodoInactivityPenaltyResult ApplyTodoInactivityPenalty(
+        Character character,
+        DateTime? lastTodoCreatedAt,
+        DateTime now)
+    {
+        if (lastTodoCreatedAt is null
+            || lastTodoCreatedAt.Value.Date > now.Date.AddDays(-3))
+        {
+            return TodoInactivityPenaltyResult.None;
+        }
+
+        if (character.LastTodoInactivityPenaltyAt?.Date == now.Date)
+        {
+            return TodoInactivityPenaltyResult.None;
+        }
+
+        var healthLost = Math.Max(
+            1,
+            RPGCalculator.Percent(character.MaxHealth, 0.1)
+        );
+        ChangeHealth(character, -healthLost);
+        character.LastTodoInactivityPenaltyAt = now;
+        character.RewardReductionExpiresAt = now.AddDays(1);
+
+        return new TodoInactivityPenaltyResult(true, healthLost);
+    }
+
+    private static bool IsRewardReductionActive(Character character, DateTime now)
+    {
+        return character.RewardReductionExpiresAt is not null
+            && character.RewardReductionExpiresAt > now;
+    }
 
     // 카테고리 별 스탯 보상안
     private void ApplyCategoryReward(
@@ -247,6 +337,16 @@ public sealed class TodoRewardService
             messages.Add("HEALTH PENALTY");
         }
 
+        if (reward.TodoInactivityPenaltyApplied)
+        {
+            messages.Add($"NO TODO PENALTY HP -{reward.TodoInactivityHealthLost}");
+        }
+
+        if (reward.RewardReductionApplied)
+        {
+            messages.Add("NO TODO REWARD -10%");
+        }
+
         return string.Join(" / ", messages);
     }
 
@@ -286,5 +386,12 @@ public sealed class TodoRewardService
                 character.Intelligence,
                 character.Fortune);
         }
+    }
+
+    private readonly record struct TodoInactivityPenaltyResult(
+        bool PenaltyApplied,
+        int HealthLost)
+    {
+        public static TodoInactivityPenaltyResult None { get; } = new(false, 0);
     }
 }

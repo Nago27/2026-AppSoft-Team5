@@ -23,4 +23,8 @@ public sealed class CharacterDto
     public int CurrentDungeonIndex { get; set; }
 
     public int DungeonTickets { get; set; }
+
+    public DateTime? LastTodoInactivityPenaltyAt { get; set; }
+
+    public DateTime? RewardReductionExpiresAt { get; set; }
 }

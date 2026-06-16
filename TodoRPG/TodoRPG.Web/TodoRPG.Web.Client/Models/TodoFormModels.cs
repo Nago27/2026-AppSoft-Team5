@@ -99,12 +99,17 @@ public sealed class TodoRewardResultDto
     public int ExperienceLost { get; set; }
     public int CoinLost { get; set; }
     public int HealthRecovered { get; set; }
+    public int TodoInactivityHealthLost { get; set; }
 
     public bool DeadlineBonusApplied { get; set; }
 
     public bool DeadlinePenaltyApplied { get; set; }
 
     public bool HealthPenaltyApplied { get; set; }
+
+    public bool TodoInactivityPenaltyApplied { get; set; }
+
+    public bool RewardReductionApplied { get; set; }
 
     public string Message { get; set; } = string.Empty;
 }

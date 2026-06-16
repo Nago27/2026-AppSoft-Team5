@@ -224,6 +224,9 @@
                 await LoadTodos();
             }
 
+            await LoadCharacter();
+            sectorProgressRefreshKey++;
+
             return true;
         }
         catch (Exception ex)

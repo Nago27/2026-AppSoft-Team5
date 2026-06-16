@@ -51,6 +51,11 @@ namespace TodoRPG.Api.Models
         [Range(0, int.MaxValue, ErrorMessage = "던전 티켓은 0개 이상이어야 합니다.")]
         public int DungeonTickets { get; set; } = 0;
 
+		// Todo 미생성 패널티
+        public DateTime? LastTodoInactivityPenaltyAt { get; set; }
+
+        public DateTime? RewardReductionExpiresAt { get; set; }
+
         // EF Core 관계 설정을 위한 네비게이션 프로퍼티
         [JsonIgnore]
 		public User? User { get; set; }

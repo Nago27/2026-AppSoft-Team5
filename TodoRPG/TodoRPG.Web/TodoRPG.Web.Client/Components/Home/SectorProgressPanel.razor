@@ -90,10 +90,10 @@
     [Parameter]
     public int RequiredDungeonClearCount { get; set; } = 1;
 
-    private const int RequiredLevel = 2;
+    private const int RequiredLevel = 5;
     private const int RequiredStrength = 40;
     private const int RequiredIntelligence = 35;
-    private const int RequiredStamina = 150;
+    private const int RequiredMaxHP = 150;
 
     private CharacterDto? character;
     private int completedMissionCount;
@@ -161,7 +161,7 @@
 
     private int CurrentIntelligence => character?.Intelligence ?? 0;
 
-    private int CurrentStamina => character?.MaxHealth ?? 0;
+    private int CurrentMaxHP => character?.MaxHealth ?? 0;
 
     private IReadOnlyList<SectorRequirement> Requirements
     {
@@ -171,7 +171,7 @@
             {
                 new("STR", CurrentStrength, RequiredStrength),
                 new("INT", CurrentIntelligence, RequiredIntelligence),
-                new("STA", CurrentStamina, RequiredStamina),
+                new("Max HP", CurrentMaxHP, RequiredMaxHP),
                 new("MISSIONS", completedMissionCount, RequiredMissionCount)
             };
 

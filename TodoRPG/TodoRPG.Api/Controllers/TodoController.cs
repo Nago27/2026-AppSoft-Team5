@@ -100,6 +100,8 @@ namespace TodoRPG.Api.Controllers
                 return NotFound("해당 사용자를 찾을 수 없습니다.");
             }
 
+            await todoRewardService.ApplyTodoInactivityPenaltyAsync(userId);
+
             var todoItem = new TodoItem
             {
                 UserId = userId,
