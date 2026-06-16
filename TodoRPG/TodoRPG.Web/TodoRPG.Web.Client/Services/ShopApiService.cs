@@ -33,6 +33,20 @@ public sealed class ShopApiService
         return await response.Content.ReadFromJsonAsync<PurchaseResponse>();
     }
 
+    public async Task<GachaResponse?> DrawGachaAsync(string userId)
+    {
+        var request = new GachaRequest
+        {
+            UserId = userId
+        };
+
+        var response = await http.PostAsJsonAsync("api/Gacha/draw", request);
+
+        await EnsureSuccessAsync(response, "뽑기에 실패했습니다.");
+
+        return await response.Content.ReadFromJsonAsync<GachaResponse>();
+    }
+
     private static async Task EnsureSuccessAsync(
         HttpResponseMessage response,
         string fallbackMessage)

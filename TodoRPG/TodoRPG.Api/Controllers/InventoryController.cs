@@ -67,22 +67,16 @@ namespace TodoRPG.Api.Controllers
                 return NotFound("캐릭터 정보를 찾을 수 없습니다.");
             }
 
-            string statType = inventory.ShopItem.PlusStat.ToLower().Trim();
             int statValue = inventory.ShopItem.PlusStatValue;
+            int statDelta = inventory.IsEquipped ? -statValue : statValue;
+
+            if (!UpdateCharacterStat(character, inventory.ShopItem.PlusStat, statDelta))
+            {
+                return BadRequest("아이템 스탯 정보를 처리할 수 없습니다.");
+            }
 
             // [3] 장착 여부 상태 플래그 판별 연산
-            if (!inventory.IsEquipped)
-            {
-                // 미장착 -> 장착 상태 변환 (캐릭터 스탯 누적 가산 처리)
-                inventory.IsEquipped = true;
-                UpdateCharacterStat(character, statType, statValue);
-            }
-            else
-            {
-                // 장착 -> 미장착 상태 변환 (장착 해제에 따른 스탯 회수 역연산 처리)
-                inventory.IsEquipped = false;
-                UpdateCharacterStat(character, statType, -statValue); // 마이너스 부호 연산
-            }
+            inventory.IsEquipped = !inventory.IsEquipped;
 
             // [4] 가방 상태 및 캐릭터 엔티티 상태 수정 마킹
             _context.Entry(inventory).State = EntityState.Modified;
@@ -126,8 +120,13 @@ namespace TodoRPG.Api.Controllers
             }
 
             // [1] 스탯 즉시 반영 처리
-            string statType = inventory.ShopItem.PlusStat.ToLower().Trim();
-            UpdateCharacterStat(character, statType, inventory.ShopItem.PlusStatValue);
+            if (!UpdateCharacterStat(
+                character,
+                inventory.ShopItem.PlusStat,
+                inventory.ShopItem.PlusStatValue))
+            {
+                return BadRequest("아이템 스탯 정보를 처리할 수 없습니다.");
+            }
 
             // [2] 수량 감산 계산
             inventory.Count -= 1;
@@ -172,27 +171,74 @@ namespace TodoRPG.Api.Controllers
         }
 
         // 💡 [서브 연산 헬퍼 함수] 공통 수치 제어 연산식 규칙 정의
-        private void UpdateCharacterStat(Character character, string statType, int value)
+        private static bool UpdateCharacterStat(Character character, string statType, int value)
         {
-            switch (statType)
+            switch (NormalizeStatCode(statType))
             {
-                case "strength":
+                case "STR":
+                case "STRENGTH":
                 case "근력":
-                    character.Strength += value;
-                    break;
-                case "intelligence":
+                    character.Strength = Math.Max(0, character.Strength + value);
+                    return true;
+
+                case "INT":
+                case "INTELLIGENCE":
                 case "지능":
-                    character.Intelligence += value;
-                    break;
-                case "fortune":
+                    character.Intelligence = Math.Max(0, character.Intelligence + value);
+                    return true;
+
+                case "LUK":
+                case "LUCK":
+                case "FORTUNE":
                 case "행운":
-                    character.Fortune += value;
-                    break;
-                case "health":
+                    character.Fortune = Math.Max(0, character.Fortune + value);
+                    return true;
+
+                case "STA":
+                case "MAXHP":
+                case "MAXHEALTH":
+                case "최대체력":
+                    character.MaxHealth = Math.Max(1, character.MaxHealth + value);
+                    character.Health = Math.Min(character.Health, character.MaxHealth);
+                    return true;
+
+                case "HP":
+                case "HEALTH":
                 case "체력":
-                    character.Health += value;
-                    break;
+                    character.Health = Math.Clamp(
+                        character.Health + value,
+                        0,
+                        character.MaxHealth
+                    );
+                    return true;
+
+                case "DUNGEON":
+                case "DUNGEONTICKET":
+                case "TICKET":
+                    character.DungeonTickets = Math.Max(
+                        0,
+                        character.DungeonTickets + value
+                    );
+                    return true;
+
+                default:
+                    return false;
             }
+        }
+
+        private static string NormalizeStatCode(string? value)
+        {
+            if (string.IsNullOrWhiteSpace(value))
+            {
+                return string.Empty;
+            }
+
+            return value
+                .Trim()
+                .Replace(" ", string.Empty)
+                .Replace("_", string.Empty)
+                .Replace("-", string.Empty)
+                .ToUpperInvariant();
         }
     }
 

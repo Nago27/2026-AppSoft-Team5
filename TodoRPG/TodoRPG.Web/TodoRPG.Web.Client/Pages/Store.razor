@@ -64,7 +64,8 @@
                     {
                         var item = inventory.ShopItem;
 
-                        <article class="shop-card">
+                        <article class="shop-card @(inventory.IsEquipped ? "active-item" : "")"
+                                 @key="inventory.Id">
                             <div class="shop-card-top">
                                 <span class="item-type">@DisplayItemType(item?.ItemType)</span>
                                 <span class="item-code">@($"INV-{inventory.Id:D2}")</span>
@@ -109,7 +110,6 @@
         </section>
 
         <!-- Random capsule machine -->
-        <!-- 추후 뽑기 기능 연결용 UI 초안. 현재 작업 범위에서는 백엔드 API와 연결하지 않는다. -->
         <section class="machine-panel">
             <div class="panel-title-row">
                 <div>
@@ -148,10 +148,12 @@
                             else
                             {
                                 <div class="machine-result">
-                                    <span class="reward-rank @lastGachaReward.RankClass">@lastGachaReward.Rank</span>
-                                    <div class="reward-icon">@lastGachaReward.Icon</div>
+                                    <span class="reward-rank @GetRarityClass(lastGachaReward.Rarity)">
+                                        @lastGachaReward.Rarity
+                                    </span>
+                                    <div class="reward-icon">@GetItemIcon(lastGachaReward)</div>
                                     <strong>@lastGachaReward.Name</strong>
-                                    <p>@lastGachaReward.Effect</p>
+                                    <p>@GetEffectText(lastGachaReward)</p>
                                 </div>
                             }
                         </div>
@@ -162,7 +164,7 @@
                             <button type="button"
                                     class="draw-btn"
                                     @onclick="RunGacha"
-                                    disabled="@(isDrawing || currentSupply < gachaCost)">
+                                    disabled="@(isDrawing || IsBusy || isLoading || currentSupply < gachaCost)">
                                 @(isDrawing ? "PROCESSING..." : "DRAW CAPSULE")
                             </button>
                         </div>
@@ -177,7 +179,7 @@
 
                     <div class="machine-info-card">
                         <span class="info-label">POOL</span>
-                        <strong>BUFF / ITEM / RECOVERY</strong>
+                        <strong>DB SHOP ITEMS</strong>
                     </div>
 
                     <div class="machine-info-card">
@@ -218,7 +220,8 @@
                     {
                         var isSoldOut = IsSoldOut(item);
 
-                        <article class="shop-card @(isSoldOut ? "coming-soon" : "")">
+                        <article class="shop-card @(isSoldOut ? "coming-soon" : "")"
+                                 @key="item.Id">
                             <div class="shop-card-top">
                                 <span class="item-type">@DisplayItemType(item.ItemType)</span>
                                 <span class="item-code">@($"SHOP-{item.Id:D2}")</span>
@@ -291,53 +294,9 @@
     private int? processingShopItemId;
     private int? processingInventoryId;
 
-    private GachaReward? lastGachaReward;
+    private ShopItemDto? lastGachaReward;
 
     private bool IsBusy => processingShopItemId.HasValue || processingInventoryId.HasValue;
-
-    private readonly List<GachaReward> gachaRewards = new()
-    {
-        new GachaReward
-        {
-            Rank = "COMMON",
-            RankClass = "common",
-            Icon = "✚",
-            Name = "낡은 회복 패치",
-            Effect = "HP SMALL RECOVERY"
-        },
-        new GachaReward
-        {
-            Rank = "COMMON",
-            RankClass = "common",
-            Icon = "▣",
-            Name = "소형 보급팩",
-            Effect = "SUPPLY REFUND"
-        },
-        new GachaReward
-        {
-            Rank = "RARE",
-            RankClass = "rare",
-            Icon = "▲",
-            Name = "고농축 경험치 앰플",
-            Effect = "EXP BONUS"
-        },
-        new GachaReward
-        {
-            Rank = "RARE",
-            RankClass = "rare",
-            Icon = "★",
-            Name = "행운 보조 칩",
-            Effect = "LUK BONUS"
-        },
-        new GachaReward
-        {
-            Rank = "EPIC",
-            RankClass = "epic",
-            Icon = "◉",
-            Name = "비상 필터 세트",
-            Effect = "RARE DUNGEON ITEM"
-        }
-    };
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
@@ -421,11 +380,8 @@
 
     private async Task ReloadInventoryAsync(string currentUserId)
     {
-        inventoryItems = (await InventoryApi.GetByUserAsync(currentUserId))
-            .OrderByDescending(item => item.IsEquipped)
-            .ThenBy(item => item.ShopItem?.Id ?? item.ShopItemId)
-            .ThenBy(item => item.Id)
-            .ToList();
+        inventoryItems = await InventoryApi.GetByUserAsync(currentUserId);
+        SortInventoryItems();
     }
 
     private async Task ReloadAllAfterMutationAsync(string currentUserId)
@@ -569,7 +525,9 @@
                 currentCharacter = result.UpdatedCharacter;
             }
 
-            await ReloadAllAfterMutationAsync(currentUserId);
+            inventory.IsEquipped = result?.IsEquipped ?? !inventory.IsEquipped;
+            SortInventoryItems();
+            await ReloadCharacterAsync(currentUserId);
 
             storeLog = string.IsNullOrWhiteSpace(result?.Message)
                 ? $"{inventory.ShopItem.Name} 상태가 변경되었습니다."
@@ -587,6 +545,13 @@
 
     private async Task RunGacha()
     {
+        var currentUserId = GetCurrentUserIdOrRedirect();
+
+        if (currentUserId is null)
+        {
+            return;
+        }
+
         if (isDrawing)
         {
             return;
@@ -600,15 +565,38 @@
 
         approvedItemId = null;
         isDrawing = true;
-        storeLog = "랜덤 보급 투입구 UI 프리뷰 작동 중입니다. 실제 DB 반영은 아직 하지 않습니다.";
+        storeLog = "랜덤 보급 투입구 요청을 전송했습니다.";
 
-        await Task.Delay(1200);
+        try
+        {
+            await Task.Delay(900);
 
-        var index = Random.Shared.Next(gachaRewards.Count);
-        lastGachaReward = gachaRewards[index];
+            var result = await ShopApi.DrawGachaAsync(currentUserId);
 
-        isDrawing = false;
-        storeLog = $"UI 프리뷰 결과: {lastGachaReward.Name}. 실제 지급/차감은 아직 처리하지 않습니다.";
+            if (result?.UpdatedCharacter is not null)
+            {
+                currentCharacter = result.UpdatedCharacter;
+            }
+
+            if (result?.Item is not null)
+            {
+                lastGachaReward = result.Item;
+            }
+
+            await ReloadAllAfterMutationAsync(currentUserId);
+
+            storeLog = string.IsNullOrWhiteSpace(result?.Message)
+                ? $"{lastGachaReward?.Name ?? "아이템"}을(를) 획득했습니다."
+                : result.Message;
+        }
+        catch (Exception ex)
+        {
+            storeLog = $"뽑기 실패: {ex.Message}";
+        }
+        finally
+        {
+            isDrawing = false;
+        }
     }
 
     private string? GetCurrentUserIdOrRedirect()
@@ -624,7 +612,7 @@
 
     private bool CanBuy(ShopItemDto item)
     {
-        if (IsBusy)
+        if (IsBusy || isDrawing)
         {
             return false;
         }
@@ -639,7 +627,7 @@
 
     private bool CanUseInventoryAction(InventoryItemDto inventory)
     {
-        if (IsBusy)
+        if (IsBusy || isDrawing)
         {
             return false;
         }
@@ -650,6 +638,15 @@
         }
 
         return inventory.Count > 0;
+    }
+
+    private void SortInventoryItems()
+    {
+        inventoryItems = inventoryItems
+            .OrderByDescending(item => item.IsEquipped)
+            .ThenBy(item => item.ShopItem?.Id ?? item.ShopItemId)
+            .ThenBy(item => item.Id)
+            .ToList();
     }
 
     private string GetBuyButtonText(ShopItemDto item)
@@ -689,10 +686,10 @@
             return "USE";
         }
 
-        return inventory.ShopItem.ItemType switch
+        return NormalizeCode(inventory.ShopItem.ItemType) switch
         {
-            "Equip" => inventory.IsEquipped ? "UNEQUIP" : "EQUIP",
-            "NoneEquip" => inventory.IsEquipped ? "EFFECT OFF" : "EFFECT ON",
+            "EQUIP" => inventory.IsEquipped ? "UNEQUIP" : "EQUIP",
+            "NONEEQUIP" => inventory.IsEquipped ? "EFFECT OFF" : "EFFECT ON",
             _ => inventory.IsEquipped ? "OFF" : "ON"
         };
     }
@@ -709,10 +706,10 @@
             return "CONSUME";
         }
 
-        return inventory.ShopItem.ItemType switch
+        return NormalizeCode(inventory.ShopItem.ItemType) switch
         {
-            "Equip" => "EQUIP TOGGLE",
-            "NoneEquip" => "PASSIVE TOGGLE",
+            "EQUIP" => "EQUIP TOGGLE",
+            "NONEEQUIP" => "PASSIVE TOGGLE",
             _ => "EFFECT TOGGLE"
         };
     }
@@ -739,16 +736,16 @@
 
     private static bool IsConsumable(ShopItemDto item)
     {
-        return item.ItemType == "Consume";
+        return NormalizeCode(item.ItemType) == "CONSUME";
     }
 
     private static string DisplayItemType(string? itemType)
     {
-        return itemType switch
+        return NormalizeCode(itemType) switch
         {
-            "Consume" => "CONSUME",
-            "Equip" => "EQUIP",
-            "NoneEquip" => "PASSIVE",
+            "CONSUME" => "CONSUME",
+            "EQUIP" => "EQUIP",
+            "NONEEQUIP" => "PASSIVE",
             _ => "ITEM"
         };
     }
@@ -760,12 +757,13 @@
             return "?";
         }
 
-        return item.PlusStat switch
+        return NormalizeCode(item.PlusStat) switch
         {
-            "strength" => "STR",
-            "intelligence" => "INT",
-            "fortune" => "LUK",
-            "health" => "STA",
+            "STR" or "STRENGTH" => "STR",
+            "INT" or "INTELLIGENCE" => "INT",
+            "LUK" or "LUCK" or "FORTUNE" => "LUK",
+            "STA" or "HP" or "HEALTH" or "MAXHP" => "STA",
+            "DUNGEON" or "DUNGEONTICKET" or "TICKET" => "KEY",
             _ => "□"
         };
     }
@@ -801,26 +799,41 @@
 
     private static string GetStatLabel(string? plusStat)
     {
-        return plusStat switch
+        return NormalizeCode(plusStat) switch
         {
-            "strength" => "STR",
-            "intelligence" => "INT",
-            "fortune" => "LUK",
-            "health" => "STA",
+            "STR" or "STRENGTH" => "STR",
+            "INT" or "INTELLIGENCE" => "INT",
+            "LUK" or "LUCK" or "FORTUNE" => "LUK",
+            "STA" or "HP" or "HEALTH" or "MAXHP" => "STA",
+            "DUNGEON" or "DUNGEONTICKET" or "TICKET" => "DUNGEON TICKET",
             _ => string.Empty
         };
     }
 
-    private sealed class GachaReward
+    private static string GetRarityClass(string? rarity)
     {
-        public string Rank { get; set; } = string.Empty;
+        return NormalizeCode(rarity) switch
+        {
+            "COMMON" => "common",
+            "RARE" => "rare",
+            "EPIC" => "epic",
+            "LEGENDARY" => "legendary",
+            _ => "common"
+        };
+    }
 
-        public string RankClass { get; set; } = string.Empty;
+    private static string NormalizeCode(string? value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return string.Empty;
+        }
 
-        public string Icon { get; set; } = string.Empty;
-
-        public string Name { get; set; } = string.Empty;
-
-        public string Effect { get; set; } = string.Empty;
+        return value
+            .Trim()
+            .Replace(" ", string.Empty)
+            .Replace("_", string.Empty)
+            .Replace("-", string.Empty)
+            .ToUpperInvariant();
     }
 }

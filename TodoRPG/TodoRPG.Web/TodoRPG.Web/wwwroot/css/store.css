@@ -320,6 +320,10 @@
         color: #f0a24f;
     }
 
+    .reward-rank.legendary {
+        color: #f3d66b;
+    }
+
 .machine-bottom {
     margin-top: 16px;
 }
@@ -441,6 +445,11 @@
     .shop-card.coming-soon {
         filter: grayscale(0.6);
         opacity: 0.58;
+    }
+
+    .shop-card.active-item {
+        border-top-color: #d89d53;
+        box-shadow: inset 0 0 0 1px rgba(240, 162, 79, 0.16), inset 0 -24px 32px rgba(0,0,0,0.48), 0 0 18px rgba(240, 162, 79, 0.16), 5px 6px 12px rgba(0,0,0,0.42);
     }
 
 .shop-card-top {

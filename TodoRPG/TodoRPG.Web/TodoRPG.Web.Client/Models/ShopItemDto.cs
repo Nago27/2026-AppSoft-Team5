@@ -73,3 +73,19 @@ public sealed class PurchaseResponse
 
     public CharacterDto? UpdatedCharacter { get; set; }
 }
+
+public sealed class GachaRequest
+{
+    public string UserId { get; set; } = string.Empty;
+}
+
+public sealed class GachaResponse
+{
+    public string Message { get; set; } = string.Empty;
+
+    public ShopItemDto? Item { get; set; }
+
+    public int RemainingCoin { get; set; }
+
+    public CharacterDto? UpdatedCharacter { get; set; }
+}

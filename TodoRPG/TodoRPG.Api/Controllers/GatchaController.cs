@@ -43,7 +43,9 @@ namespace TodoRPG.Api.Controllers
             }
 
             // 3. 뽑기 가능한 아이템 목록 가져오기
-            var items = await _context.ShopItems.ToListAsync();
+            var items = await _context.ShopItems
+                .Where(item => item.DropWeight > 0)
+                .ToListAsync();
             if (!items.Any())
             {
                 return BadRequest("뽑을 수 있는 아이템이 존재하지 않습니다.");
@@ -101,14 +103,9 @@ namespace TodoRPG.Api.Controllers
             return Ok(new
             {
                 Message = $"{selectedItem.Name}({selectedItem.Rarity})을(를) 뽑았습니다!",
-                Item = new
-                {
-                    selectedItem.Id,
-                    selectedItem.Name,
-                    selectedItem.Rarity,
-                    selectedItem.Description
-                },
-                RemainingCoin = character.Coin
+                Item = selectedItem,
+                RemainingCoin = character.Coin,
+                UpdatedCharacter = character
             });
         }
     }
