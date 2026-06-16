@@ -740,16 +740,16 @@
     height: 97px;
 }
 
+/* INVENTORY PREVIEW */
+
 .active-loadout-panel {
     margin-top: 14px;
-    box-sizing: border-box;
     padding: 12px 14px;
-    color: #1d1915;
-    background:
-        linear-gradient(180deg, rgba(255,255,255,0.045), transparent),
-        rgba(183, 171, 146, 0.62);
+    box-sizing: border-box;
+    background: linear-gradient(180deg, rgba(255,255,255,0.045), transparent), rgba(183, 171, 146, 0.62);
     border: 1px solid rgba(64, 51, 38, 0.28);
     box-shadow: inset 0 0 10px rgba(70, 50, 35, 0.07);
+    color: #1d1915;
 }
 
 .loadout-header {
@@ -765,25 +765,14 @@
     margin-bottom: 5px;
     padding: 4px 9px 3px;
     color: #d8ccb1;
-    background:
-        repeating-linear-gradient(
-            90deg,
-            rgba(255,255,255,0.025) 0px,
-            rgba(255,255,255,0.025) 1px,
-            transparent 1px,
-            transparent 5px
-        ),
-        linear-gradient(180deg, #25211c 0%, #11100d 100%);
+    background: repeating-linear-gradient( 90deg, rgba(255,255,255,0.025) 0px, rgba(255,255,255,0.025) 1px, transparent 1px, transparent 5px ), linear-gradient(180deg, #25211c 0%, #11100d 100%);
     border: 1px solid #090806;
-    box-shadow:
-        inset 0 1px 0 rgba(255,255,255,0.08),
-        inset 0 -2px 4px rgba(0,0,0,0.50),
-        2px 2px 4px rgba(0,0,0,0.16);
+    border-radius: 1px;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.08), inset 0 -2px 4px rgba(0,0,0,0.50), 2px 2px 4px rgba(0,0,0,0.16);
     font-family: "Courier New", "Malgun Gothic", monospace;
     font-size: 0.58rem;
     font-weight: 900;
     letter-spacing: 1.2px;
-    text-transform: uppercase;
 }
 
 .loadout-header h3 {
@@ -794,20 +783,24 @@
     letter-spacing: -0.2px;
 }
 
-.loadout-state {
+.inventory-view-button {
     flex-shrink: 0;
     padding: 5px 8px 4px;
     color: #d7ccb0;
     background: linear-gradient(180deg, #25211c 0%, #11100d 100%);
     border: 1px solid #090806;
-    box-shadow:
-        inset 0 1px 0 rgba(255,255,255,0.07),
-        inset 0 -2px 4px rgba(0,0,0,0.42);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.07), inset 0 -2px 4px rgba(0,0,0,0.42);
     font-family: "Courier New", "Malgun Gothic", monospace;
     font-size: 0.58rem;
     font-weight: 900;
     letter-spacing: 0.8px;
+    cursor: pointer;
 }
+
+    .inventory-view-button:hover {
+        color: #f0e0bf;
+        filter: brightness(1.08);
+    }
 
 .loadout-grid {
     display: grid;
@@ -817,29 +810,27 @@
 
 .loadout-slot {
     min-height: 48px;
-    box-sizing: border-box;
     padding: 7px 9px;
-    color: #17130f;
+    box-sizing: border-box;
     background: rgba(255, 255, 255, 0.08);
     border: 1px solid rgba(63, 51, 39, 0.22);
     box-shadow: inset 0 0 7px rgba(40, 30, 22, 0.04);
+    color: #17130f;
 }
 
-.loadout-slot.ready {
-    background: linear-gradient(180deg, rgba(79, 115, 84, 0.16), rgba(30, 25, 20, 0.04));
-    border-color: rgba(79, 115, 84, 0.62);
-}
+    .loadout-slot.owned {
+        background: rgba(255, 255, 255, 0.10);
+        border-color: rgba(63, 51, 39, 0.28);
+    }
 
-.loadout-slot.active {
-    background: linear-gradient(180deg, rgba(147, 98, 69, 0.17), rgba(30, 25, 20, 0.04));
-    border-color: rgba(147, 98, 69, 0.68);
-}
+    .loadout-slot.dungeon-item {
+        border-color: rgba(116, 67, 42, 0.42);
+        background: rgba(116, 67, 42, 0.08);
+    }
 
-.loadout-slot.empty,
-.loadout-slot.locked {
-    opacity: 0.46;
-    background: linear-gradient(180deg, rgba(30, 25, 20, 0.06), rgba(30, 25, 20, 0.025));
-}
+    .loadout-slot.item-log {
+        opacity: 0.62;
+    }
 
 .loadout-code {
     display: block;
@@ -867,15 +858,6 @@
     font-size: 0.53rem;
     font-weight: 800;
     letter-spacing: 0.3px;
-}
-
-.loadout-slot.empty .loadout-code,
-.loadout-slot.empty strong,
-.loadout-slot.empty small,
-.loadout-slot.locked .loadout-code,
-.loadout-slot.locked strong,
-.loadout-slot.locked small {
-    color: #5f5549;
 }
 
 /* =========================================================
@@ -1167,8 +1149,20 @@
 
 .mission-input-row.mission-input-row-with-date,
 .mission-input-row-with-date {
-    grid-template-columns: minmax(0, 1fr) 150px 150px 96px;
+    grid-template-columns: 1fr 150px 150px 96px;
+    align-items: start;
 }
+
+.mission-title-field {
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+    .mission-title-field .mission-input {
+        width: 100%;
+    }
 
 .mission-form .mission-input,
 .mission-form .mission-category,
@@ -1700,7 +1694,6 @@
         ),
         linear-gradient(180deg, #6f6554 0%, #554b3e 100%);
     border: 2px solid #2b241d;
-    border-left: 6px solid #936245;
     box-shadow:
         inset 0 0 14px rgba(15, 10, 7, 0.30),
         3px 3px 8px rgba(0,0,0,0.20);
@@ -1721,22 +1714,61 @@
 
 .mission-form .validation-message,
 .mission-edit-panel .validation-message {
-    display: block;
-    margin-top: 10px;
-    padding: 10px 12px;
-    color: #f6dfd7;
-    background: rgba(120, 45, 38, 0.30);
-    border-left: 5px solid #c77a6b;
-    border-top: 1px solid rgba(255,255,255,0.06);
-    border-right: 1px solid rgba(0,0,0,0.18);
-    border-bottom: 1px solid rgba(0,0,0,0.24);
-    box-shadow:
-        inset 0 0 10px rgba(0,0,0,0.24),
-        2px 2px 6px rgba(0,0,0,0.16);
-    font-size: 0.84rem;
-    font-weight: 800;
-    letter-spacing: 0.2px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    min-height: 46px;
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0 14px;
+    color: #2b241d;
+    background: radial-gradient(circle at 84% 18%, rgba(70, 52, 38, 0.06), transparent 22%), linear-gradient( 180deg, rgba(149, 138, 118, 0.64) 0%, rgba(129, 118, 100, 0.56) 100% );
+    border: none;
+    border-left: 6px solid rgba(138, 67, 59, 0.86);
+    box-shadow: inset 0 0 16px rgba(69, 47, 33, 0.08);
+    font-family: "Segoe UI", "Malgun Gothic", sans-serif;
+    font-size: 0.9rem;
+    font-weight: 700;
+    letter-spacing: -0.2px;
+    line-height: 1;
 }
+
+    .mission-form .validation-message::before,
+    .mission-edit-panel .validation-message::before {
+        content: "!";
+        display: inline-flex;
+        justify-content: center;
+        align-items: center;
+        flex-shrink: 0;
+        width: 17px;
+        height: 17px;
+        color: #15120f;
+        background: #b56c29;
+        border: 1px solid #5a321f;
+        font-family: "Courier New", monospace;
+        font-size: 0.74rem;
+        font-weight: 900;
+        line-height: 1;
+    }
+
+    .mission-form .validation-message::before,
+    .mission-edit-panel .validation-message::before {
+        content: "!";
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        width: 15px;
+        height: 15px;
+        color: #15120f;
+        background: #b56c29;
+        border: 1px solid #5a321f;
+        font-family: "Courier New", monospace;
+        font-size: 0.68rem;
+        font-weight: 900;
+        line-height: 1;
+    }
 
 
 /* =========================================================
@@ -1784,6 +1816,84 @@
     font-size: 0.98rem;
     font-weight: 900;
     letter-spacing: 0.4px;
+}
+
+.loadout-state {
+    display: inline-block;
+    align-self: flex-start;
+    padding: 5px 10px 4px;
+    color: #d8ccb1;
+    background: repeating-linear-gradient( 90deg, rgba(255,255,255,0.025) 0px, rgba(255,255,255,0.025) 1px, transparent 1px, transparent 5px ), linear-gradient(180deg, #25211c 0%, #11100d 100%);
+    border: 1px solid #090806;
+    border-radius: 1px;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.08), inset 0 -2px 4px rgba(0,0,0,0.50), 2px 2px 4px rgba(0,0,0,0.16);
+    font-family: "Courier New", "Malgun Gothic", monospace;
+    font-size: 0.62rem;
+    font-weight: 900;
+    letter-spacing: 1.2px;
+    text-transform: uppercase;
+    text-shadow: 0 1px 0 rgba(0,0,0,0.95), 0 -1px 0 rgba(255,255,255,0.06);
+}
+
+/* =========================================================
+   Home texture / readability balance patch
+   ========================================================= */
+
+/* 큰 종이 패널 텍스처 강도 줄이기 */
+.terminal-header::before,
+.monitor-section::before,
+.stats-aside::before,
+.mission-log::before {
+    opacity: 0.38;
+}
+
+/* 스탯 카드 안쪽 텍스처 강도 줄이기 */
+.param-box::before {
+    opacity: 0.34;
+}
+
+/* 오른쪽 스탯 카드 배경을 조금 더 깨끗하게 */
+.param-box {
+    background: radial-gradient(circle at 14% 18%, rgba(255,255,255,0.10), transparent 22%), radial-gradient(circle at 88% 78%, rgba(73, 53, 36, 0.10), transparent 26%), linear-gradient(180deg, rgba(214, 202, 176, 0.96), rgba(188, 174, 146, 0.94));
+}
+
+/* 스탯 아이콘이 너무 크게 덮는 것 완화 */
+.param-str .stat-icon {
+    top: 4px;
+    right: 14px;
+    width: 126px;
+    height: 126px;
+}
+
+.param-int .stat-icon,
+.param-sta .stat-icon {
+    top: 8px;
+    right: 18px;
+    width: 118px;
+    height: 118px;
+}
+
+.param-luk .stat-icon {
+    top: 30px;
+    right: 42px;
+    width: 82px;
+    height: 82px;
+}
+
+/* 아이콘 자체도 조금 덜 진하게 */
+.stat-icon {
+    opacity: 0.22;
+    filter: sepia(0.12) saturate(0.75) contrast(1.12) brightness(0.95);
+}
+
+/* Floor Clearance 박스가 너무 어두운 것 완화 */
+.sector-progress-panel {
+    background: linear-gradient(180deg, rgba(255,255,255,0.14), transparent), rgba(162, 152, 130, 0.86);
+}
+
+.sector-check-row {
+    background: rgba(255, 255, 255, 0.10);
+    border-color: rgba(42, 35, 28, 0.24);
 }
 
 @keyframes reward-pop {
