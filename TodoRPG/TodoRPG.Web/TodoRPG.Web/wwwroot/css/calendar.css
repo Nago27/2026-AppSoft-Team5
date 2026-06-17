@@ -1,0 +1,505 @@
+/*
+   Global stylesheet for TodoRPG calendar page.
+   Place this file at: TodoRPG/TodoRPG.Web/TodoRPG.Web/wwwroot/css/calendar.css
+   Loaded from Calendar.razor with: <link rel="stylesheet" href="/css/calendar.css" />
+*/
+.calendar-shell {
+    position: relative;
+    min-height: 100vh;
+    padding: 32px;
+    overflow: hidden;
+    color: #e7e2cf;
+    background:
+        radial-gradient(circle at top left, rgba(166, 124, 57, 0.16), transparent 34rem),
+        linear-gradient(135deg, #161511 0%, #242017 48%, #0f100e 100%);
+    border: 1px solid rgba(204, 177, 111, 0.22);
+}
+
+.calendar-shell .calendar-scanlines {
+    pointer-events: none;
+    position: absolute;
+    inset: 0;
+    opacity: 0.11;
+    background-image: repeating-linear-gradient(
+        to bottom,
+        rgba(255, 255, 255, 0.16) 0,
+        rgba(255, 255, 255, 0.16) 1px,
+        transparent 1px,
+        transparent 4px
+    );
+}
+
+.calendar-shell .calendar-header,
+.calendar-shell .calendar-toolbar,
+.calendar-shell .calendar-content,
+.calendar-shell .calendar-state-panel {
+    position: relative;
+    z-index: 1;
+}
+
+.calendar-shell .calendar-header {
+    display: flex;
+    align-items: stretch;
+    justify-content: space-between;
+    gap: 24px;
+    margin-bottom: 22px;
+    padding: 24px;
+    background: rgba(18, 19, 16, 0.78);
+    border: 1px solid rgba(202, 171, 92, 0.28);
+    box-shadow: 0 18px 40px rgba(0, 0, 0, 0.32);
+}
+
+.calendar-shell .calendar-kicker {
+    margin-bottom: 8px;
+    color: #d7ae56;
+    font-size: 0.75rem;
+    font-weight: 800;
+    letter-spacing: 0.18em;
+}
+
+.calendar-shell .calendar-header h1 {
+    margin: 0;
+    color: #fff2c0;
+    font-size: clamp(2rem, 4vw, 3.4rem);
+    line-height: 1;
+    letter-spacing: 0.08em;
+    text-shadow: 0 0 18px rgba(219, 171, 74, 0.2);
+}
+
+.calendar-shell .calendar-header p {
+    max-width: 680px;
+    margin: 12px 0 0;
+    color: rgba(231, 226, 207, 0.72);
+}
+
+.calendar-shell .calendar-user-card {
+    display: grid;
+    min-width: 190px;
+    padding: 18px;
+    align-content: center;
+    gap: 6px;
+    background: rgba(214, 169, 77, 0.08);
+    border: 1px solid rgba(214, 169, 77, 0.32);
+}
+
+.calendar-shell .calendar-user-card span,
+.calendar-shell .calendar-user-card em,
+.calendar-shell .calendar-stats span,
+.calendar-shell .detail-header span,
+.calendar-shell .detail-meta dt {
+    color: rgba(231, 226, 207, 0.58);
+    font-size: 0.72rem;
+    font-style: normal;
+    font-weight: 800;
+    letter-spacing: 0.14em;
+}
+
+.calendar-shell .calendar-user-card strong {
+    color: #fff3c4;
+    font-size: 1.2rem;
+    word-break: break-all;
+}
+
+.calendar-shell .calendar-toolbar {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    align-items: center;
+    gap: 18px;
+    margin-bottom: 18px;
+}
+
+.calendar-shell .month-navigation {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.calendar-shell .calendar-nav-button {
+    min-height: 40px;
+    padding: 0 16px;
+    color: #fff0bc;
+    font-size: 0.78rem;
+    font-weight: 900;
+    letter-spacing: 0.08em;
+    background: linear-gradient(180deg, rgba(142, 91, 35, 0.9), rgba(83, 52, 29, 0.92));
+    border: 1px solid rgba(235, 193, 100, 0.42);
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.06), 0 8px 18px rgba(0, 0, 0, 0.24);
+    cursor: pointer;
+}
+
+.calendar-shell .calendar-nav-button:hover,
+.calendar-shell .calendar-nav-button:focus-visible {
+    border-color: rgba(255, 221, 141, 0.75);
+    outline: none;
+    transform: translateY(-1px);
+}
+
+.calendar-shell .calendar-nav-button.ghost {
+    background: rgba(18, 19, 16, 0.8);
+}
+
+.calendar-shell .month-readout {
+    display: flex;
+    align-items: baseline;
+    justify-content: center;
+    min-width: 180px;
+    padding: 12px 18px;
+    color: #fff2c0;
+    background: rgba(18, 19, 16, 0.84);
+    border: 1px solid rgba(202, 171, 92, 0.28);
+}
+
+.calendar-shell .month-readout span {
+    margin-right: 10px;
+    color: rgba(231, 226, 207, 0.58);
+    font-size: 0.9rem;
+    font-weight: 800;
+    letter-spacing: 0.12em;
+}
+
+.calendar-shell .month-readout strong {
+    font-size: 2.1rem;
+    line-height: 1;
+}
+
+.calendar-shell .calendar-stats {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+}
+
+.calendar-shell .calendar-stats div {
+    min-width: 84px;
+    padding: 10px 12px;
+    text-align: right;
+    background: rgba(18, 19, 16, 0.72);
+    border: 1px solid rgba(202, 171, 92, 0.22);
+}
+
+.calendar-shell .calendar-stats strong {
+    display: block;
+    margin-top: 4px;
+    color: #fff2c0;
+    font-size: 1.35rem;
+}
+
+.calendar-shell .calendar-content {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 360px;
+    gap: 18px;
+}
+
+.calendar-shell .calendar-grid-panel,
+.calendar-shell .day-detail-panel,
+.calendar-shell .calendar-state-panel {
+    background: rgba(18, 19, 16, 0.78);
+    border: 1px solid rgba(202, 171, 92, 0.28);
+    box-shadow: 0 18px 40px rgba(0, 0, 0, 0.28);
+}
+
+.calendar-shell .weekday-row {
+    display: grid;
+    grid-template-columns: repeat(7, minmax(0, 1fr));
+    border-bottom: 1px solid rgba(202, 171, 92, 0.22);
+}
+
+.calendar-shell .weekday-cell {
+    padding: 12px 8px;
+    color: #d7ae56;
+    font-size: 0.78rem;
+    font-weight: 900;
+    text-align: center;
+    letter-spacing: 0.12em;
+    background: rgba(214, 169, 77, 0.07);
+}
+
+.calendar-shell .month-grid {
+    display: grid;
+    grid-template-columns: repeat(7, minmax(0, 1fr));
+}
+
+.calendar-shell .day-cell {
+    min-height: 126px;
+    padding: 10px;
+    color: inherit;
+    text-align: left;
+    background: rgba(28, 28, 23, 0.74);
+    border: 0;
+    border-right: 1px solid rgba(202, 171, 92, 0.14);
+    border-bottom: 1px solid rgba(202, 171, 92, 0.14);
+    cursor: pointer;
+}
+
+.calendar-shell .day-cell:hover,
+.calendar-shell .day-cell:focus-visible {
+    position: relative;
+    z-index: 2;
+    outline: 1px solid rgba(255, 221, 141, 0.72);
+    background: rgba(58, 47, 29, 0.78);
+}
+
+.calendar-shell .day-cell.outside-month {
+    opacity: 0.42;
+    background: rgba(12, 13, 12, 0.82);
+}
+
+.calendar-shell .day-cell.today {
+    box-shadow: inset 0 0 0 2px rgba(215, 174, 86, 0.5);
+}
+
+.calendar-shell .day-cell.selected {
+    background: rgba(104, 76, 35, 0.72);
+    box-shadow: inset 0 0 0 2px rgba(255, 221, 141, 0.7);
+}
+
+.calendar-shell .day-cell.has-todos .day-number {
+    color: #fff2c0;
+}
+
+.calendar-shell .day-cell-topline {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    margin-bottom: 8px;
+}
+
+.calendar-shell .day-number {
+    color: rgba(231, 226, 207, 0.74);
+    font-size: 1rem;
+    font-weight: 900;
+}
+
+.calendar-shell .day-todo-count {
+    min-width: 24px;
+    padding: 2px 7px;
+    color: #161511;
+    font-size: 0.72rem;
+    font-weight: 900;
+    text-align: center;
+    background: #d7ae56;
+    border-radius: 999px;
+}
+
+.calendar-shell .todo-chip-list {
+    display: grid;
+    gap: 5px;
+}
+
+.calendar-shell .todo-chip {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    min-width: 0;
+    padding: 5px 7px;
+    color: #f4e7bd;
+    font-size: 0.76rem;
+    font-weight: 700;
+    background: rgba(231, 226, 207, 0.08);
+    border: 1px solid rgba(231, 226, 207, 0.14);
+}
+
+.calendar-shell .todo-chip-title {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.calendar-shell .todo-status-dot {
+    flex: 0 0 auto;
+    width: 7px;
+    height: 7px;
+    background: #e2b95e;
+    border-radius: 999px;
+    box-shadow: 0 0 10px rgba(226, 185, 94, 0.45);
+}
+
+.calendar-shell .todo-chip.completed {
+    opacity: 0.48;
+    text-decoration: line-through;
+    filter: grayscale(0.85);
+}
+
+.calendar-shell .todo-chip.completed .todo-status-dot {
+    background: rgba(231, 226, 207, 0.42);
+    box-shadow: none;
+}
+
+.calendar-shell .todo-chip.more {
+    justify-content: center;
+    color: rgba(231, 226, 207, 0.62);
+    border-style: dashed;
+}
+
+.calendar-shell .day-detail-panel {
+    min-height: 520px;
+    padding: 18px;
+}
+
+.calendar-shell .detail-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding-bottom: 16px;
+    margin-bottom: 16px;
+    border-bottom: 1px solid rgba(202, 171, 92, 0.22);
+}
+
+.calendar-shell .detail-header h2 {
+    margin: 6px 0 0;
+    color: #fff2c0;
+    font-size: 1.25rem;
+}
+
+.calendar-shell .detail-count {
+    min-width: 78px;
+    padding: 10px;
+    text-align: center;
+    background: rgba(214, 169, 77, 0.08);
+    border: 1px solid rgba(214, 169, 77, 0.28);
+}
+
+.calendar-shell .detail-count strong {
+    display: block;
+    color: #fff2c0;
+    font-size: 1.6rem;
+    line-height: 1;
+}
+
+.calendar-shell .empty-day-message,
+.calendar-shell .calendar-state-panel {
+    display: grid;
+    gap: 8px;
+    padding: 24px;
+    color: rgba(231, 226, 207, 0.68);
+}
+
+.calendar-shell .empty-day-message strong,
+.calendar-shell .calendar-state-panel strong {
+    color: #fff2c0;
+    letter-spacing: 0.08em;
+}
+
+.calendar-shell .calendar-state-panel.danger {
+    border-color: rgba(190, 75, 58, 0.5);
+}
+
+.calendar-shell .detail-todo-list {
+    display: grid;
+    gap: 12px;
+}
+
+.calendar-shell .detail-todo {
+    display: grid;
+    gap: 12px;
+    padding: 14px;
+    background: rgba(231, 226, 207, 0.07);
+    border: 1px solid rgba(231, 226, 207, 0.14);
+}
+
+.calendar-shell .detail-todo.active {
+    border-left: 4px solid #d7ae56;
+}
+
+.calendar-shell .detail-todo.completed {
+    opacity: 0.58;
+    border-left: 4px solid rgba(231, 226, 207, 0.34);
+    filter: grayscale(0.72);
+}
+
+.calendar-shell .detail-todo.completed h3 {
+    text-decoration: line-through;
+}
+
+.calendar-shell .detail-status {
+    display: inline-flex;
+    margin-bottom: 7px;
+    padding: 2px 7px;
+    color: #161511;
+    font-size: 0.68rem;
+    font-weight: 900;
+    letter-spacing: 0.12em;
+    background: #d7ae56;
+}
+
+.calendar-shell .detail-todo.completed .detail-status {
+    color: rgba(231, 226, 207, 0.8);
+    background: rgba(231, 226, 207, 0.16);
+}
+
+.calendar-shell .detail-todo h3 {
+    margin: 0;
+    color: #fff2c0;
+    font-size: 1rem;
+}
+
+.calendar-shell .detail-todo p {
+    margin: 5px 0 0;
+    color: rgba(231, 226, 207, 0.62);
+    font-size: 0.85rem;
+}
+
+.calendar-shell .detail-meta {
+    display: grid;
+    gap: 8px;
+    margin: 0;
+}
+
+.calendar-shell .detail-meta div {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+.calendar-shell .detail-meta dd {
+    margin: 0;
+    color: rgba(231, 226, 207, 0.8);
+    font-size: 0.85rem;
+}
+
+@media (max-width: 1120px) {
+    .calendar-shell .calendar-toolbar,
+    .calendar-shell .calendar-content {
+        grid-template-columns: 1fr;
+    }
+
+    .calendar-shell .calendar-stats {
+        justify-content: flex-start;
+    }
+
+    .calendar-shell .month-readout {
+        justify-content: flex-start;
+        width: fit-content;
+    }
+}
+
+@media (max-width: 760px) {
+    .calendar-shell {
+        padding: 18px;
+    }
+
+    .calendar-shell .calendar-header {
+        flex-direction: column;
+    }
+
+    .calendar-shell .calendar-stats {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+
+    .calendar-shell .month-grid,
+    .calendar-shell .weekday-row {
+        min-width: 720px;
+    }
+
+    .calendar-shell .calendar-grid-panel {
+        overflow-x: auto;
+    }
+
+    .calendar-shell .day-cell {
+        min-height: 118px;
+    }
+}
