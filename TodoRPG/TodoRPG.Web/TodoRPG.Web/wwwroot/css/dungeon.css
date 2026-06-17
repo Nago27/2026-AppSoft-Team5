@@ -1,0 +1,574 @@
+﻿.dungeon-page {
+    min-height: 100vh;
+    padding: 26px;
+    color: #f1e3c3;
+    background: radial-gradient(circle at 14% 12%, rgba(164, 93, 45, 0.12), transparent 24%), radial-gradient(circle at 86% 18%, rgba(84, 92, 69, 0.12), transparent 26%), linear-gradient(135deg, #19130f 0%, #0c0a08 100%);
+    font-family: "Segoe UI", "Malgun Gothic", sans-serif;
+}
+
+.dungeon-hero,
+.dungeon-briefing,
+.dungeon-zone-section,
+.dungeon-control-panel {
+    max-width: 1280px;
+    margin: 0 auto 22px;
+}
+
+.dungeon-hero {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 18px;
+    padding: 28px 32px;
+    background: linear-gradient(rgba(20, 16, 12, 0.78), rgba(12, 10, 8, 0.92)), url("/images/textures/store-texture.png") center/cover;
+    border: 1px solid rgba(174, 127, 78, 0.34);
+    box-shadow: inset 0 0 32px rgba(0,0,0,0.48), 0 10px 24px rgba(0,0,0,0.35);
+}
+
+.dungeon-label {
+    display: inline-block;
+    padding: 6px 12px;
+    color: #e1c797;
+    background: linear-gradient(180deg, #25211c 0%, #11100d 100%);
+    border: 1px solid #080706;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.08), 2px 2px 4px rgba(0,0,0,0.24);
+    font-family: "Courier New", monospace;
+    font-size: 0.68rem;
+    font-weight: 900;
+    letter-spacing: 1.6px;
+}
+
+.dungeon-hero h1,
+.briefing-panel h2,
+.dungeon-zone-section h2,
+.control-screen h2 {
+    margin: 14px 0 8px;
+    color: #f6e7c9;
+    font-weight: 900;
+}
+
+.dungeon-hero p,
+.briefing-panel p,
+.control-screen p {
+    margin: 0;
+    color: #bcae92;
+    line-height: 1.6;
+}
+
+.dungeon-status-card {
+    width: 170px;
+    min-width: 170px;
+    padding: 18px;
+    text-align: center;
+    background: linear-gradient(180deg, #14110e 0%, #070605 100%);
+    border: 1px solid rgba(174, 127, 78, 0.38);
+    box-shadow: inset 0 0 18px rgba(0,0,0,0.72);
+}
+
+    .dungeon-status-card span,
+    .dungeon-status-card small {
+        display: block;
+        color: #a99a7e;
+        font-family: "Courier New", monospace;
+        font-size: 0.7rem;
+        font-weight: 900;
+        letter-spacing: 1.2px;
+    }
+
+    .dungeon-status-card strong {
+        display: block;
+        margin: 10px 0 6px;
+        font-size: 1.4rem;
+        color: #e0a75f;
+    }
+
+    .dungeon-status-card.ready strong {
+        color: #cfe6a1;
+    }
+
+    .dungeon-status-card.locked strong {
+        color: #d88a75;
+    }
+
+.dungeon-briefing {
+    display: grid;
+    grid-template-columns: 1.2fr 0.8fr;
+    gap: 18px;
+}
+
+.briefing-panel,
+.dungeon-zone-section,
+.dungeon-control-panel {
+    padding: 22px;
+    background: linear-gradient(rgba(60, 43, 31, 0.76), rgba(24, 18, 14, 0.88)), url("/images/textures/store-texture.png") center/cover;
+    border: 1px solid rgba(174, 127, 78, 0.28);
+    box-shadow: inset 0 0 28px rgba(0,0,0,0.42);
+}
+
+.dungeon-requirements {
+    display: grid;
+    gap: 8px;
+    margin-top: 18px;
+}
+
+.requirement-row {
+    display: grid;
+    grid-template-columns: 28px 1fr auto;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 12px;
+    background: rgba(0,0,0,0.28);
+    border: 1px solid rgba(255,255,255,0.08);
+}
+
+    .requirement-row span {
+        display: inline-flex;
+        justify-content: center;
+        align-items: center;
+        width: 22px;
+        height: 22px;
+        font-weight: 900;
+    }
+
+    .requirement-row.passed span {
+        color: #15200f;
+        background: rgba(124, 151, 80, 0.86);
+    }
+
+    .requirement-row.failed span {
+        color: #f0d6d0;
+        background: rgba(139, 67, 58, 0.86);
+    }
+
+    .requirement-row strong {
+        color: #f1e3c3;
+        font-family: "Courier New", monospace;
+        font-size: 0.8rem;
+    }
+
+    .requirement-row small {
+        color: #bcae92;
+        font-family: "Courier New", monospace;
+    }
+
+.dungeon-rule-list {
+    margin: 16px 0 0;
+    padding-left: 20px;
+    color: #c9b99a;
+    line-height: 1.8;
+}
+
+.dungeon-section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: end;
+    gap: 14px;
+    margin-bottom: 16px;
+    padding-bottom: 14px;
+    border-bottom: 2px solid rgba(0,0,0,0.56);
+}
+
+.route-count {
+    color: #bcae92;
+    font-family: "Courier New", monospace;
+    font-size: 0.75rem;
+    font-weight: 900;
+    letter-spacing: 1px;
+}
+
+.dungeon-zone-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 14px;
+}
+
+.dungeon-zone-card {
+    min-height: 180px;
+    padding: 18px;
+    text-align: left;
+    color: #f1e3c3;
+    background: linear-gradient(180deg, rgba(25,22,18,0.95), rgba(9,8,7,0.96));
+    border: 1px solid rgba(174, 127, 78, 0.24);
+    box-shadow: inset 0 0 18px rgba(0,0,0,0.54);
+    cursor: pointer;
+}
+
+    .dungeon-zone-card:hover,
+    .dungeon-zone-card.selected {
+        border-color: rgba(224, 167, 95, 0.72);
+        box-shadow: inset 0 0 18px rgba(0,0,0,0.54), 0 0 12px rgba(224, 167, 95, 0.18);
+    }
+
+.zone-code {
+    display: inline-block;
+    margin-bottom: 16px;
+    color: #e0a75f;
+    font-family: "Courier New", monospace;
+    font-size: 0.75rem;
+    font-weight: 900;
+    letter-spacing: 1.2px;
+}
+
+.dungeon-zone-card strong {
+    display: block;
+    margin-bottom: 8px;
+    font-size: 1.05rem;
+    font-weight: 900;
+}
+
+.dungeon-zone-card small {
+    display: block;
+    min-height: 42px;
+    color: #bcae92;
+    line-height: 1.45;
+}
+
+.zone-meta {
+    display: flex;
+    justify-content: space-between;
+    gap: 8px;
+    margin-top: 18px;
+    padding-top: 12px;
+    border-top: 1px solid rgba(255,255,255,0.08);
+    color: #d6a15f;
+    font-family: "Courier New", monospace;
+    font-size: 0.7rem;
+    font-weight: 900;
+}
+
+.dungeon-control-panel {
+    display: grid;
+    grid-template-columns: 1fr 280px;
+    gap: 18px;
+    align-items: stretch;
+}
+
+.control-screen {
+    min-height: 160px;
+    padding: 18px;
+    background: linear-gradient(180deg, #11100d 0%, #050504 100%);
+    border: 1px solid rgba(174, 127, 78, 0.22);
+    box-shadow: inset 0 0 24px rgba(0,0,0,0.78);
+}
+
+.control-detail {
+    margin-top: 12px !important;
+    color: #d6a15f !important;
+    font-family: "Courier New", monospace;
+    font-weight: 900;
+}
+
+.dungeon-result {
+    margin-top: 18px;
+    padding: 14px;
+    border-left: 6px solid #74432a;
+    background: rgba(255,255,255,0.05);
+}
+
+    .dungeon-result span,
+    .dungeon-result small {
+        display: block;
+        color: #bcae92;
+        font-family: "Courier New", monospace;
+        font-size: 0.72rem;
+        font-weight: 900;
+    }
+
+    .dungeon-result strong {
+        display: block;
+        margin: 6px 0;
+        color: #f6e7c9;
+        font-size: 1rem;
+    }
+
+    .dungeon-result.success {
+        border-left-color: #738352;
+    }
+
+    .dungeon-result.fail {
+        border-left-color: #8a433b;
+    }
+
+.expedition-button {
+    color: #15120f;
+    background: linear-gradient(180deg, #d6a15f 0%, #936245 100%);
+    border: 1px solid #2b1b10;
+    border-bottom: 4px solid #17100a;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.18), 0 5px 10px rgba(0,0,0,0.35);
+    font-family: "Courier New", monospace;
+    font-size: 0.95rem;
+    font-weight: 900;
+    letter-spacing: 1.4px;
+    cursor: pointer;
+}
+
+    .expedition-button:disabled {
+        color: #807061;
+        background: linear-gradient(180deg, #332722 0%, #17120f 100%);
+        border-color: #120c09;
+        cursor: not-allowed;
+        opacity: 0.7;
+    }
+
+.dungeon-status-card.checking strong {
+    color: #d6a15f;
+}
+
+.requirement-row.pending span {
+    color: #15120f;
+    background: rgba(214, 161, 95, 0.86);
+}
+
+.dungeon-boss-section {
+    max-width: 1280px;
+    margin: 0 auto 22px;
+    padding: 22px;
+    background:
+        linear-gradient(rgba(64, 38, 30, 0.78), rgba(18, 12, 10, 0.92)),
+        url("/images/textures/store-texture.png") center/cover;
+    border: 1px solid rgba(174, 88, 68, 0.36);
+    box-shadow: inset 0 0 34px rgba(0,0,0,0.52);
+}
+
+.boss-encounter-card {
+    display: grid;
+    grid-template-columns: 1fr 1.1fr;
+    gap: 18px;
+}
+
+.boss-visual-panel,
+.boss-control-panel {
+    padding: 20px;
+    background: linear-gradient(180deg, rgba(18,16,13,0.96), rgba(6,5,4,0.98));
+    border: 1px solid rgba(174, 88, 68, 0.28);
+    box-shadow: inset 0 0 22px rgba(0,0,0,0.68);
+}
+
+.boss-code {
+    display: inline-block;
+    padding: 5px 10px;
+    color: #f0b09d;
+    background: rgba(120, 45, 38, 0.38);
+    border: 1px solid rgba(190, 80, 62, 0.42);
+    font-family: "Courier New", monospace;
+    font-size: 0.72rem;
+    font-weight: 900;
+    letter-spacing: 1.2px;
+}
+
+.boss-visual-panel h3 {
+    margin: 16px 0 8px;
+    color: #f6e7c9;
+    font-size: 1.5rem;
+    font-weight: 900;
+}
+
+.boss-visual-panel p {
+    color: #c9b99a;
+    line-height: 1.6;
+}
+
+.boss-hp-bar {
+    overflow: hidden;
+    height: 18px;
+    margin: 18px 0 8px;
+    background: #080706;
+    border: 1px solid rgba(255,255,255,0.12);
+    box-shadow: inset 0 0 10px rgba(0,0,0,0.75);
+}
+
+.boss-hp-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #7b2f29 0%, #c05a45 100%);
+    transition: width 0.25s ease;
+}
+
+.boss-visual-panel small {
+    color: #d6a15f;
+    font-family: "Courier New", monospace;
+    font-weight: 900;
+}
+
+.boss-control-panel {
+    display: grid;
+    gap: 10px;
+}
+
+.boss-log {
+    min-height: 54px;
+    padding: 12px;
+    color: #e1c797;
+    background: rgba(0,0,0,0.32);
+    border: 1px solid rgba(255,255,255,0.08);
+    font-family: "Courier New", "Malgun Gothic", monospace;
+    font-size: 0.8rem;
+    line-height: 1.5;
+}
+
+.boss-actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+}
+
+.expedition-button.secondary {
+    color: #f1e3c3;
+    background: linear-gradient(180deg, #3e3a30 0%, #1a1713 100%);
+    border-color: #0d0b09;
+}
+
+.dungeon-status-card.checking strong {
+    color: #d6a15f;
+}
+
+.requirement-row.pending span {
+    color: #15120f;
+    background: rgba(214, 161, 95, 0.86);
+}
+
+.dungeon-boss-section {
+    max-width: 1280px;
+    margin: 0 auto 22px;
+    padding: 22px;
+    background: linear-gradient(rgba(64, 38, 30, 0.78), rgba(18, 12, 10, 0.92)), url("/images/textures/store-texture.png") center/cover;
+    border: 1px solid rgba(174, 88, 68, 0.36);
+    box-shadow: inset 0 0 34px rgba(0,0,0,0.52);
+}
+
+.boss-encounter-card {
+    display: grid;
+    grid-template-columns: 1fr 1.1fr;
+    gap: 18px;
+}
+
+.boss-visual-panel,
+.boss-control-panel {
+    padding: 20px;
+    background: linear-gradient(180deg, rgba(18,16,13,0.96), rgba(6,5,4,0.98));
+    border: 1px solid rgba(174, 88, 68, 0.28);
+    box-shadow: inset 0 0 22px rgba(0,0,0,0.68);
+}
+
+.boss-code {
+    display: inline-block;
+    padding: 5px 10px;
+    color: #f0b09d;
+    background: rgba(120, 45, 38, 0.38);
+    border: 1px solid rgba(190, 80, 62, 0.42);
+    font-family: "Courier New", monospace;
+    font-size: 0.72rem;
+    font-weight: 900;
+    letter-spacing: 1.2px;
+}
+
+.boss-visual-panel h3 {
+    margin: 16px 0 8px;
+    color: #f6e7c9;
+    font-size: 1.5rem;
+    font-weight: 900;
+}
+
+.boss-visual-panel p {
+    color: #c9b99a;
+    line-height: 1.6;
+}
+
+.boss-hp-bar {
+    overflow: hidden;
+    height: 18px;
+    margin: 18px 0 8px;
+    background: #080706;
+    border: 1px solid rgba(255,255,255,0.12);
+    box-shadow: inset 0 0 10px rgba(0,0,0,0.75);
+}
+
+.boss-hp-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #7b2f29 0%, #c05a45 100%);
+    transition: width 0.25s ease;
+}
+
+.boss-visual-panel small {
+    color: #d6a15f;
+    font-family: "Courier New", monospace;
+    font-weight: 900;
+}
+
+.boss-control-panel {
+    display: grid;
+    gap: 10px;
+}
+
+.boss-log {
+    min-height: 54px;
+    padding: 12px;
+    color: #e1c797;
+    background: rgba(0,0,0,0.32);
+    border: 1px solid rgba(255,255,255,0.08);
+    font-family: "Courier New", "Malgun Gothic", monospace;
+    font-size: 0.8rem;
+    line-height: 1.5;
+}
+
+.boss-actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+}
+
+.expedition-button.secondary {
+    color: #f1e3c3;
+    background: linear-gradient(180deg, #3e3a30 0%, #1a1713 100%);
+    border-color: #0d0b09;
+}
+
+.home-return-link {
+    display: block;
+    padding: 10px 12px;
+    text-align: center;
+    color: #d6a15f;
+    background: rgba(0,0,0,0.28);
+    border: 1px solid rgba(214, 161, 95, 0.28);
+    font-family: "Courier New", "Malgun Gothic", monospace;
+    font-size: 0.76rem;
+    font-weight: 900;
+    letter-spacing: 0.8px;
+    text-decoration: none;
+}
+
+    .home-return-link:hover {
+        color: #f6e7c9;
+        border-color: rgba(214, 161, 95, 0.54);
+    }
+
+@media (max-width: 900px) {
+    .boss-encounter-card,
+    .boss-actions {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 900px) {
+    .boss-encounter-card,
+    .boss-actions {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 900px) {
+    .dungeon-hero,
+    .dungeon-briefing,
+    .dungeon-control-panel {
+        grid-template-columns: 1fr;
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .dungeon-zone-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .dungeon-status-card {
+        width: 100%;
+    }
+}

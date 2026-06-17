@@ -1835,65 +1835,112 @@
     text-shadow: 0 1px 0 rgba(0,0,0,0.95), 0 -1px 0 rgba(255,255,255,0.06);
 }
 
-/* =========================================================
-   Home texture / readability balance patch
-   ========================================================= */
-
-/* 큰 종이 패널 텍스처 강도 줄이기 */
-.terminal-header::before,
-.monitor-section::before,
-.stats-aside::before,
-.mission-log::before {
-    opacity: 0.38;
+/* Active loadout fixed grid */
+.active-loadout-panel {
+    min-height: 178px;
 }
 
-/* 스탯 카드 안쪽 텍스처 강도 줄이기 */
-.param-box::before {
-    opacity: 0.34;
+.loadout-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-rows: repeat(2, 58px);
+    gap: 7px;
 }
 
-/* 오른쪽 스탯 카드 배경을 조금 더 깨끗하게 */
-.param-box {
-    background: radial-gradient(circle at 14% 18%, rgba(255,255,255,0.10), transparent 22%), radial-gradient(circle at 88% 78%, rgba(73, 53, 36, 0.10), transparent 26%), linear-gradient(180deg, rgba(214, 202, 176, 0.96), rgba(188, 174, 146, 0.94));
+.loadout-slot {
+    min-height: 58px;
+    height: 58px;
+    box-sizing: border-box;
 }
 
-/* 스탯 아이콘이 너무 크게 덮는 것 완화 */
-.param-str .stat-icon {
-    top: 4px;
-    right: 14px;
-    width: 126px;
-    height: 126px;
+    .loadout-slot.empty.placeholder {
+        opacity: 0.58;
+        border-style: dashed;
+    }
+
+.loadout-state.empty {
+    color: #d8ccb1;
+    opacity: 0.72;
 }
 
-.param-int .stat-icon,
-.param-sta .stat-icon {
-    top: 8px;
-    right: 18px;
-    width: 118px;
-    height: 118px;
+.loadout-state.sync {
+    color: #d6a15f;
 }
 
-.param-luk .stat-icon {
-    top: 30px;
-    right: 42px;
-    width: 82px;
-    height: 82px;
+.loadout-state.active {
+    color: #cfe6a1;
 }
 
-/* 아이콘 자체도 조금 덜 진하게 */
-.stat-icon {
-    opacity: 0.22;
-    filter: sepia(0.12) saturate(0.75) contrast(1.12) brightness(0.95);
+.loadout-state.standby {
+    color: #d8ccb1;
 }
 
-/* Floor Clearance 박스가 너무 어두운 것 완화 */
-.sector-progress-panel {
-    background: linear-gradient(180deg, rgba(255,255,255,0.14), transparent), rgba(162, 152, 130, 0.86);
+/* Active loadout fixed summary slots */
+.active-loadout-panel {
+    min-height: 188px;
 }
 
-.sector-check-row {
-    background: rgba(255, 255, 255, 0.10);
-    border-color: rgba(42, 35, 28, 0.24);
+.loadout-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-rows: repeat(2, 64px);
+    gap: 7px;
+}
+
+.loadout-slot.loadout-summary {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: flex-start;
+    min-height: 64px;
+    height: 64px;
+    box-sizing: border-box;
+    padding: 8px 10px;
+}
+
+    .loadout-slot.loadout-summary strong,
+    .loadout-slot.loadout-summary small,
+    .loadout-slot.loadout-summary .loadout-code {
+        max-width: 100%;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .loadout-slot.loadout-summary.active {
+        border-color: rgba(120, 145, 82, 0.48);
+        background: rgba(112, 138, 78, 0.13);
+    }
+
+    .loadout-slot.loadout-summary.ready {
+        border-color: rgba(147, 98, 69, 0.48);
+        background: rgba(147, 98, 69, 0.12);
+    }
+
+.loadout-slot.empty.placeholder {
+    opacity: 0.58;
+    border-style: dashed;
+}
+
+.loadout-state.active {
+    color: #cfe6a1;
+}
+
+.loadout-state.ready {
+    color: #d6a15f;
+}
+
+.loadout-state.standby {
+    color: #d8ccb1;
+}
+
+.loadout-state.empty {
+    color: #d8ccb1;
+    opacity: 0.72;
+}
+
+.loadout-state.sync {
+    color: #d6a15f;
 }
 
 @keyframes reward-pop {
