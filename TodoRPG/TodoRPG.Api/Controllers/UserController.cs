@@ -62,8 +62,19 @@ namespace TodoRPG.Api.Controllers
                 return BadRequest("이미 존재하는 아이디입니다.");
             }
 
-            user.Level = 1;
-            user.Experience = 0;
+            user.Character = new Character
+            {
+                UserId = user.Id,
+                Level = 1,
+                Experience = 0,
+                Coin = 0,
+                Strength = 0,
+                Intelligence = 0,
+                Fortune = 0,
+                Health = 100,
+                MaxHealth = 100,
+                CurrentDungeonIndex = 1 // OnModelCreating에서 시딩한 '초보자의 숲' 번호
+            };
 
             _context.Users.Add(user);
             await _context.SaveChangesAsync();
@@ -75,26 +86,19 @@ namespace TodoRPG.Api.Controllers
         [HttpPost("login")]
         public async Task<IActionResult> Login([FromBody] Dictionary<string, string>? request)
         {
-            if (request == null)
-            {
-                return BadRequest("로그인 정보가 없습니다.");
-            }
+            if (request == null) return BadRequest("로그인 정보가 없습니다.");
 
-            var id = request
-                .FirstOrDefault(x => string.Equals(x.Key, "id", StringComparison.OrdinalIgnoreCase))
-                .Value?
-                .Trim();
-
-            var password = request
-                .FirstOrDefault(x => string.Equals(x.Key, "password", StringComparison.OrdinalIgnoreCase))
-                .Value;
+            var id = request.FirstOrDefault(x => string.Equals(x.Key, "id", StringComparison.OrdinalIgnoreCase)).Value?.Trim();
+            var password = request.FirstOrDefault(x => string.Equals(x.Key, "password", StringComparison.OrdinalIgnoreCase)).Value;
 
             if (string.IsNullOrWhiteSpace(id) || string.IsNullOrWhiteSpace(password))
             {
                 return BadRequest("ID와 비밀번호를 입력하세요.");
             }
 
+            // Character 테이블을 Include하여 레벨과 경험치를 가져옵니다.
             var user = await _context.Users
+                .Include(u => u.Character)
                 .AsNoTracking()
                 .FirstOrDefaultAsync(u => u.Id == id && u.Password == password);
 
@@ -104,11 +108,14 @@ namespace TodoRPG.Api.Controllers
             }
 
             return Ok(new
-            {
+            {  
                 user.Id,
                 user.Nickname,
-                user.Level,
-                user.Experience
+                Level = user.Character?.Level ?? 1,
+                Experience = user.Character?.Experience ?? 0,
+                Coin = user.Character?.Coin ?? 10,
+                Health = user.Character?.Health ?? 100,
+                MaxHealth = user.Character?.MaxHealth ?? 100
             });
         }
 

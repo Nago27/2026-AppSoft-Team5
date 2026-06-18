@@ -1,8 +1,9 @@
-﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using TodoRPG.Api.Data;
 using TodoRPG.Api.Models;
+using TodoRPG.Api.Services;
 
 namespace TodoRPG.Api.Controllers
 {
@@ -10,7 +11,8 @@ namespace TodoRPG.Api.Controllers
     [ApiController]
     public class TodoController : ControllerBase
     {
-        private readonly AppDbContext _context;
+        private readonly AppDbContext context;
+        private readonly TodoRewardService todoRewardService;
 
         private static readonly HashSet<string> AllowedCategories = new(StringComparer.Ordinal)
         {
@@ -21,13 +23,12 @@ namespace TodoRPG.Api.Controllers
             "기타"
         };
 
-        public TodoController(AppDbContext context)
+        public TodoController(AppDbContext context, TodoRewardService todoRewardService)
         {
-            _context = context;
+            this.context = context;
+            this.todoRewardService = todoRewardService;
         }
 
-        // GET: api/Todo/user/testuser
-        // GET: api/Todo/user/testuser?category=운동
         [HttpGet("user/{userId}")]
         public async Task<ActionResult<IEnumerable<TodoItem>>> GetTodoItems(
             string userId,
@@ -40,14 +41,14 @@ namespace TodoRPG.Api.Controllers
                 return BadRequest("사용자 ID가 필요합니다.");
             }
 
-            var userExists = await _context.Users.AnyAsync(user => user.Id == userId);
+            var userExists = await context.Users.AnyAsync(user => user.Id == userId);
 
             if (!userExists)
             {
                 return NotFound("해당 사용자를 찾을 수 없습니다.");
             }
 
-            var query = _context.TodoItems
+            var query = context.TodoItems
                 .AsNoTracking()
                 .Where(todo => todo.UserId == userId);
 
@@ -64,7 +65,17 @@ namespace TodoRPG.Api.Controllers
             return Ok(todos);
         }
 
-        // POST: api/Todo
+
+        [HttpGet("user/{userId}/completed-count")]
+        public async Task<ActionResult<int>> GetCompletedCount(string userId)
+        {
+            var completedCount = await context.TodoItems
+                .AsNoTracking()
+                .CountAsync(todo => todo.UserId == userId && todo.IsCompleted);
+
+            return Ok(completedCount);
+        }
+
         [HttpPost]
         public async Task<ActionResult<TodoItem>> PostTodoItem(CreateTodoRequest request)
         {
@@ -82,12 +93,14 @@ namespace TodoRPG.Api.Controllers
                 return BadRequest("할 일 제목을 입력하세요.");
             }
 
-            var userExists = await _context.Users.AnyAsync(user => user.Id == userId);
+            var userExists = await context.Users.AnyAsync(user => user.Id == userId);
 
             if (!userExists)
             {
                 return NotFound("해당 사용자를 찾을 수 없습니다.");
             }
+
+            await todoRewardService.ApplyTodoInactivityPenaltyAsync(userId);
 
             var todoItem = new TodoItem
             {
@@ -96,11 +109,12 @@ namespace TodoRPG.Api.Controllers
                 Category = category,
                 IsCompleted = false,
                 CreatedAt = DateTime.UtcNow,
+                CompletedAt = null,
                 DueDate = request.DueDate
             };
 
-            _context.TodoItems.Add(todoItem);
-            await _context.SaveChangesAsync();
+            context.TodoItems.Add(todoItem);
+            await context.SaveChangesAsync();
 
             return CreatedAtAction(
                 nameof(GetTodoItems),
@@ -109,7 +123,6 @@ namespace TodoRPG.Api.Controllers
             );
         }
 
-        // PUT: api/Todo/5
         [HttpPut("{id}")]
         public async Task<IActionResult> PutTodoItem(int id, UpdateTodoRequest request)
         {
@@ -127,7 +140,7 @@ namespace TodoRPG.Api.Controllers
                 return BadRequest("할 일 제목을 입력하세요.");
             }
 
-            var todoItem = await _context.TodoItems
+            var todoItem = await context.TodoItems
                 .FirstOrDefaultAsync(todo => todo.Id == id && todo.UserId == userId);
 
             if (todoItem == null)
@@ -135,19 +148,24 @@ namespace TodoRPG.Api.Controllers
                 return NotFound("해당 할 일을 찾을 수 없습니다.");
             }
 
+            if (todoItem.IsCompleted)
+            {
+                return BadRequest("완료된 할 일은 수정할 수 없습니다.");
+            }
+
             todoItem.Title = title;
             todoItem.Category = category;
-            todoItem.IsCompleted = request.IsCompleted;
             todoItem.DueDate = request.DueDate;
 
-            await _context.SaveChangesAsync();
+            await context.SaveChangesAsync();
 
             return NoContent();
         }
 
-        // PATCH: api/Todo/5/completed
         [HttpPatch("{id}/completed")]
-        public async Task<IActionResult> SetTodoCompleted(int id, SetTodoCompletedRequest request)
+        public async Task<ActionResult<TodoCompletionResult>> SetTodoCompleted(
+            int id,
+            SetTodoCompletedRequest request)
         {
             var userId = request.UserId.Trim();
 
@@ -156,22 +174,25 @@ namespace TodoRPG.Api.Controllers
                 return BadRequest("사용자 ID가 필요합니다.");
             }
 
-            var todoItem = await _context.TodoItems
-                .FirstOrDefaultAsync(todo => todo.Id == id && todo.UserId == userId);
-
-            if (todoItem == null)
+            if (!request.IsCompleted)
             {
-                return NotFound("해당 할 일을 찾을 수 없습니다.");
+                return BadRequest("완료된 할 일은 미완료로 되돌릴 수 없습니다.");
             }
 
-            todoItem.IsCompleted = request.IsCompleted;
+            var result = await todoRewardService.SetCompletedAsync(
+                id,
+                userId,
+                request.IsCompleted
+            );
 
-            await _context.SaveChangesAsync();
+            if (result is null)
+            {
+                return NotFound("해당 할 일 또는 캐릭터를 찾을 수 없습니다.");
+            }
 
-            return NoContent();
+            return Ok(result);
         }
 
-        // DELETE: api/Todo/5?userId=testuser
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteTodoItem(
             int id,
@@ -184,7 +205,7 @@ namespace TodoRPG.Api.Controllers
                 return BadRequest("사용자 ID가 필요합니다.");
             }
 
-            var todoItem = await _context.TodoItems
+            var todoItem = await context.TodoItems
                 .FirstOrDefaultAsync(todo => todo.Id == id && todo.UserId == userId);
 
             if (todoItem == null)
@@ -192,8 +213,13 @@ namespace TodoRPG.Api.Controllers
                 return NotFound("해당 할 일을 찾을 수 없습니다.");
             }
 
-            _context.TodoItems.Remove(todoItem);
-            await _context.SaveChangesAsync();
+            if (todoItem.IsCompleted)
+            {
+                return BadRequest("완료된 할 일은 삭제할 수 없습니다.");
+            }
+
+            context.TodoItems.Remove(todoItem);
+            await context.SaveChangesAsync();
 
             return NoContent();
         }
@@ -211,6 +237,11 @@ namespace TodoRPG.Api.Controllers
                 ? trimmed
                 : "기타";
         }
+    }
+
+    public sealed class TodoCompletedCountResponse
+    {
+        public int Count { get; set; }
     }
 
     public sealed class CreateTodoRequest

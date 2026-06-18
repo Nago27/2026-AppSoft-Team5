@@ -1,0 +1,180 @@
+@using TodoRPG.Web.Client.Models
+@implements IDisposable
+
+<section class="monitor-section">
+    <div class="section-tag field-view-label">FIELD VIEW</div>
+
+    <div class="monitor-content">
+        <div class="depth-indicator">B@(10 - Character.Level)F / EXIT ROUTE</div>
+
+        <div class="camera-clock">
+            CAM-04 REC / @currentTime.ToString("yyyy-MM-dd HH:mm:ss")
+        </div>
+
+        <div class="character-container">
+            <img src="/images/survivor.png"
+                 alt="Survivor character"
+                 class="survivor-character" />
+            <div class="char-shadow"></div>
+        </div>
+
+        <div class="monitor-warning @GetMonitorStatusClass()">
+            @GetMonitorStatus()
+        </div>
+    </div>
+
+    <div class="survivor-note">
+        <strong>@DisplayUserName #0000</strong>
+        <span>@Character.Title</span>
+    </div>
+
+    <ActiveLoadoutPanel UserId="@UserId" />
+
+    <div class="system-memo survival-rule-memo">
+        <strong>DAILY SURVIVAL CHECK</strong>
+        <p>
+            매일 최소 1개의 미션을 완료해야 합니다.<br />
+            <span class="memo-warning">
+                <span class="warning-mark">!</span>
+                미달성 시 FILTER HP가 감소합니다.
+            </span>
+        </p>
+    </div>
+</section>
+
+<aside class="stats-aside">
+    <h2>SURVIVAL PARAMS</h2>
+
+    <div class="vitals-group">
+        <div class="vital-row">
+            <div class="vital-info">
+                <span class="vital-name">FILTER HP</span>
+                <span class="vital-num">@Character.Hp / @Character.MaxHp</span>
+            </div>
+
+            <div class="gauge-container hp">
+                <div class="gauge-fill" style="width: @(Character.HpPercent)%"></div>
+            </div>
+        </div>
+
+        <div class="vital-row">
+            <div class="vital-info">
+                <span class="vital-name">LOAD EXP</span>
+                <span class="vital-num">@Character.Exp / @Character.MaxExp</span>
+            </div>
+
+            <div class="gauge-container exp">
+                <div class="gauge-fill" style="width: @(Character.ExpPercent)%"></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="params-grid">
+        <div class="param-box param-str">
+            <img class="stat-icon" src="/images/stats/icons/str.png" alt="" />
+
+            <div class="param-content">
+                <span class="p-label">STR</span>
+                <span class="p-value">@Character.Strength</span>
+                <span class="p-desc">근력</span>
+            </div>
+        </div>
+
+        <div class="param-box param-int">
+            <img class="stat-icon" src="/images/stats/icons/int.png" alt="" />
+
+            <div class="param-content">
+                <span class="p-label">INT</span>
+                <span class="p-value">@Character.Intelligence</span>
+                <span class="p-desc">지능</span>
+            </div>
+        </div>
+
+        <div class="param-box param-sta">
+            <img class="stat-icon" src="/images/stats/icons/sta.png" alt="" />
+
+            <div class="param-content">
+                <span class="p-label">Max HP</span>
+                <span class="p-value">@Character.MaxHp</span>
+                <span class="p-desc">최대 체력</span>
+            </div>
+        </div>
+
+        <div class="param-box param-luk">
+            <img class="stat-icon" src="/images/stats/icons/luk.png" alt="" />
+
+            <div class="param-content">
+                <span class="p-label">LUK</span>
+                <span class="p-value">@Character.Luck</span>
+                <span class="p-desc">행운</span>
+            </div>
+        </div>
+    </div>
+
+    <SectorProgressPanel UserId="@UserId" RefreshKey="@SectorProgressRefreshKey" />
+</aside>
+
+@code {
+    [Parameter]
+    public CharacterStatus Character { get; set; } = new();
+
+    [Parameter]
+    public string? UserName { get; set; }
+
+    [Parameter]
+    public string? UserId { get; set; }
+
+    [Parameter]
+    public int SectorProgressRefreshKey { get; set; }
+
+    private string DisplayUserName => string.IsNullOrWhiteSpace(UserName)
+        ? "UNKNOWN USER"
+        : UserName;
+
+    private DateTime currentTime = DateTime.Now;
+    private System.Threading.Timer? clockTimer;
+
+    protected override void OnInitialized()
+    {
+        clockTimer = new System.Threading.Timer(_ =>
+        {
+            currentTime = DateTime.Now;
+            InvokeAsync(StateHasChanged);
+        }, null, TimeSpan.Zero, TimeSpan.FromSeconds(1));
+    }
+
+    private string GetMonitorStatus()
+    {
+        if (Character.HpPercent <= 30)
+        {
+            return "CRITICAL CONDITION / FILTER FAILURE RISK / AREA UNSTABLE";
+        }
+
+        if (Character.HpPercent <= 60)
+        {
+            return "FILTER DAMAGE DETECTED / LOW LIGHT / CAUTION";
+        }
+
+        return "LOW LIGHT / FILTER REQUIRED / AREA UNSTABLE";
+    }
+
+    private string GetMonitorStatusClass()
+    {
+        if (Character.HpPercent <= 30)
+        {
+            return "critical";
+        }
+
+        if (Character.HpPercent <= 60)
+        {
+            return "caution";
+        }
+
+        return "stable";
+    }
+
+    public void Dispose()
+    {
+        clockTimer?.Dispose();
+    }
+}

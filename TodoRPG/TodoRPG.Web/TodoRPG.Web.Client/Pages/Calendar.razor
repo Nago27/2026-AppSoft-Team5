@@ -1,5 +1,423 @@
-﻿@page "/calendar"
+@page "/calendar"
 
-<PageTitle>Calendar</PageTitle>
+@using System
+@using System.Linq
+@using Microsoft.AspNetCore.Components
+@using Microsoft.JSInterop
+@using TodoRPG.Web.Client.Models
+@using TodoRPG.Web.Client.Services
 
-<h1>Calendar</h1>
+@inject IJSRuntime JS
+@inject NavigationManager Navigation
+@inject TodoApiService TodoApi
+
+<PageTitle>LAST SURVIVAL - MISSION CALENDAR</PageTitle>
+
+<div class="calendar-shell">
+    <div class="calendar-scanlines" aria-hidden="true"></div>
+
+    <header class="calendar-header">
+        <div>
+            <div class="calendar-kicker">BUNKER DAILY LOG</div>
+            <h1>MISSION CALENDAR</h1>
+        </div>
+
+        <div class="calendar-user-card">
+            <span>USER</span>
+            <strong>@DisplayUserId</strong>
+            <em>@CurrentMonthLabel</em>
+        </div>
+    </header>
+
+    <section class="calendar-toolbar" aria-label="Calendar controls">
+        <div class="month-navigation">
+            <button type="button" class="calendar-nav-button" @onclick="MoveToPreviousMonth">
+                ◀ PREV
+            </button>
+            <button type="button" class="calendar-nav-button ghost" @onclick="MoveToToday">
+                TODAY
+            </button>
+            <button type="button" class="calendar-nav-button" @onclick="MoveToNextMonth">
+                NEXT ▶
+            </button>
+        </div>
+
+        <div class="month-readout" aria-live="polite">
+            <span>@currentMonth.Year</span>
+            <strong>@currentMonth.Month.ToString("00")</strong>
+        </div>
+
+        <div class="calendar-stats" aria-label="Todo summary">
+            <div>
+                <span>TOTAL</span>
+                <strong>@TotalTodoCount</strong>
+            </div>
+            <div>
+                <span>ACTIVE</span>
+                <strong>@ActiveTodoCount</strong>
+            </div>
+            <div>
+                <span>DONE</span>
+                <strong>@CompletedTodoCount</strong>
+            </div>
+        </div>
+    </section>
+
+    @if (isLoading)
+    {
+        <section class="calendar-state-panel">
+            <strong>LOADING MISSION DATA</strong>
+            <span>Todo 기록을 불러오는 중입니다.</span>
+        </section>
+    }
+    else if (!string.IsNullOrWhiteSpace(errorMessage))
+    {
+        <section class="calendar-state-panel danger">
+            <strong>DATA LINK FAILURE</strong>
+            <span>@errorMessage</span>
+            <button type="button" class="calendar-nav-button" @onclick="LoadTodos">
+                RETRY
+            </button>
+        </section>
+    }
+    else
+    {
+        var selectedTodos = SelectedTodos;
+
+        <main class="calendar-content">
+            <section class="calendar-grid-panel" aria-label="Monthly todo calendar">
+                <div class="weekday-row" role="row">
+                    @foreach (var weekday in WeekdayNames)
+                    {
+                        <div class="weekday-cell" role="columnheader">@weekday</div>
+                    }
+                </div>
+
+                <div class="month-grid">
+                    @foreach (var day in CalendarDays)
+                    {
+                        var todos = GetTodosForDay(day);
+                        var visibleTodos = todos.Take(MaxTodosInCell);
+                        var hiddenTodoCount = Math.Max(0, todos.Count - MaxTodosInCell);
+
+                        <button type="button"
+                                class="@GetDayCellClass(day, todos.Count)"
+                                @onclick="() => SelectDay(day)"
+                                aria-label="@BuildDayAriaLabel(day, todos.Count)">
+                            <span class="day-cell-topline">
+                                <span class="day-number">@day.Day</span>
+                                @if (todos.Count > 0)
+                                {
+                                    <span class="day-todo-count">@todos.Count</span>
+                                }
+                            </span>
+
+                            <span class="todo-chip-list">
+                                @foreach (var todo in visibleTodos)
+                                {
+                                    <span class="@GetTodoChipClass(todo)" title="@BuildTodoTooltip(todo)">
+                                        <span class="todo-status-dot" aria-hidden="true"></span>
+                                        <span class="todo-chip-title">@todo.Title</span>
+                                    </span>
+                                }
+
+                                @if (hiddenTodoCount > 0)
+                                {
+                                    <span class="todo-chip more">+@hiddenTodoCount more</span>
+                                }
+                            </span>
+                        </button>
+                    }
+                </div>
+            </section>
+
+            <aside class="day-detail-panel" aria-label="Selected day todo details">
+                <div class="detail-header">
+                    <div>
+                        <span>SELECTED DATE</span>
+                        <h2>@FormatDate(selectedDate)</h2>
+                    </div>
+
+                    <div class="detail-count">
+                        <strong>@selectedTodos.Count</strong>
+                        <span>TODOS</span>
+                    </div>
+                </div>
+
+                @if (selectedTodos.Count == 0)
+                {
+                    <div class="empty-day-message">
+                        <strong>NO MISSION LOG</strong>
+                        <span>선택한 날짜에 생성된 Todo가 없습니다.</span>
+                    </div>
+                }
+                else
+                {
+                    <div class="detail-todo-list">
+                        @foreach (var todo in selectedTodos)
+                        {
+                            <article class="@GetDetailTodoClass(todo)">
+                                <div class="detail-todo-main">
+                                    <span class="detail-status">@(todo.IsCompleted ? "DONE" : "ACTIVE")</span>
+                                    <h3>@todo.Title</h3>
+                                    <p>@todo.Category</p>
+                                </div>
+
+                                <dl class="detail-meta">
+                                    <div>
+                                        <dt>CREATED</dt>
+                                        <dd>@FormatLocalTime(todo.CreatedAt)</dd>
+                                    </div>
+
+                                    @if (todo.CompletedAt is not null)
+                                    {
+                                        <div>
+                                            <dt>COMPLETED</dt>
+                                            <dd>@FormatLocalDateTime(todo.CompletedAt.Value)</dd>
+                                        </div>
+                                    }
+
+                                    @if (todo.DueDate is not null)
+                                    {
+                                        <div>
+                                            <dt>DUE</dt>
+                                            <dd>@FormatDueDate(todo.DueDate.Value)</dd>
+                                        </div>
+                                    }
+                                </dl>
+                            </article>
+                        }
+                    </div>
+                }
+            </aside>
+        </main>
+    }
+</div>
+
+@code {
+    private const int CalendarCellCount = 42;
+    private const int MaxTodosInCell = 3;
+
+    private static readonly string[] WeekdayNames = new[]
+    {
+        "일", "월", "화", "수", "목", "금", "토"
+    };
+
+    private static readonly TodoItemDto[] EmptyTodos = Array.Empty<TodoItemDto>();
+
+    private string? userId;
+    private string? errorMessage;
+    private bool isLoading = true;
+
+    private DateOnly currentMonth = GetFirstDayOfMonth(DateOnly.FromDateTime(DateTime.Today));
+    private DateOnly selectedDate = DateOnly.FromDateTime(DateTime.Today);
+
+    private List<TodoItemDto> todos = new();
+    private Dictionary<DateOnly, List<TodoItemDto>> todosByLocalCreatedDate = new();
+
+    private string DisplayUserId => string.IsNullOrWhiteSpace(userId) ? "UNKNOWN" : userId;
+    private string CurrentMonthLabel => $"{currentMonth.Year}년 {currentMonth.Month}월";
+
+    private int TotalTodoCount => todos.Count;
+    private int CompletedTodoCount => todos.Count(todo => todo.IsCompleted);
+    private int ActiveTodoCount => TotalTodoCount - CompletedTodoCount;
+
+    private IEnumerable<DateOnly> CalendarDays
+    {
+        get
+        {
+            var startOffset = (int)currentMonth.DayOfWeek;
+            var firstCalendarCell = currentMonth.AddDays(-startOffset);
+
+            return Enumerable.Range(0, CalendarCellCount)
+                .Select(offset => firstCalendarCell.AddDays(offset));
+        }
+    }
+
+    private IReadOnlyList<TodoItemDto> SelectedTodos => GetTodosForDay(selectedDate);
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender)
+        {
+            return;
+        }
+
+        userId = await JS.InvokeAsync<string?>(
+            "sessionStorage.getItem",
+            "todoRpg_user_id"
+        );
+
+        if (string.IsNullOrWhiteSpace(userId))
+        {
+            Navigation.NavigateTo("/login", forceLoad: true);
+            return;
+        }
+
+        await LoadTodos();
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private async Task LoadTodos()
+    {
+        if (string.IsNullOrWhiteSpace(userId))
+        {
+            return;
+        }
+
+        isLoading = true;
+        errorMessage = null;
+
+        try
+        {
+            todos = await TodoApi.GetByUserAsync(userId);
+            RebuildTodoLookup();
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Todo 캘린더 데이터를 불러오지 못했습니다: {ex.Message}";
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private void RebuildTodoLookup()
+    {
+        todosByLocalCreatedDate = todos
+            .GroupBy(todo => ToLocalDate(todo.CreatedAt))
+            .ToDictionary(
+                group => group.Key,
+                group => group
+                    .OrderBy(todo => todo.IsCompleted)
+                    .ThenBy(todo => ToLocalDateTime(todo.CreatedAt))
+                    .ToList()
+            );
+    }
+
+    private IReadOnlyList<TodoItemDto> GetTodosForDay(DateOnly day)
+    {
+        return todosByLocalCreatedDate.TryGetValue(day, out var dayTodos)
+            ? dayTodos
+            : EmptyTodos;
+    }
+
+    private void SelectDay(DateOnly day)
+    {
+        selectedDate = day;
+    }
+
+    private void MoveToPreviousMonth()
+    {
+        currentMonth = currentMonth.AddMonths(-1);
+        selectedDate = currentMonth;
+    }
+
+    private void MoveToNextMonth()
+    {
+        currentMonth = currentMonth.AddMonths(1);
+        selectedDate = currentMonth;
+    }
+
+    private void MoveToToday()
+    {
+        var today = DateOnly.FromDateTime(DateTime.Today);
+        currentMonth = GetFirstDayOfMonth(today);
+        selectedDate = today;
+    }
+
+    private string GetDayCellClass(DateOnly day, int todoCount)
+    {
+        var classes = new List<string> { "day-cell" };
+
+        if (day.Month != currentMonth.Month)
+        {
+            classes.Add("outside-month");
+        }
+
+        if (day == DateOnly.FromDateTime(DateTime.Today))
+        {
+            classes.Add("today");
+        }
+
+        if (day == selectedDate)
+        {
+            classes.Add("selected");
+        }
+
+        if (todoCount > 0)
+        {
+            classes.Add("has-todos");
+        }
+
+        return string.Join(" ", classes);
+    }
+
+    private static string GetTodoChipClass(TodoItemDto todo)
+    {
+        return todo.IsCompleted
+            ? "todo-chip completed"
+            : "todo-chip active";
+    }
+
+    private static string GetDetailTodoClass(TodoItemDto todo)
+    {
+        return todo.IsCompleted
+            ? "detail-todo completed"
+            : "detail-todo active";
+    }
+
+    private static string BuildDayAriaLabel(DateOnly day, int todoCount)
+    {
+        return $"{FormatDate(day)}, Todo {todoCount}개";
+    }
+
+    private static string BuildTodoTooltip(TodoItemDto todo)
+    {
+        var status = todo.IsCompleted ? "완료" : "미완료";
+        return $"[{status}] {todo.Title}";
+    }
+
+    private static DateOnly GetFirstDayOfMonth(DateOnly date)
+    {
+        return new DateOnly(date.Year, date.Month, 1);
+    }
+
+    private static DateOnly ToLocalDate(DateTime dateTime)
+    {
+        return DateOnly.FromDateTime(ToLocalDateTime(dateTime));
+    }
+
+    private static DateTime ToLocalDateTime(DateTime dateTime)
+    {
+        return dateTime.Kind switch
+        {
+            DateTimeKind.Local => dateTime,
+            DateTimeKind.Utc => dateTime.ToLocalTime(),
+            _ => DateTime.SpecifyKind(dateTime, DateTimeKind.Utc).ToLocalTime()
+        };
+    }
+
+    private static string FormatDate(DateOnly date)
+    {
+        return $"{date.Year}년 {date.Month}월 {date.Day}일";
+    }
+
+    private static string FormatLocalTime(DateTime dateTime)
+    {
+        return ToLocalDateTime(dateTime).ToString("HH:mm");
+    }
+
+    private static string FormatLocalDateTime(DateTime dateTime)
+    {
+        return ToLocalDateTime(dateTime).ToString("yyyy.MM.dd HH:mm");
+    }
+
+    private static string FormatDueDate(DateTime dueDate)
+    {
+        return dueDate.Kind == DateTimeKind.Utc
+            ? dueDate.ToLocalTime().ToString("yyyy.MM.dd HH:mm")
+            : dueDate.ToString("yyyy.MM.dd HH:mm");
+    }
+}

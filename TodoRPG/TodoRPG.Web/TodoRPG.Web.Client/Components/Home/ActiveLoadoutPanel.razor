@@ -1,0 +1,414 @@
+﻿@using TodoRPG.Web.Client.Models
+@using TodoRPG.Web.Client.Services
+
+@inject InventoryApiService InventoryApi
+
+<div class="active-loadout-panel">
+    <div class="loadout-header">
+        <div>
+            <span class="loadout-label">ACTIVE LOADOUT</span>
+            <h3>현재 적용 중인 보급 상태</h3>
+        </div>
+
+        <span class="loadout-state @GetLoadoutStateClass()">
+            @GetLoadoutStateText()
+        </span>
+    </div>
+
+    <div class="loadout-grid">
+        @if (isLoadoutLoading)
+        {
+            <div class="loadout-slot loadout-summary empty placeholder">
+                <span class="loadout-code">EQUIP</span>
+                <strong>동기화 중</strong>
+                <small>LOADING EQUIPMENT</small>
+            </div>
+
+            <div class="loadout-slot loadout-summary empty placeholder">
+                <span class="loadout-code">PASSIVE</span>
+                <strong>동기화 중</strong>
+                <small>LOADING PASSIVE</small>
+            </div>
+
+            <div class="loadout-slot loadout-summary empty placeholder">
+                <span class="loadout-code">SUPPLY</span>
+                <strong>동기화 중</strong>
+                <small>LOADING SUPPLY</small>
+            </div>
+
+            <div class="loadout-slot loadout-summary empty placeholder">
+                <span class="loadout-code">DUNGEON</span>
+                <strong>동기화 중</strong>
+                <small>LOADING ENTRY DATA</small>
+            </div>
+        }
+        else
+        {
+            <div class="loadout-slot loadout-summary @(EquippedItems.Any() ? "active" : "empty placeholder")">
+                <span class="loadout-code">EQUIP</span>
+                <strong>@GetEquippedTitle()</strong>
+                <small>@GetEquippedDetail()</small>
+            </div>
+
+            <div class="loadout-slot loadout-summary @(PassiveItems.Any() ? "active" : "empty placeholder")">
+                <span class="loadout-code">PASSIVE</span>
+                <strong>@GetPassiveTitle()</strong>
+                <small>@GetPassiveDetail()</small>
+            </div>
+
+            <div class="loadout-slot loadout-summary @(ConsumableItems.Any() ? "ready" : "empty placeholder")">
+                <span class="loadout-code">SUPPLY</span>
+                <strong>@GetSupplyTitle()</strong>
+                <small>@GetSupplyDetail()</small>
+            </div>
+
+            <div class="loadout-slot loadout-summary @(DungeonTicketItems.Any() ? "ready dungeon-item" : "empty placeholder")">
+                <span class="loadout-code">DUNGEON</span>
+                <strong>@GetDungeonTitle()</strong>
+                <small>@GetDungeonDetail()</small>
+            </div>
+        }
+    </div>
+</div>
+
+@code {
+    [Parameter]
+    public string? UserId { get; set; }
+
+    private List<InventoryItemDto> inventoryItems = new();
+    private bool isLoadoutLoading = true;
+
+    private List<InventoryItemDto> EquippedItems => inventoryItems
+        .Where(IsEquippedActiveItem)
+        .ToList();
+
+    private List<InventoryItemDto> PassiveItems => inventoryItems
+        .Where(IsPassiveItem)
+        .ToList();
+
+    private List<InventoryItemDto> ConsumableItems => inventoryItems
+        .Where(IsConsumableItem)
+        .ToList();
+
+    private List<InventoryItemDto> DungeonTicketItems => inventoryItems
+        .Where(IsDungeonTicket)
+        .ToList();
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (string.IsNullOrWhiteSpace(UserId))
+        {
+            inventoryItems.Clear();
+            isLoadoutLoading = false;
+            return;
+        }
+
+        try
+        {
+            isLoadoutLoading = true;
+
+            var inventories = await InventoryApi.GetByUserAsync(UserId);
+
+            inventoryItems = inventories
+                .Where(item => item.ShopItem is not null)
+                .Where(item => GetSafeCount(item) > 0)
+                .ToList();
+        }
+        catch
+        {
+            inventoryItems.Clear();
+        }
+        finally
+        {
+            isLoadoutLoading = false;
+        }
+    }
+
+    private string GetLoadoutStateText()
+    {
+        if (isLoadoutLoading)
+        {
+            return "SYNC";
+        }
+
+        if (EquippedItems.Any() || PassiveItems.Any())
+        {
+            return "ACTIVE";
+        }
+
+        if (ConsumableItems.Any() || DungeonTicketItems.Any())
+        {
+            return "READY";
+        }
+
+        if (inventoryItems.Any())
+        {
+            return "STANDBY";
+        }
+
+        return "EMPTY";
+    }
+
+    private string GetLoadoutStateClass()
+    {
+        return GetLoadoutStateText().ToLowerInvariant();
+    }
+
+    private string GetEquippedTitle()
+    {
+        var count = GetTotalCount(EquippedItems);
+
+        return count > 0
+            ? $"장착 장비 {count}개"
+            : "장착 장비 없음";
+    }
+
+    private string GetEquippedDetail()
+    {
+        return GetEffectSummary(EquippedItems, "NO EQUIPMENT ACTIVE");
+    }
+
+    private string GetPassiveTitle()
+    {
+        var count = GetTotalCount(PassiveItems);
+
+        return count > 0
+            ? $"패시브 효과 {count}개"
+            : "패시브 효과 없음";
+    }
+
+    private string GetPassiveDetail()
+    {
+        return GetEffectSummary(PassiveItems, "NO PASSIVE EFFECT");
+    }
+
+    private string GetSupplyTitle()
+    {
+        var count = GetTotalCount(ConsumableItems);
+
+        return count > 0
+            ? $"소모품 {count}개 준비됨"
+            : "사용 가능 소모품 없음";
+    }
+
+    private string GetSupplyDetail()
+    {
+        if (!ConsumableItems.Any())
+        {
+            return "NO CONSUMABLE READY";
+        }
+
+        var effectText = GetEffectSummary(ConsumableItems, string.Empty);
+
+        return string.IsNullOrWhiteSpace(effectText)
+            ? "CONSUMABLE READY"
+            : $"{effectText} / READY";
+    }
+
+    private string GetDungeonTitle()
+    {
+        var count = GetTotalCount(DungeonTicketItems);
+
+        return count > 0
+            ? $"입장권 {count}개 보유"
+            : "입장권 없음";
+    }
+
+    private string GetDungeonDetail()
+    {
+        return DungeonTicketItems.Any()
+            ? "ENTRY READY"
+            : "DUNGEON LOCKED";
+    }
+
+    private static int GetTotalCount(IEnumerable<InventoryItemDto> items)
+    {
+        return items.Sum(GetSafeCount);
+    }
+
+    private static int GetSafeCount(InventoryItemDto inventory)
+    {
+        return inventory.Count > 0 ? inventory.Count : 0;
+    }
+
+    private static bool IsEquippedActiveItem(InventoryItemDto inventory)
+    {
+        if (inventory.ShopItem is null)
+        {
+            return false;
+        }
+
+        if (IsDungeonTicket(inventory) || IsConsumableItem(inventory))
+        {
+            return false;
+        }
+
+        return inventory.IsEquipped;
+    }
+
+    private static bool IsPassiveItem(InventoryItemDto inventory)
+    {
+        var item = inventory.ShopItem;
+
+        if (item is null)
+        {
+            return false;
+        }
+
+        if (IsDungeonTicket(inventory) || IsConsumableItem(inventory) || inventory.IsEquipped)
+        {
+            return false;
+        }
+
+        var itemType = NormalizeCode(item.ItemType);
+
+        return itemType is "NONEEQUIP"
+            or "NONEQUIP"
+            or "PASSIVE"
+            or "PERMANENT"
+            or "INVENTORYEFFECT";
+    }
+
+    private static bool IsConsumableItem(InventoryItemDto inventory)
+    {
+        var item = inventory.ShopItem;
+
+        if (item is null)
+        {
+            return false;
+        }
+
+        if (IsDungeonTicket(inventory))
+        {
+            return false;
+        }
+
+        var itemType = NormalizeCode(item.ItemType);
+
+        return itemType is "CONSUME"
+            or "CONSUMABLE"
+            or "USE"
+            or "USABLE";
+    }
+
+    private static bool IsDungeonTicket(InventoryItemDto inventory)
+    {
+        var item = inventory.ShopItem;
+
+        if (item is null)
+        {
+            return false;
+        }
+
+        var name = NormalizeCode(item.Name);
+        var itemType = NormalizeCode(item.ItemType);
+        var plusStat = NormalizeCode(item.PlusStat);
+
+        return name.Contains("던전")
+            || name.Contains("입장권")
+            || itemType.Contains("DUNGEON")
+            || itemType.Contains("TICKET")
+            || plusStat.Contains("DUNGEON")
+            || plusStat.Contains("TICKET");
+    }
+
+    private static string GetEffectSummary(IEnumerable<InventoryItemDto> items, string emptyText)
+    {
+        var totals = new Dictionary<string, int>();
+
+        foreach (var inventory in items)
+        {
+            var item = inventory.ShopItem;
+
+            if (item is null)
+            {
+                continue;
+            }
+
+            if (string.IsNullOrWhiteSpace(item.PlusStat) || item.PlusStatValue == 0)
+            {
+                continue;
+            }
+
+            var stat = FormatStatCode(item.PlusStat);
+            var value = item.PlusStatValue * GetSafeCount(inventory);
+
+            if (totals.ContainsKey(stat))
+            {
+                totals[stat] += value;
+            }
+            else
+            {
+                totals[stat] = value;
+            }
+        }
+
+        var parts = totals
+            .Where(pair => pair.Value != 0)
+            .OrderBy(pair => GetStatOrder(pair.Key))
+            .ThenBy(pair => pair.Key)
+            .Select(pair => $"{pair.Key} {GetSignedValueText(pair.Value)}")
+            .Take(3)
+            .ToList();
+
+        if (parts.Count == 0)
+        {
+            return emptyText;
+        }
+
+        return string.Join(" / ", parts);
+    }
+
+    private static string FormatStatCode(string? stat)
+    {
+        var code = NormalizeCode(stat);
+
+        return code switch
+        {
+            "STRENGTH" or "STR" => "STR",
+            "INTELLIGENCE" or "INT" => "INT",
+            "STA" or "STAMINA" or "HP" or "HEALTH" or "MAXHP" => "STA",
+            "LUCK" or "LUK" or "FORTUNE" => "LUK",
+            "EXP" or "EXPERIENCE" => "EXP",
+            _ => code
+        };
+    }
+
+    private static int GetStatOrder(string stat)
+    {
+        return stat switch
+        {
+            "STR" => 1,
+            "INT" => 2,
+            "STA" => 3,
+            "LUK" => 4,
+            "EXP" => 5,
+            _ => 99
+        };
+    }
+
+    private static string GetSignedValueText(int value)
+    {
+        if (value > 0)
+        {
+            return $"+{value}";
+        }
+
+        return value.ToString();
+    }
+
+    private static string NormalizeCode(string? value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return string.Empty;
+        }
+
+        return value
+            .Trim()
+            .Replace(" ", string.Empty)
+            .Replace("_", string.Empty)
+            .Replace("-", string.Empty)
+            .ToUpperInvariant();
+    }
+}

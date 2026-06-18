@@ -32,6 +32,9 @@ namespace TodoRPG.Api.Migrations
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("TEXT");
+                    
+                    b.Property<DateTime?>("CompletedAt")
+                        .HasColumnType("TEXT");
 
                     b.Property<DateTime?>("DueDate")
                         .HasColumnType("TEXT");

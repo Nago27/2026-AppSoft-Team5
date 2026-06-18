@@ -21,6 +21,7 @@ namespace TodoRPG.Api.Migrations
                     IsCompleted = table.Column<bool>(type: "INTEGER", nullable: false),
                     Category = table.Column<string>(type: "TEXT", nullable: false),
                     CreatedAt = table.Column<DateTime>(type: "TEXT", nullable: false),
+                    CompletedAt = table.Column<DateTime>(type: "TEXT", nullable: true),
                     DueDate = table.Column<DateTime>(type: "TEXT", nullable: true)
                 },
                 constraints: table =>

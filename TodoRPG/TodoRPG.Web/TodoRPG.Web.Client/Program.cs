@@ -1,12 +1,19 @@
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
 using System.Net.Http;
+using TodoRPG.Web.Client.Services;
 
 var builder = WebAssemblyHostBuilder.CreateDefault(args);
 
-builder.Services.AddScoped(sp => 
+builder.Services.AddScoped(sp =>
     new HttpClient
     {
         BaseAddress = new Uri("http://localhost:5187/")
     });
+
+builder.Services.AddScoped<TodoApiService>();
+builder.Services.AddScoped<CharacterApiService>();
+builder.Services.AddScoped<ShopApiService>();
+builder.Services.AddScoped<InventoryApiService>();
+builder.Services.AddScoped<DungeonApiService>();
 
 await builder.Build().RunAsync();
