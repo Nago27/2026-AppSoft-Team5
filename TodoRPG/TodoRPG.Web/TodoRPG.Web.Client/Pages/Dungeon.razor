@@ -237,9 +237,7 @@
     private string bossLog = "보스가 황무지 게이트 너머에서 대기 중입니다.";
     private bool bossDefeated = false;
 
-    private int DungeonTicketCount => inventoryItems
-        .Where(IsDungeonTicket)
-        .Sum(item => item.Count);
+    private int DungeonTicketCount => Math.Max(0, currentCharacter?.DungeonTickets ?? 0);
 
     private int DisplayDungeonTicketCount => isDemoMode && DungeonTicketCount <= 0
         ? 1

@@ -510,6 +510,8 @@
             return;
         }
 
+        var shouldNavigateToDungeon = IsDungeonTicket(inventory.ShopItem);
+
         processingInventoryId = inventory.Id;
         storeLog = $"{inventory.ShopItem.Name} 사용 요청을 전송했습니다.";
 
@@ -523,6 +525,12 @@
             if (result?.UpdatedCharacter is not null)
             {
                 currentCharacter = result.UpdatedCharacter;
+            }
+
+            if (shouldNavigateToDungeon)
+            {
+                Navigation.NavigateTo("/dungeon");
+                return;
             }
 
             await ReloadAllAfterMutationAsync(currentUserId);
@@ -777,6 +785,15 @@
     private static bool IsConsumable(ShopItemDto item)
     {
         return NormalizeCode(item.ItemType) == "CONSUME";
+    }
+
+    private static bool IsDungeonTicket(ShopItemDto item)
+    {
+        var name = NormalizeCode(item.Name);
+        var plusStat = NormalizeCode(item.PlusStat);
+
+        return name == "던전입장권"
+            || plusStat is "DUNGEON" or "DUNGEONTICKET" or "TICKET";
     }
 
     private static string DisplayItemType(string? itemType)
