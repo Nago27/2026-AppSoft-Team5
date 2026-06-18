@@ -63,15 +63,27 @@
                     @foreach (var inventory in inventoryItems)
                     {
                         var item = inventory.ShopItem;
+                        var itemImage = GetGachaItemImage(item?.Name);
 
                         <article class="shop-card @(inventory.IsEquipped ? "active-item" : "")"
                                  @key="inventory.Id">
                             <div class="shop-card-top">
-                                <span class="item-type">@DisplayItemType(item?.ItemType)</span>
+                                <span class="item-type @GetRarityClass(item?.Rarity)">
+                                    @DisplayItemType(item?.ItemType)
+                                </span>
                                 <span class="item-code">@($"INV-{inventory.Id:D2}")</span>
                             </div>
 
-                            <div class="shop-icon">@GetItemIcon(item)</div>
+                            <div class="shop-icon @(itemImage is not null ? "has-image" : "")">
+                                @if (itemImage is not null)
+                                {
+                                    <img src="@itemImage" alt="@(item?.Name ?? "아이템")" />
+                                }
+                                else
+                                {
+                                    <span>@GetItemIcon(item)</span>
+                                }
+                            </div>
 
                             <h3>@(item?.Name ?? "알 수 없는 아이템")</h3>
 
@@ -147,11 +159,27 @@
                             }
                             else
                             {
+                                var rewardImage = GetGachaItemImage(lastGachaReward.Name);
+                                var rewardRarityClass = GetRarityClass(lastGachaReward.Rarity);
+
                                 <div class="machine-result">
-                                    <span class="reward-rank @GetRarityClass(lastGachaReward.Rarity)">
+                                    <span class="reward-rank @rewardRarityClass">
                                         @lastGachaReward.Rarity
                                     </span>
-                                    <div class="reward-icon">@GetItemIcon(lastGachaReward)</div>
+
+                                    @if (rewardImage is not null)
+                                    {
+                                        <img class="gacha-result-image @rewardRarityClass"
+                                             src="@rewardImage"
+                                             alt="@lastGachaReward.Name" />
+                                    }
+                                    else
+                                    {
+                                        <div class="reward-icon @rewardRarityClass">
+                                            @GetItemIcon(lastGachaReward)
+                                        </div>
+                                    }
+
                                     <strong>@lastGachaReward.Name</strong>
                                     <p>@GetEffectText(lastGachaReward)</p>
                                 </div>
@@ -219,15 +247,27 @@
                     @foreach (var item in shopItems)
                     {
                         var isSoldOut = IsSoldOut(item);
+                        var itemImage = GetGachaItemImage(item.Name);
 
                         <article class="shop-card @(isSoldOut ? "coming-soon" : "")"
                                  @key="item.Id">
                             <div class="shop-card-top">
-                                <span class="item-type">@DisplayItemType(item.ItemType)</span>
+                                <span class="item-type @GetRarityClass(item.Rarity)">
+                                    @DisplayItemType(item.ItemType)
+                                </span>
                                 <span class="item-code">@($"SHOP-{item.Id:D2}")</span>
                             </div>
 
-                            <div class="shop-icon">@GetItemIcon(item)</div>
+                            <div class="shop-icon @(itemImage is not null ? "has-image" : "")">
+                                @if (itemImage is not null)
+                                {
+                                    <img src="@itemImage" alt="@item.Name" />
+                                }
+                                else
+                                {
+                                    <span>@GetItemIcon(item)</span>
+                                }
+                            </div>
 
                             <h3>@item.Name</h3>
 
@@ -747,6 +787,33 @@
             "EQUIP" => "EQUIP",
             "NONEEQUIP" => "PASSIVE",
             _ => "ITEM"
+        };
+    }
+
+    private static string? GetGachaItemImage(string? itemName)
+    {
+        return NormalizeCode(itemName) switch
+        {
+            "마크42" => "/images/gacha/mark42.png",
+            "스미스머신" => "/images/gacha/smith-machine.png",
+            "K2소총" => "/images/gacha/k2-rifle.png",
+            "던전입장권" => "/images/gacha/dungeon-ticket.png",
+            "프로틴쉐이크" => "/images/gacha/protein-pack.png",
+            "가고일돌갑옷" => "/images/gacha/gargoyle-stone-armor.png",
+            "황색방호복" => "/images/gacha/hazmat-suit.png",
+            "지도" => "/images/gacha/map.png",
+            "런닝머신" => "/images/gacha/treadmill.png",
+            "러닝머신" => "/images/gacha/treadmill.png",
+            "아이폰시리" => "/images/gacha/smartphone.png",
+            //"교과서" => "/images/gacha/textbook.png",
+            //"복권" => "/images/gacha/lottery.png",
+            "네잎클로버" => "/images/gacha/clover.png",
+            "행운의편지" => "/images/gacha/lucky-letter.png",
+            "슈퍼솔져혈청" => "/images/gacha/super-soldier-serum.png",
+            "슈퍼솔저혈청" => "/images/gacha/super-soldier-serum.png",
+            "무안단물" => "/images/gacha/sweet-water.png",
+            //"웃음" => "/images/gacha/laughter.png",
+            _ => null
         };
     }
 

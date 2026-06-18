@@ -1,0 +1,675 @@
+﻿@page "/dungeon"
+
+@using TodoRPG.Web.Client.Models
+@using TodoRPG.Web.Client.Services
+
+@inject IJSRuntime JS
+@inject InventoryApiService InventoryApi
+@inject TodoApiService TodoApi
+@inject CharacterApiService CharacterApi
+
+<PageTitle>DUNGEON ACCESS</PageTitle>
+
+<link rel="stylesheet" href="/css/dungeon.css" />
+
+<div class="dungeon-page">
+    <section class="dungeon-hero">
+        <div>
+            <span class="dungeon-label">DUNGEON ACCESS TERMINAL</span>
+            <h1>황무지 던전 진입 게이트</h1>
+            <p>BUNKER AIRLOCK → WASTELAND RUINS / BOSS ENCOUNTER SECTOR</p>
+        </div>
+
+        <div class="dungeon-status-card @(isPageLoading ? "checking" : HasDungeonTicket ? "ready" : "locked")"
+            <span>ENTRY STATUS</span>
+
+            @if (isPageLoading)
+            {
+                    <strong>CHECKING</strong>
+                    <small>입장권 확인 중</small>
+            }
+            else
+            {
+                    <strong>@(HasDungeonTicket ? "READY" : "LOCKED")</strong>
+                    <small>입장권 @DungeonTicketCount 개 보유</small>
+            }
+        </div>
+    </section>
+
+    <section class="dungeon-briefing">
+        <div class="briefing-panel">
+            <span class="dungeon-label">EXPEDITION BRIEFING</span>
+            <h2>탐사 브리핑</h2>
+
+            <p>
+                벙커 외부의 황무지 폐허 구역을 탐색합니다. 탐사에는 던전 입장권이 필요하며,
+                생존자의 능력치와 보급 상태에 따라 탐사 결과가 달라질 수 있습니다.
+            </p>
+
+            <div class="dungeon-requirements">
+                <div class="requirement-row @(isPageLoading ? "pending" : HasDungeonTicket ? "passed" : "failed")">
+                    <span>
+                        @(isPageLoading ? "…" : HasDungeonTicket ? "✓" : "×")
+                    </span>
+                    <strong>DUNGEON TICKET</strong>
+                    <small>@(isPageLoading ? "CHECKING" : $"{DungeonTicketCount} / 1")</small>
+                </div>
+
+                <div class="requirement-row passed">
+                    <span>✓</span>
+                    <strong>FIELD VIEW ONLINE</strong>
+                    <small>CAM-04 LINKED</small>
+                </div>
+
+                <div class="requirement-row passed">
+                    <span>✓</span>
+                    <strong>SURVIVAL PARAMS</strong>
+                    <small>STATUS SYNCED</small>
+                </div>
+            </div>
+        </div>
+
+        <div class="briefing-panel">
+            <span class="dungeon-label">MISSION RULE</span>
+            <h2>탐사 규칙</h2>
+
+            <ul class="dungeon-rule-list">
+                <li>입장권이 없으면 탐사를 시작할 수 없습니다.</li>
+                <li>현재 초안에서는 입장권을 실제로 소모하지 않습니다.</li>
+                <li>탐사 결과는 화면 표시용으로만 출력됩니다.</li>
+                <li>추후 EXP, SUPPLY, HP 변동 API를 연결할 수 있습니다.</li>
+            </ul>
+        </div>
+    </section>
+
+    <section class="dungeon-zone-section">
+        <div class="dungeon-section-header">
+            <div>
+                <span class="dungeon-label">SELECT EXPEDITION ROUTE</span>
+                <h2>탐사 구역 선택</h2>
+            </div>
+
+            <span class="route-count">3 ROUTES AVAILABLE</span>
+        </div>
+
+        <div class="dungeon-zone-grid">
+            @foreach (var zone in zones)
+            {
+                <button class="dungeon-zone-card @(selectedZone?.Code == zone.Code ? "selected" : "")"
+                        @onclick="() => SelectZone(zone)">
+                    <span class="zone-code">@zone.Code</span>
+                    <strong>@zone.Name</strong>
+                    <small>@zone.Description</small>
+
+                    <div class="zone-meta">
+                        <span>RISK: @zone.Risk</span>
+                        <span>REWARD: @zone.RewardHint</span>
+                    </div>
+                </button>
+            }
+        </div>
+    </section>
+
+    <section class="dungeon-boss-section">
+        <div class="dungeon-section-header">
+            <div>
+                <span class="dungeon-label">WASTELAND BOSS ENCOUNTER</span>
+                <h2>황무지 보스 조우</h2>
+            </div>
+
+            <span class="route-count">BOSS DEMO</span>
+        </div>
+
+        <div class="boss-encounter-card">
+            <div class="boss-visual-panel">
+                <span class="boss-code">BOSS-01</span>
+                <h3>@BossName</h3>
+                <p>
+                    벙커 외부 황무지 게이트를 점거한 변이 감시 개체입니다.
+                    보스전 진입 전 Todo 미션을 완료해야 공격 명령을 실행할 수 있습니다.
+                </p>
+
+                <div class="boss-hp-bar">
+                    <div class="boss-hp-fill" style="width: @(bossHp * 100 / BossMaxHp)%"></div>
+                </div>
+
+                <small>HP @bossHp / @BossMaxHp</small>
+            </div>
+
+            <div class="boss-control-panel">
+                <div class="requirement-row @(HasDungeonTicket ? "passed" : "failed")">
+                    <span>@(HasDungeonTicket ? "✓" : "×")</span>
+                    <strong>DUNGEON PASS</strong>
+                    <small>@(isDemoMode ? 1 : DungeonTicketCount) / 1</small>
+                </div>
+
+                <div class="requirement-row @(IsBossMissionRegistered ? "passed" : "failed")">
+                    <span>@(IsBossMissionRegistered ? "✓" : "×")</span>
+                    <strong>BOSS TODO REGISTERED</strong>
+                    <small>@(IsBossMissionRegistered ? "MISSION LINKED" : "NOT REGISTERED")</small>
+                </div>
+
+                <div class="requirement-row @(IsBossMissionCompleted ? "passed" : "failed")">
+                    <span>@(IsBossMissionCompleted ? "✓" : "×")</span>
+                    <strong>BOSS TODO COMPLETED</strong>
+                    <small>@(IsBossMissionCompleted ? "ATTACK READY" : "COMPLETE TODO FIRST")</small>
+                </div>
+
+                <div class="boss-log">
+                    @bossLog
+                </div>
+
+                <div class="boss-actions">
+                    <button class="expedition-button secondary"
+                            disabled="@(IsBossMissionRegistered || isCreatingBossMission)"
+                            @onclick="RegisterBossMission">
+                        REGISTER BOSS TODO
+                    </button>
+
+                    <button class="expedition-button"
+                            disabled="@(!CanAttackBoss)"
+                            @onclick="AttackBoss">
+                        ATTACK BOSS
+                    </button>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="dungeon-control-panel">
+        <div class="control-screen">
+            <span class="dungeon-label">CONTROL LOG</span>
+
+            @if (selectedZone is null)
+            {
+                <h2>NO ROUTE SELECTED</h2>
+                <p>탐사할 하층 구역을 선택하세요.</p>
+            }
+            else
+            {
+                <h2>@selectedZone.Name</h2>
+                <p>@selectedZone.Description</p>
+                <p class="control-detail">
+                    위험도 @selectedZone.Risk / 예상 보상 @selectedZone.RewardHint
+                </p>
+            }
+
+            @if (!string.IsNullOrWhiteSpace(resultMessage))
+            {
+                <div class="dungeon-result @(lastResultSuccess ? "success" : "fail")">
+                    <span>EXPEDITION RESULT</span>
+                    <strong>@resultTitle</strong>
+                    <small>@resultMessage</small>
+                </div>
+            }
+        </div>
+
+        <button class="expedition-button"
+                disabled="@(!CanStartExpedition)"
+                @onclick="StartExpedition">
+            START EXPEDITION
+        </button>
+    </section>
+</div>
+
+@code {
+    private string? currentUserId;
+    private CharacterDto? currentCharacter;
+
+    private List<TodoItemDto> todos = new();
+    private List<InventoryItemDto> inventoryItems = new();
+
+    private DungeonZone? selectedZone;
+
+    private string resultTitle = string.Empty;
+    private string resultMessage = string.Empty;
+    private bool lastResultSuccess;
+
+    private bool isPageLoading = true;
+    private bool isDemoMode = false;
+    private bool isCreatingBossMission = false;
+
+    private const string BossMissionTitle = "[황무지 던전] 보스전 진입 준비";
+    private const string BossName = "황무지 감시자";
+    private const int BossMaxHp = 180;
+
+    private int bossHp = BossMaxHp;
+    private string bossLog = "보스가 황무지 게이트 너머에서 대기 중입니다.";
+    private bool bossDefeated = false;
+
+    private int DungeonTicketCount => inventoryItems
+        .Where(IsDungeonTicket)
+        .Sum(item => item.Count);
+
+    private int DisplayDungeonTicketCount => isDemoMode && DungeonTicketCount <= 0
+        ? 1
+        : DungeonTicketCount;
+
+    private bool HasDungeonTicket => isDemoMode || DungeonTicketCount > 0;
+
+    private bool CanStartExpedition =>
+        !isPageLoading
+        && HasDungeonTicket
+        && selectedZone is not null;
+
+    private bool IsBossMissionRegistered => todos.Any(IsBossMission);
+
+    private bool IsBossMissionCompleted => todos.Any(todo =>
+        IsBossMission(todo) && todo.IsCompleted);
+
+    private bool CanAttackBoss =>
+        !isPageLoading
+        && !isDemoMode
+        && HasDungeonTicket
+        && IsBossMissionCompleted
+        && !bossDefeated;
+
+    private readonly List<DungeonZone> zones = new()
+    {
+        new DungeonZone(
+            "ZONE-01",
+            "폐허 고속도로",
+            "벙커 외부로 이어지는 오래된 고속도로입니다. 모래폭풍과 약탈 흔적이 남아 있습니다.",
+            "MEDIUM",
+            "EXP"
+        ),
+        new DungeonZone(
+            "ZONE-02",
+            "마른 정수장",
+            "오염된 물 저장 시설입니다. 필터 부품과 보급품이 남아 있을 수 있습니다.",
+            "LOW",
+            "SUPPLY + EXP"
+        ),
+        new DungeonZone(
+            "ZONE-03",
+            "붉은 모래 채굴장",
+            "황무지 감시자가 출몰하는 폐쇄 채굴장입니다. 보스 조우 가능성이 가장 높습니다.",
+            "HIGH",
+            "BOSS ACCESS"
+        )
+    };
+
+    protected override void OnInitialized()
+    {
+        selectedZone = zones.FirstOrDefault(zone => zone.Code == "ZONE-03")
+            ?? zones.FirstOrDefault();
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender)
+        {
+            return;
+        }
+
+        try
+        {
+            currentUserId = await ReadUserIdFromStorage();
+
+            if (string.IsNullOrWhiteSpace(currentUserId))
+            {
+                EnterDemoMode(
+                    "DEMO ACCESS MODE",
+                    "로그인 저장 정보를 찾지 못해 황무지 던전 초안을 데모 모드로 표시합니다."
+                );
+                return;
+            }
+
+            await LoadDungeonData(currentUserId);
+            isDemoMode = false;
+
+            resultTitle = "DUNGEON SYNC COMPLETE";
+            resultMessage = "입장권, Todo, 캐릭터 정보를 동기화했습니다.";
+            lastResultSuccess = true;
+        }
+        catch (Exception ex)
+        {
+            EnterDemoMode(
+                "DEMO ACCESS MODE",
+                $"던전 데이터를 불러오지 못해 데모 모드로 표시합니다. ({ex.Message})"
+            );
+        }
+        finally
+        {
+            isPageLoading = false;
+            await InvokeAsync(StateHasChanged);
+        }
+    }
+
+    private async Task<string?> ReadUserIdFromStorage()
+    {
+        var userId = await JS.InvokeAsync<string?>(
+            "sessionStorage.getItem",
+            "todoRpg_user_id"
+        );
+
+        if (!string.IsNullOrWhiteSpace(userId))
+        {
+            return userId;
+        }
+
+        userId = await JS.InvokeAsync<string?>(
+            "sessionStorage.getItem",
+            "userId"
+        );
+
+        if (!string.IsNullOrWhiteSpace(userId))
+        {
+            return userId;
+        }
+
+        userId = await JS.InvokeAsync<string?>(
+            "sessionStorage.getItem",
+            "UserId"
+        );
+
+        if (!string.IsNullOrWhiteSpace(userId))
+        {
+            return userId;
+        }
+
+        userId = await JS.InvokeAsync<string?>(
+            "sessionStorage.getItem",
+            "currentUserId"
+        );
+
+        if (!string.IsNullOrWhiteSpace(userId))
+        {
+            return userId;
+        }
+
+        return await JS.InvokeAsync<string?>(
+            "localStorage.getItem",
+            "userId"
+        );
+    }
+
+    private async Task LoadDungeonData(string userId)
+    {
+        var inventories = await InventoryApi.GetByUserAsync(userId);
+
+        inventoryItems = inventories
+            .Where(item => item.ShopItem is not null)
+            .Where(item => item.Count > 0)
+            .ToList();
+
+        todos = await TodoApi.GetByUserAsync(userId);
+        currentCharacter = await CharacterApi.GetByUserAsync(userId);
+    }
+
+    private void EnterDemoMode(string title, string message)
+    {
+        isDemoMode = true;
+        inventoryItems.Clear();
+        todos.Clear();
+        currentCharacter = null;
+
+        resultTitle = title;
+        resultMessage = message;
+        lastResultSuccess = true;
+
+        bossLog = "데모 모드에서는 Todo 등록 및 보스 공격은 잠겨 있습니다.";
+    }
+
+    private void SelectZone(DungeonZone zone)
+    {
+        selectedZone = zone;
+        resultTitle = string.Empty;
+        resultMessage = string.Empty;
+        lastResultSuccess = false;
+    }
+
+    private void StartExpedition()
+    {
+        if (!CanStartExpedition || selectedZone is null)
+        {
+            resultTitle = "ACCESS DENIED";
+            resultMessage = "던전 입장권이 없거나 탐사 구역이 선택되지 않았습니다.";
+            lastResultSuccess = false;
+            return;
+        }
+
+        var roll = Random.Shared.Next(1, 101);
+        var successRate = selectedZone.Risk switch
+        {
+            "LOW" => 85,
+            "MEDIUM" => 68,
+            "HIGH" => 52,
+            _ => 60
+        };
+
+        if (roll <= successRate)
+        {
+            resultTitle = "탐사 완료";
+            resultMessage = selectedZone.RewardHint switch
+            {
+                "SUPPLY + EXP" => "획득 예상: EXP +20 / SUPPLY +10",
+                "EXP" => "획득 예상: EXP +25",
+                "BOSS ACCESS" => "보스 조우 구역을 확인했습니다. 보스전 준비 Todo를 등록하세요.",
+                "RANDOM ITEM" => "획득 예상: RANDOM SUPPLY ITEM",
+                _ => "획득 예상: EXP +10"
+            };
+            lastResultSuccess = true;
+        }
+        else
+        {
+            resultTitle = "탐사 실패";
+            resultMessage = "FILTER HP 손상 위험이 감지되었습니다. 현재 초안에서는 HP가 실제로 감소하지 않습니다.";
+            lastResultSuccess = false;
+        }
+    }
+
+    private async Task RegisterBossMission()
+    {
+        if (isCreatingBossMission || isDemoMode)
+        {
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(currentUserId))
+        {
+            resultTitle = "MISSION REGISTER FAILED";
+            resultMessage = "사용자 정보를 찾지 못해 보스전 준비 미션을 등록할 수 없습니다.";
+            lastResultSuccess = false;
+            return;
+        }
+
+        try
+        {
+            isCreatingBossMission = true;
+
+            if (!todos.Any(IsBossMission))
+            {
+                var request = new CreateTodoRequest
+                    {
+                        UserId = currentUserId,
+                        Title = BossMissionTitle,
+                        Category = "기타",
+                        DueDate = DateTime.Today
+                    };
+
+                var createdTodo = await TodoApi.CreateAsync(request);
+
+                if (createdTodo is not null)
+                {
+                    todos.Insert(0, createdTodo);
+                }
+                else
+                {
+                    todos = await TodoApi.GetByUserAsync(currentUserId);
+                }
+            }
+
+            resultTitle = "MISSION REGISTERED";
+            resultMessage = "Home의 MISSION LOG에서 [황무지 던전] 보스전 진입 준비 Todo를 완료하면 공격이 가능합니다.";
+            lastResultSuccess = true;
+        }
+        catch (Exception ex)
+        {
+            resultTitle = "MISSION REGISTER FAILED";
+            resultMessage = ex.Message;
+            lastResultSuccess = false;
+        }
+        finally
+        {
+            isCreatingBossMission = false;
+            await InvokeAsync(StateHasChanged);
+        }
+    }
+
+    private void AttackBoss()
+    {
+        if (!CanAttackBoss)
+        {
+            resultTitle = "ATTACK LOCKED";
+            resultMessage = "던전 입장권과 완료된 보스전 준비 Todo가 필요합니다.";
+            lastResultSuccess = false;
+            return;
+        }
+
+        var level = GetCharacterNumber(1, "Level");
+        var strength = GetCharacterNumber(0, "Strength", "Str");
+        var intelligence = GetCharacterNumber(0, "Intelligence", "Int");
+        var luck = GetCharacterNumber(0, "Luck", "Luk", "Fortune");
+        var hp = GetCharacterNumber(100, "Hp", "HP", "Health", "CurrentHp", "CurrentHealth");
+        var maxHp = GetCharacterNumber(100, "MaxHp", "MaxHP", "MaxHealth", "MaximumHp", "MaximumHealth");
+
+        if (maxHp <= 0)
+        {
+            maxHp = 100;
+        }
+
+        var hpBonus = Math.Max(0, hp * 10 / maxHp);
+        var luckRoll = Random.Shared.Next(0, Math.Max(2, luck + 4));
+
+        var damage = 18
+            + (strength * 2)
+            + intelligence
+            + (level * 3)
+            + hpBonus
+            + luckRoll;
+
+        damage = Math.Clamp(damage, 12, 95);
+
+        bossHp = Math.Max(0, bossHp - damage);
+
+        if (bossHp <= 0)
+        {
+            bossDefeated = true;
+            bossLog = $"{BossName} 제압 완료. 황무지 게이트가 일시적으로 안정화되었습니다.";
+
+            resultTitle = "BOSS SUPPRESSED";
+            resultMessage = $"최종 피해량 {damage}. 황무지 던전 데모 클리어.";
+            lastResultSuccess = true;
+            return;
+        }
+
+        bossLog = $"{BossName}에게 {damage} 피해를 입혔습니다. 남은 보스 HP: {bossHp}/{BossMaxHp}";
+
+        resultTitle = "BOSS HIT";
+        resultMessage = $"STR {strength}, INT {intelligence}, LUK {luck}, LEVEL {level} 기준으로 {damage} 피해를 입혔습니다.";
+        lastResultSuccess = true;
+    }
+
+    private static bool IsBossMission(TodoItemDto todo)
+    {
+        return string.Equals(
+            todo.Title?.Trim(),
+            BossMissionTitle,
+            StringComparison.Ordinal
+        );
+    }
+
+    private int GetCharacterNumber(int fallback, params string[] propertyNames)
+    {
+        if (currentCharacter is null)
+        {
+            return fallback;
+        }
+
+        var type = currentCharacter.GetType();
+
+        foreach (var propertyName in propertyNames)
+        {
+            var property = type.GetProperty(
+                propertyName,
+                System.Reflection.BindingFlags.Public
+                | System.Reflection.BindingFlags.Instance
+                | System.Reflection.BindingFlags.IgnoreCase
+            );
+
+            if (property is null)
+            {
+                continue;
+            }
+
+            var value = property.GetValue(currentCharacter);
+
+            if (value is null)
+            {
+                continue;
+            }
+
+            try
+            {
+                return Convert.ToInt32(value);
+            }
+            catch
+            {
+                // 숫자로 변환할 수 없는 값이면 다음 후보 속성 확인
+            }
+        }
+
+        return fallback;
+    }
+
+    private static bool IsDungeonTicket(InventoryItemDto inventory)
+    {
+        var item = inventory.ShopItem;
+
+        if (item is null)
+        {
+            return false;
+        }
+
+        var name = NormalizeCode(item.Name);
+        var itemType = NormalizeCode(item.ItemType);
+        var plusStat = NormalizeCode(item.PlusStat);
+        var description = NormalizeCode(item.Description);
+
+        return name.Contains("던전")
+            || name.Contains("입장권")
+            || name.Contains("패스")
+            || description.Contains("황무지")
+            || description.Contains("던전")
+            || itemType.Contains("DUNGEON")
+            || itemType.Contains("TICKET")
+            || itemType.Contains("PASS")
+            || plusStat.Contains("DUNGEON")
+            || plusStat.Contains("TICKET")
+            || plusStat.Contains("PASS");
+    }
+
+    private static string NormalizeCode(string? value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return string.Empty;
+        }
+
+        return value
+            .Trim()
+            .Replace(" ", string.Empty)
+            .Replace("_", string.Empty)
+            .Replace("-", string.Empty)
+            .ToUpperInvariant();
+    }
+
+    private sealed record DungeonZone(
+        string Code,
+        string Name,
+        string Description,
+        string Risk,
+        string RewardHint
+    );
+}

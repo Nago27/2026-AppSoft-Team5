@@ -18,7 +18,9 @@
             <div class="char-shadow"></div>
         </div>
 
-        <div class="monitor-warning">LOW LIGHT / FILTER REQUIRED / AREA UNSTABLE</div>
+        <div class="monitor-warning @GetMonitorStatusClass()">
+            @GetMonitorStatus()
+        </div>
     </div>
 
     <div class="survivor-note">
@@ -26,7 +28,7 @@
         <span>@Character.Title</span>
     </div>
 
-    <ActiveLoadoutPanel />
+    <ActiveLoadoutPanel UserId="@UserId" />
 
     <div class="system-memo survival-rule-memo">
         <strong>DAILY SURVIVAL CHECK</strong>
@@ -154,6 +156,21 @@
         }
 
         return "LOW LIGHT / FILTER REQUIRED / AREA UNSTABLE";
+    }
+
+    private string GetMonitorStatusClass()
+    {
+        if (Character.HpPercent <= 30)
+        {
+            return "critical";
+        }
+
+        if (Character.HpPercent <= 60)
+        {
+            return "caution";
+        }
+
+        return "stable";
     }
 
     public void Dispose()
