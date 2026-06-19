@@ -17,6 +17,8 @@
 
 ---
 
+<div style="page-break-after: always;"></div>
+
 ## 1. 프로젝트 개요
 
 ### 1.1 주제 선정 배경
@@ -41,6 +43,8 @@
 
 ---
 
+<div style="page-break-after: always;"></div>
+
 ## 2. 제안서 대비 최종 설계 목표 구체화
 
 ### 2.1 최초 제안 목표
@@ -58,6 +62,8 @@
 9. 기한 또는 중요 Todo와 연계하는 던전 기능
 10. SQLite 기반 데이터 저장
 11. ASP.NET Core Blazor 기반 웹 UI 구성
+
+<div style="page-break-after: always;"></div>
 
 ### 2.2 제안서 대비 최종 구현 범위
 
@@ -81,6 +87,8 @@
 
 ---
 
+<div style="page-break-after: always;"></div>
+
 ## 3. 시스템 설계 및 구현 구조
 
 ### 3.1 기술 스택
@@ -98,6 +106,8 @@
 | 협업·형상관리 | Git, GitHub | 기능별 브랜치 작업, 병합과 코드 이력 관리 |
 | UI 스타일링 | Razor CSS, 일반 CSS | 벙커 생존 RPG 콘셉트, 반응형 레이아웃과 시각 효과 구현 |
 
+<div style="page-break-after: always;"></div>
+
 ### 3.2 시스템 구성 및 데이터 흐름
 
 일반적인 데이터 처리 흐름은 다음과 같습니다.
@@ -114,6 +124,8 @@
 ```
 
 로그인 성공 후 사용자 ID와 닉네임은 브라우저의 `sessionStorage`에 저장됩니다. Home, Store와 Calendar는 저장된 사용자 ID를 각 API 요청에 포함하여 해당 사용자의 데이터를 조회합니다. 현재 구조는 사용자 ID를 기준으로 데이터를 논리적으로 분리하는 방식이며, 실제 서비스 수준의 토큰 인증과 권한 검증은 향후 보완 사항입니다.
+
+<div style="page-break-after: always;"></div>
 
 ### 3.3 주요 데이터 모델
 
@@ -235,6 +247,8 @@
 
 ---
 
+<div style="page-break-after: always;"></div>
+
 ## 4. 주요 기능별 구현 결과
 
 ### 4.1 회원가입 및 로그인
@@ -250,11 +264,12 @@
 - 사용자 삭제 시 Character, Todo와 Inventory 관련 데이터에 연쇄 삭제 규칙을 적용했습니다.
 - 현재 데이터 분리는 사용자 ID 기반의 논리적 분리이며, 토큰 기반 인증은 향후 보완 대상입니다.
 
-> [그림 1 삽입 예정: 로그인 화면]
->
-> [그림 2 삽입 예정: 회원가입 화면]
+<img src="./screen_img/login.png" width="30%" height="50%"/>
+<img src="./screen_img/account.png" width="30%" height="30%"/>
 
 ---
+
+<div style="page-break-after: always;"></div>
 
 ### 4.2 Todo Mission Log
 
@@ -273,9 +288,9 @@
 
 Todo 완료는 단순 체크가 아니라 RPG 보상 계산을 실행하는 상태 변경입니다. 따라서 완료된 Todo를 다시 미완료로 바꾸거나 반복 완료할 수 없도록 서버와 클라이언트 양쪽에서 제한했습니다.
 
-> [그림 3 삽입 예정: Todo Mission Log 화면]
->
-> [그림 4 삽입 예정: Todo 등록·수정·삭제 화면]
+<img src="./screen_img/todo.png" width="50%" height="50%"/>
+<img src="./screen_img/todo_enroll.png" width="50%" height="50%"/>
+<img src="./screen_img/todo_add.png" width="50%" height="50%"/>
 
 ---
 
@@ -306,6 +321,8 @@ Todo를 완료하면 기본 보상과 함께 현재 HP가 1 회복됩니다. HP�
 | Todo 미생성 상태 | HP 감소와 일정 기간 경험치·Supply 보상 감소 |
 | 필요 경험치 충족 | 반복 레벨업 처리 후 현재 HP를 Max HP까지 회복 |
 | HP 0 이하 | 경험치·Supply 패널티 후 Max HP의 50%까지 회복 |
+
+<img src="./screen_img/todo_complete.png" width="50%" height="50%"/>
 
 #### Todo 미생성 패널티
 
@@ -341,9 +358,7 @@ Todo를 완료하면 기본 보상과 함께 현재 HP가 1 회복됩니다. HP�
 
 보유 경험치가 필요 경험치 이상이면 필요량을 차감하고 레벨을 올리는 과정을 반복합니다. 최대 레벨은 50이며, 한 번의 보상으로 여러 레벨이 오를 수 있습니다. 레벨업이 발생하면 현재 HP를 Max HP까지 회복합니다.
 
-> [그림 5 삽입 예정: Todo 완료 보상 효과]
->
-> [그림 6 삽입 예정: 보상 적용 후 캐릭터 수치 변화]
+<img src="./screen_img/stat.png" width="50%" height="50%"/>
 
 ---
 
@@ -361,6 +376,8 @@ Home 화면은 사용자의 캐릭터 상태를 벙커 생존자 상태판 형�
 - 체력 비율에 따른 상태 경고 문구
 - 섹터 진행 조건 체크리스트
 
+<div style="page-break-after: always;"></div>
+
 인벤토리의 모든 아이템을 나열하는 대신 다음 네 영역으로 요약합니다.
 
 | 영역 | 표시 내용 |
@@ -372,9 +389,12 @@ Home 화면은 사용자의 캐릭터 상태를 벙커 생존자 상태판 형�
 
 고정된 네 영역을 사용하여 아이템 수가 늘어나더라도 Home 화면의 구조가 크게 변하지 않도록 설계했습니다.
 
-> [그림 7 삽입 예정: 캐릭터 상태 및 Active Loadout 화면]
+<img src="./screen_img/home.png" width="50%" height="50%"/>
+<img src="./screen_img/active.png" width="50%" height="50%"/>
 
 ---
+
+<div style="page-break-after: always;"></div>
 
 ### 4.5 섹터 진행도 및 업적 대체 구조
 
@@ -393,9 +413,10 @@ Home 화면은 사용자의 캐릭터 상태를 벙커 생존자 상태판 형�
 
 모든 조건을 충족하면 버튼이 활성화되지만, 실제 다음 구역 이동 결과를 별도 데이터로 저장하는 기능은 구현하지 않았습니다. 이 구조는 독립 업적 시스템의 차선책이자 향후 섹터 해금과 업적을 연결할 수 있는 기반입니다.
 
-> [그림 8 삽입 예정: 섹터 진행도 패널]
+<img src="./screen_img/sector.png" width="50%" height="50%"/>
 
 ---
+<div style="page-break-after: always;"></div>
 
 ### 4.6 상점 및 인벤토리
 
@@ -425,11 +446,9 @@ Home 화면은 사용자의 캐릭터 상태를 벙커 생존자 상태판 형�
 
 ShopItem과 Inventory를 분리하여 가격·효과·등급 등의 마스터 데이터와 사용자별 보유 상태를 독립적으로 관리했습니다.
 
-> [그림 9 삽입 예정: Store 전체 화면]
->
-> [그림 10 삽입 예정: 사용자 인벤토리 화면]
->
-> [그림 11 삽입 예정: 아이템 구매 완료 및 승인 표시]
+<img src="./screen_img/inventory.png" width="50%" height="50%"/>
+<img src="./screen_img/store.png" width="50%" height="50%"/>
+<img src="./screen_img/purchase.png" width="30%" height="50%"/>
 
 ---
 
@@ -478,11 +497,13 @@ CurrentSum = 0
 
 확률 값을 Controller에 직접 고정하지 않고 ShopItem의 `DropWeight`로 관리하므로, 아이템을 추가하거나 가중치를 변경해도 추첨 알고리즘을 수정할 필요가 없습니다.
 
-> [그림 12 삽입 예정: 랜덤 보급 캡슐 머신]
->
-> [그림 13 삽입 예정: 랜덤 보급 결과 화면]
+<img src="./screen_img/random.png" width="50%" height="50%"/>
+<img src="./screen_img/random_click.png" width="50%" height="50%"/>
+<img src="./screen_img/random_res.png" width="50%" height="50%"/>
 
 ---
+
+<div style="page-break-after: always;"></div>
 
 ### 4.8 월간 Todo 캘린더
 
@@ -500,11 +521,11 @@ CurrentSum = 0
 
 서버가 Todo 생성 시 UTC 시각을 저장하므로, 한국 시간 기준 자정 부근에 생성한 Todo가 UTC 날짜로는 전날이 될 수 있습니다. 이를 방지하기 위해 Calendar 화면에서 `CreatedAt`을 로컬 시간으로 변환한 뒤 날짜별로 그룹화했습니다.
 
-> [그림 14 삽입 예정: 월간 Todo 캘린더]
->
-> [그림 15 삽입 예정: 날짜 선택 후 Todo 상세 패널]
+<img src="./screen_img/calendar.png" width="50%" height="50%"/>
 
 ---
+
+<div style="page-break-after: always;"></div>
 
 ### 4.9 던전 기능
 
@@ -527,6 +548,8 @@ Dungeon 화면은 로그인 사용자의 Character, Todo와 Inventory 데이터�
 탐사 시작 시 1부터 100까지의 난수를 생성하고 구역별 성공 확률과 비교합니다. 현재 Dungeon 화면의 탐사 로직은 성공·실패 결과 메시지만 표시하며, EXP·Supply 지급, HP 감소와 입장권 차감을 데이터베이스에 반영하지 않습니다.
 
 백엔드의 `CharacterController`에는 던전 입장 레벨과 입장권 수량을 확인하고, 티켓 1개를 차감한 뒤 `CurrentDungeonIndex`를 저장하는 API가 구현되어 있습니다. 다만 현재 Dungeon 화면의 탐사 시작 버튼은 해당 API와 연결되지 않았으므로, 데모 탐사에서는 실제 티켓이 차감되지 않습니다.
+
+<div style="page-break-after: always;"></div>
 
 #### Todo 연동 보스전
 
@@ -560,9 +583,9 @@ Dungeon 화면은 로그인 사용자의 Character, Todo와 Inventory 데이터�
 | Dungeon 화면의 티켓 차감 연동 | 미구현 | 백엔드 API는 있으나 현재 화면과 연결되지 않음 |
 | 보스·클리어 상태 영구 저장 | 미구현 | 페이지 내부 상태로만 처리 |
 
-> [그림 16 삽입 예정: 던전 입장 상태 및 탐사 구역]
->
-> [그림 17 삽입 예정: 보스전 준비 Todo와 보스 HP 화면]
+<img src="./screen_img/ticket.png" width="30%" height="30%"/>
+<img src="./screen_img/dungeon_1.png" width="50%" height="50%"/>
+<img src="./screen_img/dungeon_2.png" width="50%" height="50%"/>
 
 ---
 
@@ -595,6 +618,8 @@ Dungeon 화면은 로그인 사용자의 Character, Todo와 Inventory 데이터�
 
 ---
 
+<div style="page-break-after: always;"></div>
+
 ## 6. 설계 과정에서 발생한 문제 및 해결 과정
 
 ### 6.1 사용자별 데이터 분리
@@ -616,6 +641,8 @@ Dungeon 화면은 로그인 사용자의 Character, Todo와 Inventory 데이터�
 | 해결 | 완료된 Todo의 미완료 복원, 수정과 삭제를 제한하고 서버에서도 중복 완료 여부를 검사 |
 | 결과 | 완료 기록을 고정하고 보상 중복 지급 가능성을 낮춤 |
 
+<div style="page-break-after: always;"></div>
+
 ### 6.3 RPG 보상 밸런스와 계산 순서
 
 | 항목 | 내용 |
@@ -634,6 +661,8 @@ Dungeon 화면은 로그인 사용자의 Character, Todo와 Inventory 데이터�
 | 해결 | 구매 전에 아이템·재고·캐릭터·Supply를 순서대로 검사하고, 소모품은 Count를 누적하며 장비류는 상태 레코드로 관리 |
 | 결과 | 잘못된 구매 요청을 차단하고 구매와 보유 상태를 연계함 |
 | 남은 한계 | 다중 요청 환경의 명시적 트랜잭션과 동시성 제어는 추가 보완이 필요함 |
+
+<div style="page-break-after: always;"></div>
 
 ### 6.5 핵심 기능 우선순위에 따른 던전 범위 조정
 
@@ -654,16 +683,9 @@ Dungeon 화면은 로그인 사용자의 Character, Todo와 Inventory 데이터�
 | 해결 | Calendar에서 CreatedAt을 로컬 시간으로 변환한 뒤 DateOnly 기준으로 그룹화 |
 | 결과 | 사용자가 실제로 등록한 지역 날짜에 맞춰 월간 기록을 확인할 수 있게 됨 |
 
-### 6.7 팀 작업 간 데이터 규격 통합
-
-| 항목 | 내용 |
-|---|---|
-| 문제 | 기능별 브랜치에서 아이템 수량 필드와 사용자·캐릭터 데이터의 위치가 서로 달라 통합 오류가 발생함 |
-| 원인 | 초기에는 가챠의 수량 명칭과 Inventory의 `Count`가 일치하지 않았고, Level·Experience의 소유 모델도 명확하지 않았음 |
-| 해결 | 아이템 수량은 `Count`로 통일하고, RPG 성장 데이터는 User가 아니라 Character에 배치 |
-| 결과 | 가챠·상점·인벤토리가 동일한 모델을 사용하고 User와 Character의 책임을 구분함 |
-
 ---
+
+<div style="page-break-after: always;"></div>
 
 ## 7. 설계 완성을 위한 차선책
 
@@ -705,6 +727,8 @@ Dungeon 화면은 로그인 사용자의 Character, Todo와 Inventory 데이터�
 
 ---
 
+<div style="page-break-after: always;"></div>
+
 ## 8. 공학도구 활용 정도
 
 ### 8.1 C# 및 객체지향 설계
@@ -731,6 +755,8 @@ C# 클래스와 객체지향 설계를 활용하여 User, TodoItem, Character, D
 | InventoryController | 보유 아이템, 장착과 소모 처리 |
 | GachaController | 가중치 추첨, Supply 차감과 결과 저장 |
 | DungeonController | 던전 조회와 진행 산정값 제공 |
+
+<div style="page-break-after: always;"></div>
 
 ### 8.3 Blazor WebAssembly
 
@@ -785,6 +811,8 @@ Swagger UI를 활성화하여 Controller 엔드포인트, 요청 형식, 응답 
 
 ---
 
+<div style="page-break-after: always;"></div>
+
 ## 9. 개인별 역할 및 포트폴리오 목록
 
 팀 작업의 특성상 통합 과정에서 일부 파일과 기능은 공동 수정되었으며, 아래 표는 제안서의 역할과 개인보고서에 정리된 주요 기여를 종합한 내용입니다.
@@ -830,6 +858,8 @@ Swagger UI를 활성화하여 Controller 엔드포인트, 요청 형식, 응답 
 - Home, Store와 Dungeon의 시각 언어 통일
 
 ---
+
+<div style="page-break-after: always;"></div>
 
 ## 10. 결론
 
